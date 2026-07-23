@@ -56,3 +56,29 @@ if (Test-Path $rootExe) {
 else {
     Write-Host "AVISO: VeloSysPro.exe não foi encontrado na raiz após o publish." -ForegroundColor Red
 }
+
+# 7. Build the Inno Setup installer if ISCC is available.
+$iss = Join-Path $projectDir "installer\VeloSysPro.iss"
+$iscc = $null
+$isccCandidates = @(
+    (Get-Command ISCC.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -ErrorAction SilentlyContinue),
+    "C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
+    "C:\Program Files\Inno Setup 6\ISCC.exe"
+)
+foreach ($c in $isccCandidates) { if ($c -and (Test-Path $c)) { $iscc = $c; break } }
+
+if ($iscc -and (Test-Path $iss)) {
+    # Read the version from package.json so exe/installer stay aligned.
+    $ver = "1.0.0"
+    try { $ver = (Get-Content (Join-Path $projectDir "package.json") -Raw | ConvertFrom-Json).version } catch {}
+    Write-Host ""
+    Write-Host "Gerando instalador Inno Setup (v$ver)..." -ForegroundColor Cyan
+    & $iscc "/DAppVersion=$ver" "$iss"
+    $setup = Join-Path $distDir "VeloSysPro-Setup-$ver.exe"
+    if (Test-Path $setup) {
+        Write-Host "Instalador criado: $setup" -ForegroundColor Green
+    }
+}
+else {
+    Write-Host "Inno Setup (ISCC) não encontrado - pulando geração do instalador." -ForegroundColor DarkYellow
+}
