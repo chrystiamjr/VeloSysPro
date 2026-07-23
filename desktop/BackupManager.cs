@@ -14,15 +14,13 @@ namespace VeloSysPro
 
         private readonly string _backupsDir;
         private readonly CommandRunner _cmd;
-        private readonly Action<string, string> _log;
-        private readonly Action<string> _logError;
+        private readonly IStatusSink _sink;
 
-        public BackupManager(string backupsDir, CommandRunner cmd, Action<string, string> log, Action<string> logError)
+        public BackupManager(string backupsDir, CommandRunner cmd, IStatusSink sink)
         {
             _backupsDir = backupsDir;
             _cmd = cmd;
-            _log = log;
-            _logError = logError;
+            _sink = sink;
 
             Directory.CreateDirectory(_backupsDir);
         }
@@ -34,28 +32,28 @@ namespace VeloSysPro
                 string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
                 string file = Path.Combine(_backupsDir, "backup_rede_" + timestamp + ".reg");
                 _cmd.Run("reg.exe", "export \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\" \"" + file + "\" /y");
-                _log("Backup do registro criado: " + file, "success");
+                _sink.Log("logBackupCreated", "success", new { file });
             }
             catch (Exception ex)
             {
-                _logError("Falha ao criar backup: " + ex.Message);
+                _sink.Log("logBackupFailed", "error", new { message = ex.Message });
             }
         }
 
-        public void CreateRestorePoint(Action<string, int> updateStatus)
+        public void CreateRestorePoint()
         {
-            updateStatus("Criando Ponto de Restauração...", 20);
-            _log("Criando Ponto de Restauração do Sistema...", "info");
+            _sink.Status("statusRestorePointCreating", 20);
+            _sink.Log("logRestorePointCreating", "info");
             try
             {
                 string psCmd = "Checkpoint-Computer -Description 'VeloSysPro_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + "' -RestorePointType 'MODIFY_SETTINGS'";
                 _cmd.Run("powershell.exe", "-ExecutionPolicy Bypass -Command \"" + psCmd + "\"");
-                updateStatus("Ponto de restauração criado!", 100);
-                _log("Ponto de Restauração criado com sucesso.", "success");
+                _sink.Status("statusRestorePointDone", 100);
+                _sink.Log("logRestorePointDone", "success");
             }
             catch (Exception ex)
             {
-                _logError("Falha ao criar ponto de restauração: " + ex.Message);
+                _sink.Log("logRestorePointFailed", "error", new { message = ex.Message });
             }
         }
 
@@ -97,16 +95,16 @@ namespace VeloSysPro
                 if (File.Exists(filePath))
                 {
                     _cmd.Run("reg.exe", "import \"" + filePath + "\"");
-                    _log("Backup restaurado: " + backupName, "success");
+                    _sink.Log("logBackupRestored", "success", new { name = backupName });
                 }
                 else
                 {
-                    _logError("Arquivo de backup não encontrado: " + backupName);
+                    _sink.Log("logBackupNotFound", "error", new { name = backupName });
                 }
             }
             catch (Exception ex)
             {
-                _logError("Falha ao restaurar backup: " + ex.Message);
+                _sink.Log("logRestoreFailed", "error", new { message = ex.Message });
             }
         }
     }

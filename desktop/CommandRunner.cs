@@ -1,23 +1,20 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 
 namespace VeloSysPro
 {
     /// <summary>
     /// Executes system commands (ipconfig, sfc, dism, netsh, cleanmgr, etc.)
-    /// and captures stdout/stderr output.
+    /// and streams stdout/stderr to the status sink as raw (untranslatable) text.
     /// </summary>
     public class CommandRunner
     {
-        private readonly Action<string, string> _log;
-        private readonly Action<string> _logError;
+        private readonly IStatusSink _sink;
 
-        public CommandRunner(Action<string, string> log, Action<string> logError)
+        public CommandRunner(IStatusSink sink)
         {
-            _log = log;
-            _logError = logError;
+            _sink = sink;
         }
 
         public void Run(string exe, string args)
@@ -42,14 +39,14 @@ namespace VeloSysPro
                         string stderr = proc.StandardError.ReadToEnd();
                         proc.WaitForExit();
 
-                        if (!string.IsNullOrWhiteSpace(stdout)) _log(stdout.Trim(), "info");
-                        if (!string.IsNullOrWhiteSpace(stderr)) _logError(stderr.Trim());
+                        if (!string.IsNullOrWhiteSpace(stdout)) _sink.LogRaw(stdout.Trim(), "info");
+                        if (!string.IsNullOrWhiteSpace(stderr)) _sink.LogRaw(stderr.Trim(), "error");
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logError("Erro executando " + exe + ": " + ex.Message);
+                _sink.Log("logCmdError", "error", new { exe, message = ex.Message });
             }
         }
 

@@ -45,8 +45,24 @@ export interface ScheduledTaskItem {
   Path: string;
 }
 
+export type LogType = 'info' | 'error' | 'success';
+
+/** Display-ready log line (already translated) consumed by TerminalConsole. */
 export interface LogEntryItem {
   text: string;
-  type: 'info' | 'error' | 'success';
+  type: LogType;
   timestamp?: string;
+}
+
+/** Translatable message sent by the C# host: an i18n key plus optional interpolation args. */
+export interface LocalizedMessage {
+  key: string;
+  args?: Record<string, unknown>;
+}
+
+/** Log entry stored in state as an i18n key, translated at render time so it follows language switches. */
+export interface LogRecord {
+  key: string;
+  args?: Record<string, unknown>;
+  type: LogType;
 }

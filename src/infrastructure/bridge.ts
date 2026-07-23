@@ -1,7 +1,7 @@
 /**
  * VeloSys Pro - TypeScript IPC Bridge Infrastructure Layer
  */
-import { BackupItem, ScheduledTaskItem } from '../domain/types';
+import { BackupItem, ScheduledTaskItem, LocalizedMessage, LogType } from '../domain/types';
 
 declare global {
   interface Window {
@@ -11,8 +11,8 @@ declare global {
         addEventListener: (type: string, listener: (event: Event) => void) => void;
       };
     };
-    onLogReceived?: (message: string, type: 'info' | 'error' | 'success') => void;
-    onStatusUpdated?: (statusMessage: string) => void;
+    onLogReceived?: (message: LocalizedMessage, type: LogType) => void;
+    onStatusUpdated?: (status: LocalizedMessage) => void;
     onProgressUpdated?: (percent: number) => void;
     onBackupsLoaded?: (backupsJson: string | BackupItem[]) => void;
     onTasksLoaded?: (tasksJson: string | ScheduledTaskItem[]) => void;
@@ -36,17 +36,15 @@ export function sendAction(action: string, payload: string = ''): void {
   }
 }
 
-export function subscribeLogs(
-  callback: (message: string, type: 'info' | 'error' | 'success') => void
-): void {
+export function subscribeLogs(callback: (message: LocalizedMessage, type: LogType) => void): void {
   window.onLogReceived = (message, type) => {
     if (typeof callback === 'function') callback(message, type);
   };
 }
 
-export function subscribeStatus(callback: (statusMessage: string) => void): void {
-  window.onStatusUpdated = (statusMessage) => {
-    if (typeof callback === 'function') callback(statusMessage);
+export function subscribeStatus(callback: (status: LocalizedMessage) => void): void {
+  window.onStatusUpdated = (status) => {
+    if (typeof callback === 'function') callback(status);
   };
 }
 

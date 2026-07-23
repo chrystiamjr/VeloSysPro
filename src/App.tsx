@@ -3,7 +3,15 @@ import { MainLayout } from './components/templates/MainLayout';
 import { DashboardPage } from './components/pages/DashboardPage';
 import { SchedulingPage } from './components/pages/SchedulingPage';
 import { BackupPage } from './components/pages/BackupPage';
-import { AppScreen, SystemHealth, LogEntryItem, BackupItem, SystemActions } from './domain/types';
+import {
+  AppScreen,
+  SystemHealth,
+  LogEntryItem,
+  LogRecord,
+  LocalizedMessage,
+  BackupItem,
+  SystemActions,
+} from './domain/types';
 import { useTranslation, LanguageProvider } from './infrastructure/i18nContext';
 import {
   sendAction,
@@ -17,36 +25,31 @@ import {
 function AppContent() {
   const { t } = useTranslation();
   const [activeScreen, setActiveScreen] = useState<AppScreen>(AppScreen.Dashboard);
-  const [statusMessage, setStatusMessage] = useState<string>('Status: Aguardando ação');
+  const [status, setStatus] = useState<LocalizedMessage>({ key: 'statusIdle' });
   const [progressPercent, setProgressPercent] = useState<number>(100);
   const [backups, setBackups] = useState<BackupItem[]>([]);
-  const [logs, setLogs] = useState<LogEntryItem[]>([
-    {
-      text: '[SISTEMA] VeloSys Pro iniciado com sucesso (React 18 + TypeScript + Rosetta i18n).',
-      type: 'success',
-    },
-  ]);
+  const [logs, setLogs] = useState<LogRecord[]>([{ key: 'logAppStarted', type: 'success' }]);
 
   const [health, setHealth] = useState<SystemHealth>({
     admin: 'Sim',
     backupsCount: 0,
     latestBackup: 'Nenhum',
     tasksCount: 0,
-    status: 'Pronto',
+    status: 'ready',
   });
 
   useEffect(() => {
     subscribeLogs((msg, type) => {
-      setLogs((prev) => [...prev, { text: msg, type }]);
+      setLogs((prev) => [...prev, { key: msg.key, args: msg.args, type }]);
     });
 
-    subscribeStatus((status) => {
-      setStatusMessage(status);
-      setHealth((prev) => ({ ...prev, status: status.replace('Status: ', '') }));
+    subscribeStatus((msg) => {
+      setStatus(msg);
     });
 
     subscribeProgress((percent) => {
       setProgressPercent(percent);
+      setHealth((prev) => ({ ...prev, status: percent < 100 ? 'executing' : 'ready' }));
     });
 
     subscribeBackups((data) => {
@@ -72,6 +75,13 @@ function AppContent() {
   const handleClearLogs = () => {
     setLogs([]);
   };
+
+  // Translate at render time so logs/status re-localize when the language changes.
+  const translatedLogs: LogEntryItem[] = logs.map((log) => ({
+    text: log.key === 'logRaw' ? String(log.args?.text ?? '') : t(log.key, log.args),
+    type: log.type,
+  }));
+  const statusMessage = t(status.key, status.args);
 
   const titleKey =
     activeScreen === AppScreen.Dashboard
@@ -101,7 +111,7 @@ function AppContent() {
       {activeScreen === AppScreen.Dashboard && (
         <DashboardPage
           health={health}
-          logs={logs}
+          logs={translatedLogs}
           onAction={handleAction}
           onClearLogs={handleClearLogs}
           onNavigateToBackup={() => setActiveScreen(AppScreen.Backup)}

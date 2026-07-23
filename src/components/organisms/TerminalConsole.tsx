@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { LogEntryItem } from '../../domain/types';
+import { useTranslation } from '../../infrastructure/i18nContext';
 
 export interface TerminalConsoleProps {
   logs?: LogEntryItem[];
@@ -7,6 +8,7 @@ export interface TerminalConsoleProps {
 }
 
 export const TerminalConsole: React.FC<TerminalConsoleProps> = ({ logs = [], onClear }) => {
+  const { t } = useTranslation();
   const boxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -19,13 +21,13 @@ export const TerminalConsole: React.FC<TerminalConsoleProps> = ({ logs = [], onC
     <div className="mb-6 rounded-container border border-borderColor bg-[#0d0f15] p-4">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="flex items-center gap-2 text-xs font-bold text-textMain">
-          <span>📜</span> Log em Tempo Real
+          <span>📜</span> {t('terminalTitle')}
         </h3>
         <button
           onClick={onClear}
           className="cursor-pointer rounded border border-borderColor bg-transparent px-3 py-1 text-[11px] text-textMuted transition-colors hover:text-white"
         >
-          Limpar Console
+          {t('btnClearConsole')}
         </button>
       </div>
 
@@ -34,7 +36,7 @@ export const TerminalConsole: React.FC<TerminalConsoleProps> = ({ logs = [], onC
         className="h-40 overflow-y-auto rounded-lg border border-white/5 bg-[#090a0e] p-3 font-mono text-xs leading-relaxed text-gray-300"
       >
         {logs.length === 0 ? (
-          <div className="italic text-textMuted">[SISTEMA] Aguardando logs de execução...</div>
+          <div className="italic text-textMuted">{t('terminalWaiting')}</div>
         ) : (
           logs.map((log, idx) => (
             <div

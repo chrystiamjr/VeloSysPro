@@ -40,7 +40,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         <HealthCard title={t('healthTasks')} value={health.tasksCount} variant="warning" />
         <HealthCard
           title={t('healthStatus')}
-          value={health.status === 'Pronto' ? t('healthStatusReady') : health.status}
+          value={t(health.status === 'executing' ? 'healthStatusExecuting' : 'healthStatusReady')}
           variant="primary"
         />
       </div>
