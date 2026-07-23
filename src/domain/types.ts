@@ -15,6 +15,8 @@ export const SystemActions = {
   OPEN_RESTORE_POINTS: 'openRestorePoints',
   GET_BACKUPS: 'getBackups',
   GET_TASKS: 'getTasks',
+  CREATE_TASK: 'createTask',
+  DELETE_TASK: 'deleteTask',
 } as const;
 
 export type SystemActionType = (typeof SystemActions)[keyof typeof SystemActions];

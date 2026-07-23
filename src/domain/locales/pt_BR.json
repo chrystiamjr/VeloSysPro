@@ -49,9 +49,21 @@
   "terminalTitle": "Log em Tempo Real",
   "terminalWaiting": "[SISTEMA] Aguardando logs de execução...",
 
-  "schedulingComingSoonTitle": "Agendamento em Desenvolvimento",
-  "schedulingComingSoonDesc": "A execução recorrente e automática de otimizações via Agendador de Tarefas do Windows chegará em uma próxima versão do VeloSys Pro.",
-  "schedulingComingSoonBadge": "Em Breve",
+  "schedulingFormTitle": "Agendar Otimização",
+  "schedulingFormDesc": "Crie uma tarefa recorrente no Agendador de Tarefas do Windows que executa a otimização em segundo plano.",
+  "schedulingTypeLabel": "Otimização",
+  "schedulingFreqLabel": "Frequência",
+  "schedulingTimeLabel": "Horário",
+  "schedulingCreateBtn": "Agendar",
+  "schedFreqDaily": "Diária",
+  "schedFreqWeekly": "Semanal",
+  "schedFreqMonthly": "Mensal",
+  "schedulingEmpty": "Nenhuma tarefa agendada. Crie a primeira acima.",
+  "schedulingColName": "Tarefa",
+  "schedulingColState": "Estado",
+  "schedulingColActions": "Ações",
+  "schedulingDeleteBtn": "Remover",
+  "schedulingDeleteConfirm": "Remover esta tarefa agendada? A otimização automática deixará de ser executada.",
 
   "backupSectionTitle": "Backups do Registro",
   "backupSectionDesc": "Exporte cópias de segurança dos parâmetros de rede TCP/IP e restaure quando necessário.",
@@ -109,5 +121,8 @@
   "logRestorePointDone": "Ponto de Restauração criado com sucesso.",
   "logRestorePointFailed": "Falha ao criar ponto de restauração: {{message}}",
   "logCmdError": "Erro executando {{exe}}: {{message}}",
+  "logTaskCreated": "Tarefa agendada criada: {{name}}",
+  "logTaskDeleted": "Tarefa agendada removida: {{name}}",
+  "logTaskFailed": "Falha na operação de agendamento: {{message}}",
   "logRaw": "{{text}}"
 }

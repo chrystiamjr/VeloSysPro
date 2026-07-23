@@ -49,9 +49,21 @@
   "terminalTitle": "Live Real-Time Log",
   "terminalWaiting": "[SYSTEM] Awaiting execution logs...",
 
-  "schedulingComingSoonTitle": "Scheduler Under Development",
-  "schedulingComingSoonDesc": "Recurring, automated optimization runs via the Windows Task Scheduler are coming in a future release of VeloSys Pro.",
-  "schedulingComingSoonBadge": "Coming Soon",
+  "schedulingFormTitle": "Schedule Optimization",
+  "schedulingFormDesc": "Create a recurring Windows Task Scheduler entry that runs the optimization in the background.",
+  "schedulingTypeLabel": "Optimization",
+  "schedulingFreqLabel": "Frequency",
+  "schedulingTimeLabel": "Time",
+  "schedulingCreateBtn": "Schedule",
+  "schedFreqDaily": "Daily",
+  "schedFreqWeekly": "Weekly",
+  "schedFreqMonthly": "Monthly",
+  "schedulingEmpty": "No scheduled tasks. Create your first one above.",
+  "schedulingColName": "Task",
+  "schedulingColState": "State",
+  "schedulingColActions": "Actions",
+  "schedulingDeleteBtn": "Remove",
+  "schedulingDeleteConfirm": "Remove this scheduled task? The automatic optimization will no longer run.",
 
   "backupSectionTitle": "Registry Backups",
   "backupSectionDesc": "Export safety copies of TCP/IP network settings and restore them when needed.",
@@ -109,5 +121,8 @@
   "logRestorePointDone": "Restore Point created successfully.",
   "logRestorePointFailed": "Failed to create restore point: {{message}}",
   "logCmdError": "Error running {{exe}}: {{message}}",
+  "logTaskCreated": "Scheduled task created: {{name}}",
+  "logTaskDeleted": "Scheduled task removed: {{name}}",
+  "logTaskFailed": "Scheduling operation failed: {{message}}",
   "logRaw": "{{text}}"
 }

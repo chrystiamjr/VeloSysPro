@@ -50,6 +50,37 @@ namespace VeloSysPro
             }
         }
 
+        /// <summary>Runs a command and returns its stdout (used when the output must be parsed).</summary>
+        public string RunCapture(string exe, string args)
+        {
+            try
+            {
+                ProcessStartInfo psi = new ProcessStartInfo
+                {
+                    FileName = exe,
+                    Arguments = args,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                };
+
+                using (Process? proc = Process.Start(psi))
+                {
+                    if (proc == null) return "";
+                    string stdout = proc.StandardOutput.ReadToEnd();
+                    proc.StandardError.ReadToEnd();
+                    proc.WaitForExit();
+                    return stdout;
+                }
+            }
+            catch (Exception ex)
+            {
+                _sink.Log("logCmdError", "error", new { exe, message = ex.Message });
+                return "";
+            }
+        }
+
         public void CleanTempFolder()
         {
             try

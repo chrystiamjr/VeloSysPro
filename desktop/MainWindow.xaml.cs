@@ -24,6 +24,7 @@ namespace VeloSysPro
         private readonly CommandRunner _cmd;
         private readonly BackupManager _backup;
         private readonly Optimizer _optimizer;
+        private readonly SchedulerManager _scheduler;
 
         // Maps normalized (forward-slash) embedded resource names to their real manifest names.
         private Dictionary<string, string> _resourceMap = new();
@@ -45,6 +46,7 @@ namespace VeloSysPro
             _cmd = new CommandRunner(this);
             _backup = new BackupManager(_backupsDir, _cmd, this);
             _optimizer = new Optimizer(_cmd, _backup, this, PushBackups);
+            _scheduler = new SchedulerManager(_cmd, this);
 
             Loaded += MainWindow_Loaded;
         }
@@ -210,7 +212,15 @@ namespace VeloSysPro
                             PushBackups();
                             break;
                         case "getTasks":
-                            EvalJs("window.onTasksLoaded && window.onTasksLoaded([]);");
+                            PushTasks();
+                            break;
+                        case "createTask":
+                            _scheduler.CreateTask(payload);
+                            PushTasks();
+                            break;
+                        case "deleteTask":
+                            _scheduler.DeleteTask(payload);
+                            PushTasks();
                             break;
                     }
                 }
@@ -231,6 +241,19 @@ namespace VeloSysPro
             catch (Exception ex)
             {
                 LogRaw("Failed to refresh backups: " + ex.Message, "error");
+            }
+        }
+
+        private void PushTasks()
+        {
+            try
+            {
+                string json = _scheduler.GetTasksJson();
+                EvalJs("window.onTasksLoaded && window.onTasksLoaded(" + json + ");");
+            }
+            catch (Exception ex)
+            {
+                LogRaw("Failed to refresh tasks: " + ex.Message, "error");
             }
         }
 

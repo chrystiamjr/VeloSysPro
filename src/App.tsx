@@ -10,6 +10,7 @@ import {
   LogRecord,
   LocalizedMessage,
   BackupItem,
+  ScheduledTaskItem,
   SystemActions,
 } from './domain/types';
 import { useTranslation, LanguageProvider } from './infrastructure/i18nContext';
@@ -28,6 +29,7 @@ function AppContent() {
   const [status, setStatus] = useState<LocalizedMessage>({ key: 'statusIdle' });
   const [progressPercent, setProgressPercent] = useState<number>(100);
   const [backups, setBackups] = useState<BackupItem[]>([]);
+  const [tasks, setTasks] = useState<ScheduledTaskItem[]>([]);
   const [logs, setLogs] = useState<LogRecord[]>([{ key: 'logAppStarted', type: 'success' }]);
 
   const [health, setHealth] = useState<SystemHealth>({
@@ -62,10 +64,12 @@ function AppContent() {
     });
 
     subscribeTasks((data) => {
+      setTasks(data);
       setHealth((prev) => ({ ...prev, tasksCount: data.length }));
     });
 
     sendAction(SystemActions.GET_BACKUPS);
+    sendAction(SystemActions.GET_TASKS);
   }, []);
 
   const handleAction = (action: string, payload?: string) => {
@@ -118,7 +122,13 @@ function AppContent() {
         />
       )}
 
-      {activeScreen === AppScreen.Scheduling && <SchedulingPage />}
+      {activeScreen === AppScreen.Scheduling && (
+        <SchedulingPage
+          tasks={tasks}
+          onCreateTask={(payload) => handleAction(SystemActions.CREATE_TASK, payload)}
+          onDeleteTask={(name) => handleAction(SystemActions.DELETE_TASK, name)}
+        />
+      )}
 
       {activeScreen === AppScreen.Backup && (
         <BackupPage
