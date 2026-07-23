@@ -99,6 +99,10 @@
   "settingsEnabled": "Ativado",
   "settingsDisabled": "Desativado",
 
+  "updateBannerText": "Nova versão {{version}} disponível!",
+  "updateBannerBtn": "Baixar",
+  "updateBannerDismiss": "Dispensar",
+
   "backupSectionTitle": "Backups do Registro",
   "backupSectionDesc": "Exporte cópias de segurança dos parâmetros de rede TCP/IP e restaure quando necessário.",
   "backupCreateBtn": "Criar Backup Agora",

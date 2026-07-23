@@ -6,6 +6,7 @@ import {
   ScheduledTaskItem,
   RestorePointItem,
   AppSettings,
+  UpdateInfo,
   LocalizedMessage,
   LogType,
 } from '../domain/types';
@@ -25,6 +26,7 @@ declare global {
     onTasksLoaded?: (tasksJson: string | ScheduledTaskItem[]) => void;
     onRestorePointsLoaded?: (pointsJson: string | RestorePointItem[]) => void;
     onSettingsLoaded?: (settingsJson: string | AppSettings) => void;
+    onUpdateAvailable?: (info: UpdateInfo) => void;
   }
 }
 
@@ -108,5 +110,11 @@ export function subscribeSettings(callback: (data: AppSettings) => void): void {
     } catch {
       /* keep defaults */
     }
+  };
+}
+
+export function subscribeUpdate(callback: (info: UpdateInfo) => void): void {
+  window.onUpdateAvailable = (info) => {
+    if (typeof callback === 'function' && info && info.version) callback(info);
   };
 }

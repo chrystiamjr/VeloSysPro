@@ -99,6 +99,10 @@
   "settingsEnabled": "Enabled",
   "settingsDisabled": "Disabled",
 
+  "updateBannerText": "New version {{version}} available!",
+  "updateBannerBtn": "Download",
+  "updateBannerDismiss": "Dismiss",
+
   "backupSectionTitle": "Registry Backups",
   "backupSectionDesc": "Export safety copies of TCP/IP network settings and restore them when needed.",
   "backupCreateBtn": "Create Backup Now",

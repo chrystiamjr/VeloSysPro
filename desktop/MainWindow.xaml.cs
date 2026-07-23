@@ -57,6 +57,21 @@ namespace VeloSysPro
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             await InitializeWebView();
+            _ = CheckForUpdatesAsync();
+        }
+
+        private async Task CheckForUpdatesAsync()
+        {
+            try
+            {
+                UpdateChecker.UpdateInfo? info = await UpdateChecker.CheckAsync();
+                if (info != null)
+                {
+                    string payload = JsonSerializer.Serialize(new { version = info.Version, url = info.Url });
+                    EvalJs("window.onUpdateAvailable && window.onUpdateAvailable(" + payload + ");");
+                }
+            }
+            catch { }
         }
 
         private async Task InitializeWebView()
@@ -219,6 +234,12 @@ namespace VeloSysPro
                         case "saveSettings":
                             var applied = _settings.Save(payload);
                             _optimizer.CreateSafetyBackupEnabled = applied.CreateBackupBeforeOptimize;
+                            break;
+                        case "openUrl":
+                            if (payload.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                            {
+                                Process.Start(new ProcessStartInfo { FileName = payload, UseShellExecute = true });
+                            }
                             break;
                         case "openLogs":
                             Process.Start("explorer.exe", _logsDir);

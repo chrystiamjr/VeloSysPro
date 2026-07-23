@@ -15,6 +15,7 @@ import {
   ScheduledTaskItem,
   RestorePointItem,
   AppSettings,
+  UpdateInfo,
   SystemActions,
 } from './domain/types';
 import { useTranslation, LanguageProvider } from './infrastructure/i18nContext';
@@ -27,6 +28,7 @@ import {
   subscribeTasks,
   subscribeRestorePoints,
   subscribeSettings,
+  subscribeUpdate,
 } from './infrastructure/bridge';
 
 const SCREEN_HEADERS: Record<AppScreen, { title: string; subtitle: string }> = {
@@ -53,6 +55,7 @@ function AppContent() {
     createBackupBeforeOptimize: true,
   });
   const settingsLoaded = useRef(false);
+  const [update, setUpdate] = useState<UpdateInfo | null>(null);
   const [logs, setLogs] = useState<LogRecord[]>([{ key: 'logAppStarted', type: 'success' }]);
 
   const [health, setHealth] = useState<SystemHealth>({
@@ -99,6 +102,10 @@ function AppContent() {
       setSettings(data);
       if (data.language === 'pt_BR' || data.language === 'en_US') setLang(data.language);
       settingsLoaded.current = true;
+    });
+
+    subscribeUpdate((info) => {
+      setUpdate(info);
     });
 
     sendAction(SystemActions.GET_BACKUPS);
@@ -151,6 +158,28 @@ function AppContent() {
       statusMessage={statusMessage}
       progressPercent={progressPercent}
     >
+      {update && (
+        <div className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-primary/40 bg-primary/10 px-5 py-3">
+          <span className="text-xs font-semibold text-textMain">
+            🎉 {t('updateBannerText', { version: update.version })}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleAction(SystemActions.OPEN_URL, update.url)}
+              className="cursor-pointer rounded-lg border-none bg-primary px-4 py-2 text-xs font-bold text-white transition-all hover:bg-primary-hover"
+            >
+              {t('updateBannerBtn')}
+            </button>
+            <button
+              onClick={() => setUpdate(null)}
+              className="cursor-pointer rounded-lg border border-borderColor bg-transparent px-3 py-2 text-xs text-textMuted transition-colors hover:text-white"
+            >
+              {t('updateBannerDismiss')}
+            </button>
+          </div>
+        </div>
+      )}
+
       {activeScreen === AppScreen.Dashboard && (
         <DashboardPage
           health={health}

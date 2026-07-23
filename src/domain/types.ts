@@ -14,6 +14,7 @@ export const SystemActions = {
   RESTORE_BACKUP: 'restoreBackup',
   CREATE_RESTORE_POINT: 'createRestorePoint',
   OPEN_LOGS: 'openLogs',
+  OPEN_URL: 'openUrl',
   OPEN_BACKUPS: 'openBackups',
   OPEN_RESTORE_POINTS: 'openRestorePoints',
   GET_BACKUPS: 'getBackups',
@@ -39,6 +40,11 @@ export enum AppScreen {
 export interface AppSettings {
   language: 'pt_BR' | 'en_US';
   createBackupBeforeOptimize: boolean;
+}
+
+export interface UpdateInfo {
+  version: string;
+  url: string;
 }
 
 export interface SystemHealth {
