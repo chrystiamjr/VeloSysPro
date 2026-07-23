@@ -25,6 +25,7 @@ namespace VeloSysPro
         private readonly BackupManager _backup;
         private readonly Optimizer _optimizer;
         private readonly SchedulerManager _scheduler;
+        private readonly SettingsManager _settings;
 
         // Maps normalized (forward-slash) embedded resource names to their real manifest names.
         private Dictionary<string, string> _resourceMap = new();
@@ -47,6 +48,8 @@ namespace VeloSysPro
             _backup = new BackupManager(_backupsDir, _cmd, this);
             _optimizer = new Optimizer(_cmd, _backup, this, PushBackups);
             _scheduler = new SchedulerManager(_cmd, this);
+            _settings = new SettingsManager();
+            _optimizer.CreateSafetyBackupEnabled = _settings.Current.CreateBackupBeforeOptimize;
 
             Loaded += MainWindow_Loaded;
         }
@@ -200,6 +203,13 @@ namespace VeloSysPro
                             break;
                         case "restoreToPoint":
                             _backup.RestoreToPoint(payload);
+                            break;
+                        case "getSettings":
+                            EvalJs("window.onSettingsLoaded && window.onSettingsLoaded(" + _settings.GetJson() + ");");
+                            break;
+                        case "saveSettings":
+                            var applied = _settings.Save(payload);
+                            _optimizer.CreateSafetyBackupEnabled = applied.CreateBackupBeforeOptimize;
                             break;
                         case "openLogs":
                             Process.Start("explorer.exe", _logsDir);

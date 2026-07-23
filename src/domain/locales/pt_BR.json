@@ -7,6 +7,7 @@
   "navBackup": "Backup & Restauração",
   "navLogsFolder": "Pasta de Logs",
   "navRestorePoints": "Restore Points",
+  "navSettings": "Configurações",
 
   "headerDashboardTitle": "Painel de Otimização",
   "headerDashboardSubtitle": "Manutenção, aceleração de rede e recuperação do Windows",
@@ -16,6 +17,8 @@
   "headerBackupSubtitle": "Gerencie backups manuais do registro e pontos de restauração",
   "headerRestorePointsTitle": "Pontos de Restauração",
   "headerRestorePointsSubtitle": "Crie e reverta pontos de restauração do sistema Windows",
+  "headerSettingsTitle": "Configurações",
+  "headerSettingsSubtitle": "Preferências do aplicativo e comportamento das otimizações",
 
   "healthAdmin": "Administrador",
   "healthBackups": "Backups Criados",
@@ -78,6 +81,15 @@
   "rpEmpty": "Nenhum ponto de restauração encontrado. Crie o primeiro acima.",
   "rpRestoreConfirm1": "Restaurar o sistema para este ponto desfará alterações recentes. Deseja continuar?",
   "rpRestoreConfirm2": "ATENÇÃO: o computador será REINICIADO para concluir a restauração. Confirmar?",
+
+  "settingsLanguageTitle": "Idioma",
+  "settingsLanguageDesc": "Escolha o idioma da interface. A preferência é salva automaticamente.",
+  "settingsLangPt": "Português",
+  "settingsLangEn": "English",
+  "settingsBackupTitle": "Backup de Segurança",
+  "settingsBackupDesc": "Criar um backup do registro automaticamente antes de cada otimização.",
+  "settingsEnabled": "Ativado",
+  "settingsDisabled": "Desativado",
 
   "backupSectionTitle": "Backups do Registro",
   "backupSectionDesc": "Exporte cópias de segurança dos parâmetros de rede TCP/IP e restaure quando necessário.",

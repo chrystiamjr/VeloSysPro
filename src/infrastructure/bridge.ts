@@ -5,6 +5,7 @@ import {
   BackupItem,
   ScheduledTaskItem,
   RestorePointItem,
+  AppSettings,
   LocalizedMessage,
   LogType,
 } from '../domain/types';
@@ -23,6 +24,7 @@ declare global {
     onBackupsLoaded?: (backupsJson: string | BackupItem[]) => void;
     onTasksLoaded?: (tasksJson: string | ScheduledTaskItem[]) => void;
     onRestorePointsLoaded?: (pointsJson: string | RestorePointItem[]) => void;
+    onSettingsLoaded?: (settingsJson: string | AppSettings) => void;
   }
 }
 
@@ -93,6 +95,18 @@ export function subscribeRestorePoints(callback: (data: RestorePointItem[]) => v
       if (typeof callback === 'function') callback(data);
     } catch {
       if (typeof callback === 'function') callback([]);
+    }
+  };
+}
+
+export function subscribeSettings(callback: (data: AppSettings) => void): void {
+  window.onSettingsLoaded = (settingsJson) => {
+    try {
+      const data: AppSettings =
+        typeof settingsJson === 'string' ? JSON.parse(settingsJson) : settingsJson;
+      if (typeof callback === 'function') callback(data);
+    } catch {
+      /* keep defaults */
     }
   };
 }

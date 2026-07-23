@@ -13,6 +13,9 @@ namespace VeloSysPro
         private readonly IStatusSink _sink;
         private readonly Action? _onBackupsChanged;
 
+        /// <summary>When true, a registry safety backup is taken before an optimization.</summary>
+        public bool CreateSafetyBackupEnabled { get; set; } = true;
+
         public Optimizer(CommandRunner cmd, BackupManager backup, IStatusSink sink, Action? onBackupsChanged = null)
         {
             _cmd = cmd;
@@ -23,6 +26,7 @@ namespace VeloSysPro
 
         private void CreateSafetyBackup()
         {
+            if (!CreateSafetyBackupEnabled) return;
             _backup.CreateBackup();
             _onBackupsChanged?.Invoke();
         }

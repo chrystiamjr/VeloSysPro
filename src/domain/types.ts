@@ -19,6 +19,8 @@ export const SystemActions = {
   DELETE_TASK: 'deleteTask',
   GET_RESTORE_POINTS: 'getRestorePoints',
   RESTORE_TO_POINT: 'restoreToPoint',
+  GET_SETTINGS: 'getSettings',
+  SAVE_SETTINGS: 'saveSettings',
 } as const;
 
 export type SystemActionType = (typeof SystemActions)[keyof typeof SystemActions];
@@ -28,6 +30,12 @@ export enum AppScreen {
   Scheduling = 'Scheduling',
   Backup = 'Backup',
   RestorePoints = 'RestorePoints',
+  Settings = 'Settings',
+}
+
+export interface AppSettings {
+  language: 'pt_BR' | 'en_US';
+  createBackupBeforeOptimize: boolean;
 }
 
 export interface SystemHealth {

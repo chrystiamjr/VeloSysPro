@@ -91,6 +91,17 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
         </button>
 
         <button
+          onClick={() => onNavigate(AppScreen.Settings)}
+          className={`flex cursor-pointer items-center gap-3 rounded-lg border-none px-4 py-3 text-xs font-semibold transition-all ${
+            activeScreen === AppScreen.Settings
+              ? 'bg-primary text-white shadow-lg shadow-primary/30'
+              : 'bg-transparent text-textMuted hover:bg-white/5 hover:text-white'
+          }`}
+        >
+          <span>⚙️</span> {t('navSettings')}
+        </button>
+
+        <button
           onClick={onOpenLogs}
           className="flex cursor-pointer items-center gap-3 rounded-lg border-none bg-transparent px-4 py-3 text-xs font-semibold text-textMuted transition-all hover:bg-white/5 hover:text-white"
         >

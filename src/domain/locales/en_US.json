@@ -7,6 +7,7 @@
   "navBackup": "Backup & Restore",
   "navLogsFolder": "Logs Folder",
   "navRestorePoints": "Restore Points",
+  "navSettings": "Settings",
 
   "headerDashboardTitle": "Optimization Dashboard",
   "headerDashboardSubtitle": "Windows maintenance, network acceleration, and recovery",
@@ -16,6 +17,8 @@
   "headerBackupSubtitle": "Manage manual registry backups and system restore points",
   "headerRestorePointsTitle": "System Restore Points",
   "headerRestorePointsSubtitle": "Create and roll back Windows system restore points",
+  "headerSettingsTitle": "Settings",
+  "headerSettingsSubtitle": "Application preferences and optimization behavior",
 
   "healthAdmin": "Administrator",
   "healthBackups": "Backups Created",
@@ -78,6 +81,15 @@
   "rpEmpty": "No restore points found. Create your first one above.",
   "rpRestoreConfirm1": "Restoring the system to this point will undo recent changes. Continue?",
   "rpRestoreConfirm2": "WARNING: the computer will REBOOT to complete the restore. Confirm?",
+
+  "settingsLanguageTitle": "Language",
+  "settingsLanguageDesc": "Choose the interface language. Your preference is saved automatically.",
+  "settingsLangPt": "Português",
+  "settingsLangEn": "English",
+  "settingsBackupTitle": "Safety Backup",
+  "settingsBackupDesc": "Automatically create a registry backup before every optimization.",
+  "settingsEnabled": "Enabled",
+  "settingsDisabled": "Disabled",
 
   "backupSectionTitle": "Registry Backups",
   "backupSectionDesc": "Export safety copies of TCP/IP network settings and restore them when needed.",
