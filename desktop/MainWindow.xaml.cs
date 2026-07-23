@@ -187,6 +187,15 @@ namespace VeloSysPro
                         case "revertDefaults":
                             _optimizer.RevertDefaults();
                             break;
+                        case "clearUpdateCache":
+                            _optimizer.ClearUpdateCache();
+                            break;
+                        case "cleanPrefetch":
+                            _optimizer.CleanPrefetch();
+                            break;
+                        case "diskHealth":
+                            _optimizer.ReportDiskHealth();
+                            break;
                         case "createManualBackup":
                             _backup.CreateBackup();
                             PushBackups();

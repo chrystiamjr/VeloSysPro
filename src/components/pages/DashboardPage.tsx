@@ -100,6 +100,33 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           buttonText={t('btnOpenView')}
           onExecute={onNavigateToBackup}
         />
+
+        <ActionCard
+          title={t('actUpdateCacheTitle')}
+          desc={t('actUpdateCacheDesc')}
+          icon="🔄"
+          variant="primary"
+          buttonText={t('btnClean')}
+          onExecute={() => onAction(SystemActions.CLEAR_UPDATE_CACHE)}
+        />
+
+        <ActionCard
+          title={t('actPrefetchTitle')}
+          desc={t('actPrefetchDesc')}
+          icon="⚡"
+          variant="warning"
+          buttonText={t('btnClean')}
+          onExecute={() => onAction(SystemActions.CLEAN_PREFETCH)}
+        />
+
+        <ActionCard
+          title={t('actDiskHealthTitle')}
+          desc={t('actDiskHealthDesc')}
+          icon="🩺"
+          variant="success"
+          buttonText={t('btnViewReport')}
+          onExecute={() => onAction(SystemActions.DISK_HEALTH)}
+        />
       </div>
 
       {/* Terminal Console */}

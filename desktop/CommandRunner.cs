@@ -81,12 +81,15 @@ namespace VeloSysPro
             }
         }
 
-        public void CleanTempFolder()
+        public void CleanTempFolder() => ClearDirectory(Path.GetTempPath());
+
+        /// <summary>Best-effort deletion of all files/subfolders inside a directory (locked items skipped).</summary>
+        public void ClearDirectory(string path)
         {
             try
             {
-                string tempDir = Path.GetTempPath();
-                DirectoryInfo di = new DirectoryInfo(tempDir);
+                if (!Directory.Exists(path)) return;
+                DirectoryInfo di = new DirectoryInfo(path);
                 foreach (FileInfo file in di.GetFiles())
                 {
                     try { file.Delete(); } catch { }

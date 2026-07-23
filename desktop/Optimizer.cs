@@ -109,6 +109,46 @@ namespace VeloSysPro
             _sink.Log("logRevertDone", "success");
         }
 
+        public void ClearUpdateCache()
+        {
+            _sink.Status("statusUpdateCacheStart", 20);
+            _sink.Log("logUpdateCacheStart", "info");
+
+            _cmd.Run("net.exe", "stop wuauserv");
+            string windir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+            _cmd.ClearDirectory(System.IO.Path.Combine(windir, "SoftwareDistribution", "Download"));
+            _cmd.Run("net.exe", "start wuauserv");
+
+            _sink.Status("statusUpdateCacheDone", 100);
+            _sink.Log("logUpdateCacheDone", "success");
+        }
+
+        public void CleanPrefetch()
+        {
+            _sink.Status("statusPrefetchStart", 30);
+            _sink.Log("logPrefetchStart", "info");
+
+            string windir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+            _cmd.ClearDirectory(System.IO.Path.Combine(windir, "Prefetch"));
+
+            _sink.Status("statusPrefetchDone", 100);
+            _sink.Log("logPrefetchDone", "success");
+        }
+
+        public void ReportDiskHealth()
+        {
+            _sink.Status("statusDiskHealthStart", 40);
+            _sink.Log("logDiskHealthStart", "info");
+
+            const string ps =
+                "Get-PhysicalDisk | Select-Object FriendlyName, MediaType, HealthStatus, " +
+                "@{N='Size(GB)';E={[math]::Round($_.Size/1GB,1)}} | Format-Table -AutoSize | Out-String";
+            _cmd.Run("powershell.exe", "-ExecutionPolicy Bypass -Command \"" + ps + "\"");
+
+            _sink.Status("statusDiskHealthDone", 100);
+            _sink.Log("logDiskHealthDone", "success");
+        }
+
         /// <summary>Runs an optimization by its CLI task name (used by headless mode).</summary>
         public bool RunByName(string task)
         {
