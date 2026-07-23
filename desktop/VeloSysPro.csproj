@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>assets\app.ico</ApplicationIcon>
+    <AssemblyName>VeloSysPro</AssemblyName>
+    <RootNamespace>VeloSysPro</RootNamespace>
+
+    <!-- Produce a genuinely single, self-contained VeloSysPro.exe on publish.
+         The native WebView2Loader.dll is bundled inside the exe and self-extracts at runtime. -->
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+  </ItemGroup>
+
+  <!-- Embed the Vite build output (ui/) directly into the assembly so the exe needs
+       no ui/ folder on disk. Served at runtime via WebView2 WebResourceRequested.
+       LogicalName backslashes are normalized to '/' in MainWindow. -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\ui\**">
+      <LogicalName>ui/%(RecursiveDir)%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>
