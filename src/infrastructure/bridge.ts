@@ -1,7 +1,13 @@
 /**
  * VeloSys Pro - TypeScript IPC Bridge Infrastructure Layer
  */
-import { BackupItem, ScheduledTaskItem, LocalizedMessage, LogType } from '../domain/types';
+import {
+  BackupItem,
+  ScheduledTaskItem,
+  RestorePointItem,
+  LocalizedMessage,
+  LogType,
+} from '../domain/types';
 
 declare global {
   interface Window {
@@ -16,6 +22,7 @@ declare global {
     onProgressUpdated?: (percent: number) => void;
     onBackupsLoaded?: (backupsJson: string | BackupItem[]) => void;
     onTasksLoaded?: (tasksJson: string | ScheduledTaskItem[]) => void;
+    onRestorePointsLoaded?: (pointsJson: string | RestorePointItem[]) => void;
   }
 }
 
@@ -71,6 +78,18 @@ export function subscribeTasks(callback: (data: ScheduledTaskItem[]) => void): v
     try {
       const data: ScheduledTaskItem[] =
         typeof tasksJson === 'string' ? JSON.parse(tasksJson) : tasksJson;
+      if (typeof callback === 'function') callback(data);
+    } catch {
+      if (typeof callback === 'function') callback([]);
+    }
+  };
+}
+
+export function subscribeRestorePoints(callback: (data: RestorePointItem[]) => void): void {
+  window.onRestorePointsLoaded = (pointsJson) => {
+    try {
+      const data: RestorePointItem[] =
+        typeof pointsJson === 'string' ? JSON.parse(pointsJson) : pointsJson;
       if (typeof callback === 'function') callback(data);
     } catch {
       if (typeof callback === 'function') callback([]);

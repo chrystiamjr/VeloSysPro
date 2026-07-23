@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 
 namespace VeloSysPro
@@ -105,6 +106,50 @@ namespace VeloSysPro
             catch (Exception ex)
             {
                 _sink.Log("logRestoreFailed", "error", new { message = ex.Message });
+            }
+        }
+
+        /// <summary>Returns Windows System Restore points as JSON [{Sequence, Date, Description}].</summary>
+        public string GetRestorePointsJson()
+        {
+            try
+            {
+                const string ps =
+                    "Get-ComputerRestorePoint | ForEach-Object { [PSCustomObject]@{ " +
+                    "Sequence = $_.SequenceNumber; " +
+                    "Date = $_.ConvertToDateTime($_.CreationTime).ToString('dd/MM/yyyy HH:mm'); " +
+                    "Description = $_.Description } } | ConvertTo-Json -Compress";
+
+                string raw = _cmd.RunCapture("powershell.exe", "-ExecutionPolicy Bypass -Command \"" + ps + "\"").Trim();
+                if (string.IsNullOrEmpty(raw)) return "[]";
+                // ConvertTo-Json emits an object (not array) when there's a single point.
+                return raw.StartsWith("[") ? raw : "[" + raw + "]";
+            }
+            catch
+            {
+                return "[]";
+            }
+        }
+
+        /// <summary>Rolls the system back to a restore point. Destructive: triggers a reboot.</summary>
+        public void RestoreToPoint(string sequence)
+        {
+            string seq = new string(sequence.Where(char.IsDigit).ToArray());
+            if (seq.Length == 0)
+            {
+                _sink.Log("logRestoreToPointFailed", "error", new { message = "invalid sequence number" });
+                return;
+            }
+
+            _sink.Log("logRestoreToPointStart", "info", new { sequence = seq });
+            try
+            {
+                _cmd.Run("powershell.exe", "-ExecutionPolicy Bypass -Command \"Restore-Computer -RestorePoint " + seq + "\"");
+                _sink.Log("logRestoreToPointDone", "success", new { sequence = seq });
+            }
+            catch (Exception ex)
+            {
+                _sink.Log("logRestoreToPointFailed", "error", new { message = ex.Message });
             }
         }
     }

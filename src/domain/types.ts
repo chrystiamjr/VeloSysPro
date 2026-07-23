@@ -17,6 +17,8 @@ export const SystemActions = {
   GET_TASKS: 'getTasks',
   CREATE_TASK: 'createTask',
   DELETE_TASK: 'deleteTask',
+  GET_RESTORE_POINTS: 'getRestorePoints',
+  RESTORE_TO_POINT: 'restoreToPoint',
 } as const;
 
 export type SystemActionType = (typeof SystemActions)[keyof typeof SystemActions];
@@ -25,6 +27,7 @@ export enum AppScreen {
   Dashboard = 'Dashboard',
   Scheduling = 'Scheduling',
   Backup = 'Backup',
+  RestorePoints = 'RestorePoints',
 }
 
 export interface SystemHealth {
@@ -45,6 +48,12 @@ export interface ScheduledTaskItem {
   Name: string;
   State: string;
   Path: string;
+}
+
+export interface RestorePointItem {
+  Sequence: number;
+  Date: string;
+  Description: string;
 }
 
 export type LogType = 'info' | 'error' | 'success';

@@ -14,6 +14,8 @@
   "headerSchedulingSubtitle": "Configure recurring Windows optimization tasks",
   "headerBackupTitle": "Backup & Registry Recovery",
   "headerBackupSubtitle": "Manage manual registry backups and system restore points",
+  "headerRestorePointsTitle": "System Restore Points",
+  "headerRestorePointsSubtitle": "Create and roll back Windows system restore points",
 
   "healthAdmin": "Administrator",
   "healthBackups": "Backups Created",
@@ -64,6 +66,18 @@
   "schedulingColActions": "Actions",
   "schedulingDeleteBtn": "Remove",
   "schedulingDeleteConfirm": "Remove this scheduled task? The automatic optimization will no longer run.",
+
+  "rpSectionTitle": "System Restore Points",
+  "rpSectionDesc": "Create a restore point before changes, or roll Windows back to an earlier state.",
+  "rpCreateBtn": "Create Restore Point",
+  "rpColSeq": "#",
+  "rpColDate": "Date",
+  "rpColDescription": "Description",
+  "rpColActions": "Actions",
+  "rpRestoreBtn": "Restore",
+  "rpEmpty": "No restore points found. Create your first one above.",
+  "rpRestoreConfirm1": "Restoring the system to this point will undo recent changes. Continue?",
+  "rpRestoreConfirm2": "WARNING: the computer will REBOOT to complete the restore. Confirm?",
 
   "backupSectionTitle": "Registry Backups",
   "backupSectionDesc": "Export safety copies of TCP/IP network settings and restore them when needed.",
@@ -124,5 +138,8 @@
   "logTaskCreated": "Scheduled task created: {{name}}",
   "logTaskDeleted": "Scheduled task removed: {{name}}",
   "logTaskFailed": "Scheduling operation failed: {{message}}",
+  "logRestoreToPointStart": "Starting restore to point {{sequence}} (the system will reboot)...",
+  "logRestoreToPointDone": "Restore to point {{sequence}} initiated.",
+  "logRestoreToPointFailed": "Failed to restore the system: {{message}}",
   "logRaw": "{{text}}"
 }

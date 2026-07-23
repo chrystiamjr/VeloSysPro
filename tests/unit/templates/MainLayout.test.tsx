@@ -12,7 +12,6 @@ describe('MainLayout (Atomic Design template layer)', () => {
           activeScreen={AppScreen.Backup}
           onNavigate={vi.fn()}
           onOpenLogs={vi.fn()}
-          onOpenRestorePoints={vi.fn()}
           title="Título da Tela de Teste"
           subtitle="Subtítulo descritivo da tela"
           statusMessage="Status: Pronto"

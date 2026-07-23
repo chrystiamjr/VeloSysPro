@@ -3,6 +3,7 @@ import { MainLayout } from './components/templates/MainLayout';
 import { DashboardPage } from './components/pages/DashboardPage';
 import { SchedulingPage } from './components/pages/SchedulingPage';
 import { BackupPage } from './components/pages/BackupPage';
+import { RestorePointsPage } from './components/pages/RestorePointsPage';
 import {
   AppScreen,
   SystemHealth,
@@ -11,6 +12,7 @@ import {
   LocalizedMessage,
   BackupItem,
   ScheduledTaskItem,
+  RestorePointItem,
   SystemActions,
 } from './domain/types';
 import { useTranslation, LanguageProvider } from './infrastructure/i18nContext';
@@ -21,7 +23,15 @@ import {
   subscribeProgress,
   subscribeBackups,
   subscribeTasks,
+  subscribeRestorePoints,
 } from './infrastructure/bridge';
+
+const SCREEN_HEADERS: Record<AppScreen, { title: string; subtitle: string }> = {
+  [AppScreen.Dashboard]: { title: 'headerDashboardTitle', subtitle: 'headerDashboardSubtitle' },
+  [AppScreen.Scheduling]: { title: 'headerSchedulingTitle', subtitle: 'headerSchedulingSubtitle' },
+  [AppScreen.Backup]: { title: 'headerBackupTitle', subtitle: 'headerBackupSubtitle' },
+  [AppScreen.RestorePoints]: { title: 'headerRestorePointsTitle', subtitle: 'headerRestorePointsSubtitle' },
+};
 
 function AppContent() {
   const { t } = useTranslation();
@@ -30,6 +40,7 @@ function AppContent() {
   const [progressPercent, setProgressPercent] = useState<number>(100);
   const [backups, setBackups] = useState<BackupItem[]>([]);
   const [tasks, setTasks] = useState<ScheduledTaskItem[]>([]);
+  const [restorePoints, setRestorePoints] = useState<RestorePointItem[]>([]);
   const [logs, setLogs] = useState<LogRecord[]>([{ key: 'logAppStarted', type: 'success' }]);
 
   const [health, setHealth] = useState<SystemHealth>({
@@ -68,8 +79,13 @@ function AppContent() {
       setHealth((prev) => ({ ...prev, tasksCount: data.length }));
     });
 
+    subscribeRestorePoints((data) => {
+      setRestorePoints(data);
+    });
+
     sendAction(SystemActions.GET_BACKUPS);
     sendAction(SystemActions.GET_TASKS);
+    sendAction(SystemActions.GET_RESTORE_POINTS);
   }, []);
 
   const handleAction = (action: string, payload?: string) => {
@@ -86,29 +102,15 @@ function AppContent() {
     type: log.type,
   }));
   const statusMessage = t(status.key, status.args);
-
-  const titleKey =
-    activeScreen === AppScreen.Dashboard
-      ? 'headerDashboardTitle'
-      : activeScreen === AppScreen.Scheduling
-        ? 'headerSchedulingTitle'
-        : 'headerBackupTitle';
-
-  const subtitleKey =
-    activeScreen === AppScreen.Dashboard
-      ? 'headerDashboardSubtitle'
-      : activeScreen === AppScreen.Scheduling
-        ? 'headerSchedulingSubtitle'
-        : 'headerBackupSubtitle';
+  const header = SCREEN_HEADERS[activeScreen];
 
   return (
     <MainLayout
       activeScreen={activeScreen}
       onNavigate={setActiveScreen}
       onOpenLogs={() => handleAction(SystemActions.OPEN_LOGS)}
-      onOpenRestorePoints={() => handleAction(SystemActions.OPEN_RESTORE_POINTS)}
-      title={t(titleKey)}
-      subtitle={t(subtitleKey)}
+      title={t(header.title)}
+      subtitle={t(header.subtitle)}
       statusMessage={statusMessage}
       progressPercent={progressPercent}
     >
@@ -136,6 +138,14 @@ function AppContent() {
           onCreateBackup={() => handleAction(SystemActions.CREATE_MANUAL_BACKUP)}
           onRestoreBackup={(name) => handleAction(SystemActions.RESTORE_BACKUP, name)}
           onOpenFolder={() => handleAction(SystemActions.OPEN_BACKUPS)}
+        />
+      )}
+
+      {activeScreen === AppScreen.RestorePoints && (
+        <RestorePointsPage
+          points={restorePoints}
+          onCreatePoint={() => handleAction(SystemActions.CREATE_RESTORE_POINT)}
+          onRestore={(seq) => handleAction(SystemActions.RESTORE_TO_POINT, String(seq))}
         />
       )}
     </MainLayout>

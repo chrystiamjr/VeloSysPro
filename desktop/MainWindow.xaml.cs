@@ -193,6 +193,13 @@ namespace VeloSysPro
                             break;
                         case "createRestorePoint":
                             _backup.CreateRestorePoint();
+                            PushRestorePoints();
+                            break;
+                        case "getRestorePoints":
+                            PushRestorePoints();
+                            break;
+                        case "restoreToPoint":
+                            _backup.RestoreToPoint(payload);
                             break;
                         case "openLogs":
                             Process.Start("explorer.exe", _logsDir);
@@ -254,6 +261,19 @@ namespace VeloSysPro
             catch (Exception ex)
             {
                 LogRaw("Failed to refresh tasks: " + ex.Message, "error");
+            }
+        }
+
+        private void PushRestorePoints()
+        {
+            try
+            {
+                string json = _backup.GetRestorePointsJson();
+                EvalJs("window.onRestorePointsLoaded && window.onRestorePointsLoaded(" + json + ");");
+            }
+            catch (Exception ex)
+            {
+                LogRaw("Failed to refresh restore points: " + ex.Message, "error");
             }
         }
 

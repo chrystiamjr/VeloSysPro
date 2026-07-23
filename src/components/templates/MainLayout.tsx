@@ -6,7 +6,6 @@ export interface MainLayoutProps {
   activeScreen: AppScreen;
   onNavigate: (screen: AppScreen) => void;
   onOpenLogs: () => void;
-  onOpenRestorePoints: () => void;
   title: string;
   subtitle: string;
   statusMessage: string;
@@ -23,7 +22,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   activeScreen,
   onNavigate,
   onOpenLogs,
-  onOpenRestorePoints,
   title,
   subtitle,
   statusMessage,
@@ -32,12 +30,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 }) => {
   return (
     <div className="flex h-screen select-none overflow-hidden bg-bgMain text-textMain">
-      <SidebarNav
-        activeScreen={activeScreen}
-        onNavigate={onNavigate}
-        onOpenLogs={onOpenLogs}
-        onOpenRestorePoints={onOpenRestorePoints}
-      />
+      <SidebarNav activeScreen={activeScreen} onNavigate={onNavigate} onOpenLogs={onOpenLogs} />
 
       <main className="flex h-screen flex-1 flex-col overflow-y-auto p-8">
         <header className="mb-6">

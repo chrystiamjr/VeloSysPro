@@ -14,6 +14,8 @@
   "headerSchedulingSubtitle": "Configure execuções recorrentes de otimização no Windows",
   "headerBackupTitle": "Backup & Restauração",
   "headerBackupSubtitle": "Gerencie backups manuais do registro e pontos de restauração",
+  "headerRestorePointsTitle": "Pontos de Restauração",
+  "headerRestorePointsSubtitle": "Crie e reverta pontos de restauração do sistema Windows",
 
   "healthAdmin": "Administrador",
   "healthBackups": "Backups Criados",
@@ -64,6 +66,18 @@
   "schedulingColActions": "Ações",
   "schedulingDeleteBtn": "Remover",
   "schedulingDeleteConfirm": "Remover esta tarefa agendada? A otimização automática deixará de ser executada.",
+
+  "rpSectionTitle": "Pontos de Restauração do Sistema",
+  "rpSectionDesc": "Crie um ponto de restauração antes de mudanças ou reverta o Windows para um estado anterior.",
+  "rpCreateBtn": "Criar Ponto de Restauração",
+  "rpColSeq": "Nº",
+  "rpColDate": "Data",
+  "rpColDescription": "Descrição",
+  "rpColActions": "Ações",
+  "rpRestoreBtn": "Restaurar",
+  "rpEmpty": "Nenhum ponto de restauração encontrado. Crie o primeiro acima.",
+  "rpRestoreConfirm1": "Restaurar o sistema para este ponto desfará alterações recentes. Deseja continuar?",
+  "rpRestoreConfirm2": "ATENÇÃO: o computador será REINICIADO para concluir a restauração. Confirmar?",
 
   "backupSectionTitle": "Backups do Registro",
   "backupSectionDesc": "Exporte cópias de segurança dos parâmetros de rede TCP/IP e restaure quando necessário.",
@@ -124,5 +138,8 @@
   "logTaskCreated": "Tarefa agendada criada: {{name}}",
   "logTaskDeleted": "Tarefa agendada removida: {{name}}",
   "logTaskFailed": "Falha na operação de agendamento: {{message}}",
+  "logRestoreToPointStart": "Iniciando restauração para o ponto {{sequence}} (o sistema será reiniciado)...",
+  "logRestoreToPointDone": "Restauração para o ponto {{sequence}} iniciada.",
+  "logRestoreToPointFailed": "Falha ao restaurar o sistema: {{message}}",
   "logRaw": "{{text}}"
 }
