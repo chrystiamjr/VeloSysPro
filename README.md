@@ -58,8 +58,20 @@ Windows Optimizer/
 ## 🚀 Getting Started
 
 ### For End Users
-1. Download **`VeloSysPro.exe`** from the latest release.
-2. Double-click **`VeloSysPro.exe`** and grant Administrator privileges when prompted by Windows UAC.
+
+1. Download **`VeloSysPro-Setup-<version>.exe`** from the latest release and run it.
+   The installer creates Start Menu / desktop shortcuts and installs the Microsoft
+   **WebView2 Runtime** automatically if your PC doesn't already have it (Windows 11 and
+   recent Windows 10 include it).
+2. Launch **VeloSys Pro** and grant Administrator privileges when prompted by Windows UAC
+   (the optimizations require elevation).
+
+> **SmartScreen note:** the app is not code-signed yet, so Windows SmartScreen may show
+> *"Windows protected your PC"*. Click **More info → Run anyway** to proceed. A portable
+> single `VeloSysPro.exe` is also attached to each release for users who prefer not to install.
+
+**Requirements:** Windows 10/11 (x64). No .NET installation needed — the executable is
+self-contained.
 
 ### For Developers
 1. Clone the repository:
