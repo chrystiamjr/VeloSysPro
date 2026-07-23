@@ -247,14 +247,6 @@ namespace VeloSysPro
                         case "openBackups":
                             Process.Start("explorer.exe", _backupsDir);
                             break;
-                        case "openRestorePoints":
-                            Process.Start(new ProcessStartInfo
-                            {
-                                FileName = "powershell.exe",
-                                Arguments = "-NoExit -Command Get-ComputerRestorePoint",
-                                UseShellExecute = true
-                            });
-                            break;
                         case "getBackups":
                             PushBackups();
                             break;

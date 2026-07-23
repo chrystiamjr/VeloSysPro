@@ -16,7 +16,6 @@ export const SystemActions = {
   OPEN_LOGS: 'openLogs',
   OPEN_URL: 'openUrl',
   OPEN_BACKUPS: 'openBackups',
-  OPEN_RESTORE_POINTS: 'openRestorePoints',
   GET_BACKUPS: 'getBackups',
   GET_TASKS: 'getTasks',
   CREATE_TASK: 'createTask',
