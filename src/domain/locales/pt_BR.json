@@ -119,7 +119,7 @@
     "yes": "Sim"
   },
   "log": {
-    "appStarted": "[SISTEMA] VeloSys Pro iniciado com sucesso (React 18 + TypeScript + Rosetta i18n).",
+    "appStarted": "[SISTEMA] VeloSys Pro iniciado com sucesso.",
     "backup": {
       "created": "Backup do registro criado: {{file}}",
       "failed": "Falha ao criar backup: {{message}}",

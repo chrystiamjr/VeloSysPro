@@ -118,11 +118,11 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
       </div>
 
       {/* Task list */}
-      <div className="overflow-hidden rounded-xl border border-borderColor bg-bgCard">
+      <div className="overflow-x-auto rounded-xl border border-borderColor bg-bgCard">
         {tasks.length === 0 ? (
           <p className="p-8 text-center text-xs text-textMuted">{t('scheduling.empty')}</p>
         ) : (
-          <table className="w-full text-left text-xs">
+          <table className="w-full min-w-[640px] text-left text-xs">
             <thead>
               <tr className="border-b border-borderColor text-textMuted">
                 <th className="px-5 py-3 font-semibold">{t('scheduling.colName')}</th>

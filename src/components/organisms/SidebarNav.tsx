@@ -10,6 +10,7 @@ export interface SidebarNavProps {
   onOpenLogs: () => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
+  overlay?: boolean;
 }
 
 interface NavItem {
@@ -32,6 +33,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
   onOpenLogs,
   collapsed,
   onToggleCollapse,
+  overlay = false,
 }) => {
   const { t } = useTranslation();
 
@@ -47,7 +49,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
   return (
     <aside
       className={`flex h-screen select-none flex-col border-r border-borderColor bg-bgSidebar p-4 transition-all duration-200 ${
-        collapsed ? 'w-20' : 'w-64 p-6'
+        overlay ? 'fixed inset-0 z-50 w-full p-6' : collapsed ? 'w-20' : 'w-64 p-6'
       }`}
     >
       <div
