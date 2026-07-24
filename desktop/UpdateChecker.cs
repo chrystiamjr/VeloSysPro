@@ -14,7 +14,7 @@ namespace VeloSysPro
     {
         public record UpdateInfo(string Version, string Url);
 
-        private const string Owner = "EnvolvoSystems";
+        private const string Owner = "chrystiamjr";
         private const string Repo = "VeloSysPro";
 
         private static readonly HttpClient Http = CreateClient();

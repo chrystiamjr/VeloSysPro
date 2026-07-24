@@ -1,6 +1,6 @@
 # ⚡ VeloSys Pro
 
-> High-performance Windows Optimization, Maintenance, and System Recovery Suite by **Envolvo Systems LTDA.**
+> High-performance Windows optimization, network tuning, and registry-backup desktop app by **Envolvo Systems LTDA.** — a React 18 + TypeScript UI hosted in a .NET 8 WPF / WebView2 shell, shipped as a single self-contained executable.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6.svg)]()
@@ -10,47 +10,47 @@
 
 ## 📌 Features
 
-- 🚀 **Quick Optimization**: Flushes DNS cache, cleans temporary files, and performs lightweight system maintenance.
-- ⚙️ **Full Optimization**: Runs System File Checker (`sfc /scannow`), DISM image repair, disk check, and deep temp cleanup.
-- 🎮 **Gaming Mode**: Tunes TCP network stack parameters (`RSS`, `Autotuning`) for low latency and online gaming.
-- ↺ **Revert Defaults**: Resets IP and Winsock network configurations back to factory defaults.
-- 🛡️ **System Restore Points**: Creates verified Windows System Restore Points prior to major changes.
-- 💾 **Registry Backup & Recovery**: Exports safety backups of TCP/IP parameters to `.reg` files.
-- 🌐 **Bilingual i18n (Rosetta)**: Instant language switching between **Português (pt_BR)** 🇧🇷 and **English (en_US)** 🇺🇸.
-- 🎨 **Modern Dark UI**: Componentized with **React 18 + TypeScript + TailwindCSS Design System Tokens** using **Atomic Design**.
+- 🚀 **Quick / Full Optimization**: DNS flush, temp cleanup, `sfc /scannow`, DISM image repair.
+- 🎮 **Gaming Mode / Revert Defaults**: tunes the TCP stack (RSS, Autotuning) or resets IP & Winsock.
+- 🧹 **Maintenance tools**: clear the Windows Update cache, clean Prefetch, and a physical-disk (SMART) health report.
+- 💾 **Registry Backup & Restore**: exports/imports TCP/IP `.reg` backups with confirmation.
+- 🛡️ **System Restore Points**: list, create, and roll back Windows restore points.
+- 📅 **Scheduling**: recurring optimizations via the Windows Task Scheduler, running the exe headlessly (`--task=<quick|full|gaming|revert>`).
+- ⚙️ **Settings**: persistent language and safety-backup preferences (`%LOCALAPPDATA%\VeloSysPro\settings.json`).
+- 🔔 **Update check**: notifies when a newer GitHub release is available.
+- 🌐 **Bilingual (Rosetta)**: instant PT-BR 🇧🇷 / EN-US 🇺🇸 switching — including host log/status messages.
+- 🎨 **Modern dark UI**: React 18 + TypeScript + TailwindCSS tokens, Atomic Design, a collapsible sidebar, and a progressive-disclosure dashboard with a concurrency-safe action lock.
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-Windows Optimizer/
-├── AGENTS.md                  # Project rules & coding standards in English
-├── README.md                  # Main repository documentation
-├── LICENSE                    # MIT License (Envolvo Systems LTDA.)
-├── .gitignore                 # Clean repository file filters
-├── .editorconfig              # Shared indentation & charset settings
-├── global.json                # Pins the .NET 8 SDK for the build
-├── package.json               # React, Vite, Tailwind, Vitest, Cypress, Rosetta
-├── tsconfig.json              # Strict TypeScript configuration
-├── vite.config.js             # Vite build config (outputs ui/)
+VeloSysPro/
+├── AGENTS.md / README.md / CHANGELOG.md / LICENSE
+├── .editorconfig / .gitignore / global.json      # tooling + .NET 8 SDK pin
+├── package.json / vite.config.js / tsconfig.json  # React 18 + Vite + Tailwind
+├── .releaserc.json / commitlint.config.cjs        # semantic-release + Conventional Commits
 ├── src/
-│   ├── domain/                # Interfaces & Rosetta i18n (pt_BR.json, en_US.json)
-│   ├── infrastructure/        # Typed IPC bridge (bridge.ts)
-│   └── components/            # Atomic Design (atoms, molecules, organisms, templates, pages)
-├── tests/
-│   ├── unit/                  # Vitest unit test suite
-│   └── e2e/                   # Cypress E2E test specs
-├── desktop/                   # C# .NET 8 WPF host (Edge Chromium WebView2)
-│   ├── App.xaml(.cs)          # WPF application entry point
-│   ├── MainWindow.xaml(.cs)   # WebView2 host + IPC bridge
-│   ├── IpcHandler.cs          # System.Text.Json IPC parser
-│   ├── CommandRunner.cs       # System command execution
-│   ├── BackupManager.cs       # Registry backups & restore points
-│   ├── ManagedStream.cs       # Embedded-asset stream wrapper
+│   ├── domain/            # types + Rosetta i18n (nested pt_BR.json / en_US.json)
+│   ├── infrastructure/    # typed WebView2 IPC bridge (bridge.ts)
+│   └── components/        # Atomic Design: atoms, molecules, organisms, templates, pages
+├── tests/                 # Vitest (unit) + Cypress (e2e)
+├── desktop/               # C# .NET 8 WPF host (Edge Chromium WebView2)
+│   ├── App.xaml(.cs)          # startup + headless CLI mode (--task=)
+│   ├── MainWindow.xaml(.cs)   # WebView2 host, serves the embedded UI, IPC dispatch
+│   ├── Optimizer.cs           # optimization orchestration (exit-code aware)
+│   ├── CommandRunner.cs       # process execution + OEM-codepage output decoding
+│   ├── BackupManager.cs / SchedulerManager.cs / SettingsManager.cs / UpdateChecker.cs
+│   ├── IStatusSink.cs / FileStatusSink.cs / IpcHandler.cs / ManagedStream.cs
+│   ├── NativeConsoleEncoding.cs
 │   ├── app.manifest           # UAC Manifest (requireAdministrator)
-│   └── VeloSysPro.csproj      # Single-file publish (ui/ embedded)
-└── build.ps1                  # 1-Click native build script
+│   └── VeloSysPro.csproj      # single-file publish, ui/ embedded as resources
+├── desktop.Tests/         # xUnit (OEM decode)
+├── installer/VeloSysPro.iss  # Inno Setup installer (bootstraps WebView2 Runtime)
+├── scripts/               # setup-hooks.ps1, sync-version.mjs
+├── .github/workflows/ci.yml  # PR validation + semantic-release
+└── build.ps1              # 1-click build: Vite -> single exe -> installer
 ```
 
 ---
@@ -59,27 +59,36 @@ Windows Optimizer/
 
 ### For End Users
 
-1. Download **`VeloSysPro-Setup-<version>.exe`** from the latest release and run it.
-   The installer creates Start Menu / desktop shortcuts and installs the Microsoft
-   **WebView2 Runtime** automatically if your PC doesn't already have it (Windows 11 and
-   recent Windows 10 include it).
-2. Launch **VeloSys Pro** and grant Administrator privileges when prompted by Windows UAC
-   (the optimizations require elevation).
+1. Download **`VeloSysPro-Setup-<version>.exe`** from the latest release and run it. The installer
+   adds shortcuts and installs the Microsoft **WebView2 Runtime** automatically if it's missing
+   (Windows 11 and recent Windows 10 already include it).
+2. Launch **VeloSys Pro** and grant Administrator privileges when prompted by UAC (the optimizations require elevation).
 
-> **SmartScreen note:** the app is not code-signed yet, so Windows SmartScreen may show
-> *"Windows protected your PC"*. Click **More info → Run anyway** to proceed. A portable
-> single `VeloSysPro.exe` is also attached to each release for users who prefer not to install.
+> **SmartScreen note:** the app is not code-signed yet, so SmartScreen may show *"Windows protected
+> your PC"* — click **More info → Run anyway**. A portable single `VeloSysPro.exe` is also attached to each release.
 
-**Requirements:** Windows 10/11 (x64). No .NET installation needed — the executable is
-self-contained.
+**Requirements:** Windows 10/11 (x64). No .NET install needed — the executable is self-contained.
 
 ### For Developers
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/EnvolvoSystems/VeloSysPro.git
-   cd VeloSysPro
-   ```
-2. Build the native executable:
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File .\build.ps1
-   ```
+
+```bash
+git clone https://github.com/chrystiamjr/VeloSysPro.git
+cd VeloSysPro
+npm install
+npm run setup-hooks   # installs the pre-commit (validate + build) and commit-msg (commitlint) hooks
+```
+
+- **Run the UI in a browser** (IPC mocked): `npm run dev` → http://localhost:5173
+- **Validate**: `npm run validate` (type-check + Prettier + ESLint + Vitest)
+- **Build the executable + installer**: `powershell -ExecutionPolicy Bypass -File .\build.ps1`
+- **C# tests**: `dotnet test desktop.Tests/VeloSysPro.Tests.csproj`
+
+---
+
+## 🔖 Versioning & Releases
+
+Commits follow **[Conventional Commits](https://www.conventionalcommits.org/)** (enforced by commitlint).
+On every push to `main`, CI runs **semantic-release**, which derives the next version, updates the
+version everywhere (`scripts/sync-version.mjs`), builds the installer, updates `CHANGELOG.md`, and
+publishes a GitHub Release with the installer attached. While pre-1.0, breaking changes bump the
+**minor** version and features/fixes bump the **patch**.

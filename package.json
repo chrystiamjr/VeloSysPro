@@ -18,7 +18,8 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\"",
     "validate": "npm run type-check && npm run format:check && npm run lint && npm run test",
     "precommit": "npm run validate && dotnet build desktop/VeloSysPro.csproj",
-    "setup-hooks": "powershell -ExecutionPolicy Bypass -File ./scripts/setup-hooks.ps1"
+    "setup-hooks": "powershell -ExecutionPolicy Bypass -File ./scripts/setup-hooks.ps1",
+    "release": "semantic-release"
   },
   "dependencies": {
     "lucide-react": "^0.344.0",
@@ -27,7 +28,12 @@
     "rosetta": "^1.1.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.5.0",
+    "@commitlint/config-conventional": "^19.5.0",
     "@esbuild/win32-x64": "0.21.5",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/exec": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^14.2.1",
     "@types/node": "^20.11.20",
@@ -43,8 +49,10 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "jsdom": "^24.0.0",
     "postcss": "^8.4.35",
+    "conventional-changelog-conventionalcommits": "^8.0.0",
     "prettier": "^3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.11",
+    "semantic-release": "^24.1.0",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3",
     "vite": "^5.1.4",

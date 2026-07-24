@@ -24,10 +24,22 @@ echo "[Pre-Commit SUCCESS] Full-stack validation passed successfully."
 exit 0
 "@
 
+# commit-msg hook: enforce Conventional Commits (so semantic-release can version).
+$commitMsgContent = @"
+#!/bin/sh
+export PATH="`$PATH:/c/Program Files/nodejs"
+npx --no -- commitlint --edit "`$1"
+"@
+
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$hookPath = Join-Path $repoRoot ".git\hooks\pre-commit"
-# Write UTF-8 WITHOUT BOM and with LF line endings, otherwise /bin/sh cannot exec
-# the shebang ("cannot spawn .git/hooks/pre-commit: No such file or directory").
-$hookContent = $hookContent -replace "`r`n", "`n"
-[System.IO.File]::WriteAllText($hookPath, $hookContent, (New-Object System.Text.UTF8Encoding($false)))
-Write-Host "Git pre-commit hook installed at $hookPath"
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+
+# Write hooks UTF-8 WITHOUT BOM and with LF, otherwise /bin/sh cannot exec the
+# shebang ("cannot spawn .git/hooks/<hook>: No such file or directory").
+$preCommitPath = Join-Path $repoRoot ".git\hooks\pre-commit"
+[System.IO.File]::WriteAllText($preCommitPath, ($hookContent -replace "`r`n", "`n"), $utf8NoBom)
+Write-Host "Git pre-commit hook installed at $preCommitPath"
+
+$commitMsgPath = Join-Path $repoRoot ".git\hooks\commit-msg"
+[System.IO.File]::WriteAllText($commitMsgPath, ($commitMsgContent -replace "`r`n", "`n"), $utf8NoBom)
+Write-Host "Git commit-msg hook installed at $commitMsgPath"
