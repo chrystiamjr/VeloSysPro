@@ -31,6 +31,21 @@ export PATH="`$PATH:/c/Program Files/nodejs"
 npx --no -- commitlint --edit "`$1"
 "@
 
+# pre-push hook: keep the default branch PR-only even before remote rules run.
+# This is a local convenience guardrail; the GitHub ruleset is authoritative.
+$prePushContent = @"
+#!/bin/sh
+while read local_ref local_sha remote_ref remote_sha
+do
+  if [ "`$remote_ref" = "refs/heads/main" ]; then
+    echo "[Pre-Push ERROR] Direct pushes to main are blocked. Push a feature branch and open a pull request."
+    exit 1
+  fi
+done
+
+exit 0
+"@
+
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 
@@ -43,3 +58,7 @@ Write-Host "Git pre-commit hook installed at $preCommitPath"
 $commitMsgPath = Join-Path $repoRoot ".git\hooks\commit-msg"
 [System.IO.File]::WriteAllText($commitMsgPath, ($commitMsgContent -replace "`r`n", "`n"), $utf8NoBom)
 Write-Host "Git commit-msg hook installed at $commitMsgPath"
+
+$prePushPath = Join-Path $repoRoot ".git\hooks\pre-push"
+[System.IO.File]::WriteAllText($prePushPath, ($prePushContent -replace "`r`n", "`n"), $utf8NoBom)
+Write-Host "Git pre-push hook installed at $prePushPath"
