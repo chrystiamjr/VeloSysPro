@@ -65,6 +65,25 @@ describe('settings and application shell', () => {
     cy.getByCy('update-banner').should('not.exist');
   });
 
+  it('keeps a dismissed update reachable from settings', () => {
+    cy.visitApp();
+    cy.emitHost('onUpdateAvailable', updateInfo);
+    cy.getByCy('update-dismiss').click();
+    cy.getByCy('update-banner').should('not.exist');
+
+    cy.getByCy('nav-Settings').click();
+    cy.getByCy('settings-update-available').should('contain', updateInfo.version);
+    cy.getByCy('settings-update-download').click();
+    cy.expectIpc('openUrl', updateInfo.url);
+  });
+
+  it('reports being up to date when no update was announced', () => {
+    cy.visitApp();
+    cy.getByCy('nav-Settings').click();
+    cy.getByCy('settings-update-latest').should('be.visible');
+    cy.getByCy('settings-update-download').should('not.exist');
+  });
+
   it('ignores update callbacks without a version', () => {
     cy.visitApp();
     cy.emitHost('onUpdateAvailable', { version: '', url: updateInfo.url });

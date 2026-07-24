@@ -15,11 +15,18 @@ describe('scheduled optimizations', () => {
     cy.getByCy('task-frequency').find('option').should('have.length', 3);
   });
 
-  it('renders tasks received from the host', () => {
+  it('renders tasks received from the host by cadence, not by technical name', () => {
     cy.emitHost('onTasksLoaded', tasks);
-    cy.contains('VeloSysPro_Quick').should('be.visible');
-    cy.contains('Running').should('be.visible');
+    cy.contains('Diária - Otimização Rápida').should('be.visible');
+    cy.contains('Todos os dias às 03:00').should('be.visible');
+    cy.contains('Semanal - Modo Gaming').should('be.visible');
+    cy.contains('Toda segunda-feira às 04:30').should('be.visible');
+    cy.contains('Em execução').should('be.visible');
+    cy.contains('VeloSysPro_Quick_Daily_0300').should('not.exist');
   });
+
+  // DAILY ignores the day; WEEKLY and MONTHLY default to MON and day 1.
+  const defaultDay: Record<string, string> = { DAILY: '', WEEKLY: 'MON', MONTHLY: '1' };
 
   for (const type of types) {
     for (const frequency of frequencies) {
@@ -28,10 +35,40 @@ describe('scheduled optimizations', () => {
         cy.getByCy('task-frequency').select(frequency);
         cy.getByCy('task-time').clear().type('04:45');
         cy.getByCy('task-create').click();
-        cy.expectIpc('createTask', JSON.stringify({ type, frequency, time: '04:45' }));
+        cy.expectIpc(
+          'createTask',
+          JSON.stringify({ type, frequency, time: '04:45', day: defaultDay[frequency] })
+        );
       });
     }
   }
+
+  it('reveals a weekday picker only for weekly schedules', () => {
+    cy.getByCy('task-weekday').should('not.exist');
+    cy.getByCy('task-frequency').select('WEEKLY');
+    cy.getByCy('task-weekday').find('option').should('have.length', 7);
+    cy.getByCy('task-monthday').should('not.exist');
+
+    cy.getByCy('task-weekday').select('FRI');
+    cy.getByCy('task-create').click();
+    cy.expectIpc(
+      'createTask',
+      JSON.stringify({ type: 'quick', frequency: 'WEEKLY', time: '03:00', day: 'FRI' })
+    );
+  });
+
+  it('reveals a day-of-month picker only for monthly schedules', () => {
+    cy.getByCy('task-frequency').select('MONTHLY');
+    cy.getByCy('task-monthday').find('option').should('have.length', 31);
+    cy.getByCy('task-weekday').should('not.exist');
+
+    cy.getByCy('task-monthday').select('15');
+    cy.getByCy('task-create').click();
+    cy.expectIpc(
+      'createTask',
+      JSON.stringify({ type: 'quick', frequency: 'MONTHLY', time: '03:00', day: '15' })
+    );
+  });
 
   it('deletes a task after confirmation', () => {
     cy.emitHost('onTasksLoaded', tasks);

@@ -1,4 +1,7 @@
 import React from 'react';
+import { Button } from '../atoms/Button';
+import { Icon } from '../atoms/Icon';
+import { UpdateInfo } from '../../domain/types';
 import { useTranslation } from '../../infrastructure/i18nContext';
 
 export interface SettingsPageProps {
@@ -6,6 +9,9 @@ export interface SettingsPageProps {
   createBackupBeforeOptimize: boolean;
   onLanguageChange: (language: 'pt_BR' | 'en_US') => void;
   onToggleBackup: (value: boolean) => void;
+  /** Pending update reported by the host, or null when the app is up to date. */
+  updateInfo?: UpdateInfo | null;
+  onDownloadUpdate?: (url: string) => void;
 }
 
 const langButtonClass = (active: boolean) =>
@@ -20,6 +26,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   createBackupBeforeOptimize,
   onLanguageChange,
   onToggleBackup,
+  updateInfo = null,
+  onDownloadUpdate,
 }) => {
   const { t } = useTranslation();
 
@@ -67,6 +75,52 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             </span>
           </label>
         </div>
+      </div>
+
+      {/* Updates — the permanent home for a release the user dismissed on the banner. */}
+      <div
+        data-cy="settings-update"
+        className="flex flex-col gap-5 rounded-xl border border-borderColor bg-bgCard p-6"
+      >
+        <div>
+          <h3 className="text-lg font-bold text-white">{t('settings.updateTitle')}</h3>
+          <p className="mt-1 text-xs text-textMuted">{t('settings.updateDesc')}</p>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[11px] font-semibold text-textMuted">
+            {t('settings.updateCurrent')}
+          </span>
+          <span className="text-xs font-semibold text-textMain">{t('brand.version')}</span>
+        </div>
+
+        {updateInfo ? (
+          <>
+            <span
+              data-cy="settings-update-available"
+              className="flex items-center gap-2 text-xs font-semibold text-primary"
+            >
+              <Icon name="info" className="h-4 w-4" />
+              {t('settings.updateAvailable', { version: updateInfo.version })}
+            </span>
+            <Button
+              testId="settings-update-download"
+              variant="primary"
+              className="items-center gap-2 px-5"
+              onClick={() => onDownloadUpdate?.(updateInfo.url)}
+            >
+              <Icon name="rocket" /> {t('updateBanner.btn')}
+            </Button>
+          </>
+        ) : (
+          <span
+            data-cy="settings-update-latest"
+            className="flex items-center gap-2 text-xs font-semibold text-success"
+          >
+            <Icon name="check-circle" className="h-4 w-4" />
+            {t('settings.updateLatest')}
+          </span>
+        )}
       </div>
     </div>
   );
