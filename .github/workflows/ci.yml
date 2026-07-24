@@ -32,8 +32,23 @@ jobs:
         if: github.event_name == 'pull_request'
         shell: pwsh
         env:
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           PR_TITLE: ${{ github.event.pull_request.title }}
-        run: $env:PR_TITLE | npx commitlint
+        run: |
+          if ($env:PR_AUTHOR -eq 'dependabot[bot]') {
+            if ($env:PR_TITLE -notmatch '^chore\(deps\): [Bb]ump .+') {
+              Write-Error "Unexpected Dependabot PR title: $env:PR_TITLE"
+              exit 1
+            }
+
+            Write-Host "Valid Dependabot dependency update title."
+            exit 0
+          }
+
+          $env:PR_TITLE | npx commitlint
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
       - name: Validate (type-check + Prettier + ESLint + Vitest unit)
         run: npm run validate
       - name: E2E (Cypress against Vite dev server)
