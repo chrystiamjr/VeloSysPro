@@ -48,18 +48,21 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     <div className="flex select-none flex-col gap-6">
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <HealthCard
+          testId="health-backups"
           title={t('health.backups')}
           value={health.backupsCount}
           variant="info"
           onClick={onNavigateToBackup}
         />
         <HealthCard
+          testId="health-latest-backup"
           title={t('health.latestBackup')}
           value={health.latestBackup === 'Nenhum' ? t('health.none') : health.latestBackup}
           variant="purple"
           onClick={onNavigateToBackup}
         />
         <HealthCard
+          testId="health-tasks"
           title={t('health.tasks')}
           value={health.tasksCount}
           variant="warning"
@@ -74,6 +77,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
           <ActionCard
+            testId="action-quick"
             title={t('act.quick.title')}
             desc={t('act.quick.desc')}
             icon={<Icon name="rocket" className="h-5 w-5 text-success" />}
@@ -84,6 +88,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             onExecute={() => onAction(SystemActions.RUN_QUICK_OPTIMIZATION)}
           />
           <ActionCard
+            testId="action-full"
             title={t('act.full.title')}
             desc={t('act.full.desc')}
             icon={<Icon name="settings" className="h-5 w-5 text-primary" />}
@@ -94,6 +99,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             onExecute={() => onAction(SystemActions.RUN_FULL_OPTIMIZATION)}
           />
           <ActionCard
+            testId="action-gaming"
             title={t('act.gaming.title')}
             desc={t('act.gaming.desc')}
             icon={<Icon name="gamepad" className="h-5 w-5 text-purple" />}
@@ -119,6 +125,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             defaultExpanded
           >
             <CompactActionItem
+              testId="action-disk-health"
               title={t('act.diskHealth.title')}
               desc={t('act.diskHealth.desc')}
               icon={<Icon name="hard-drive" className="h-5 w-5 text-success" />}
@@ -128,6 +135,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               onExecute={() => onAction(SystemActions.DISK_HEALTH)}
             />
             <CompactActionItem
+              testId="action-update-cache"
               title={t('act.updateCache.title')}
               desc={t('act.updateCache.desc')}
               icon={<Icon name="refresh-cw" className="h-5 w-5 text-primary" />}
@@ -137,6 +145,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               onExecute={() => onAction(SystemActions.CLEAR_UPDATE_CACHE)}
             />
             <CompactActionItem
+              testId="action-prefetch"
               title={t('act.prefetch.title')}
               desc={t('act.prefetch.desc')}
               icon={<Icon name="zap" className="h-5 w-5 text-warning" />}
@@ -153,6 +162,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             itemCount={3}
           >
             <CompactActionItem
+              testId="shortcut-backups"
               title={t('act.backup.title')}
               desc={t('act.backup.desc')}
               icon={<Icon name="hard-drive" className="h-5 w-5 text-info" />}
@@ -161,6 +171,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               onExecute={onNavigateToBackup}
             />
             <CompactActionItem
+              testId="shortcut-restore-points"
               title={t('act.restorePoint.title')}
               desc={t('act.restorePoint.desc')}
               icon={<Icon name="shield-check" className="h-5 w-5 text-pink" />}
@@ -169,6 +180,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               onExecute={onNavigateToRestorePoints}
             />
             <CompactActionItem
+              testId="action-revert"
               title={t('act.revert.title')}
               desc={t('act.revert.desc')}
               icon={<Icon name="rotate-ccw" className="h-5 w-5 text-warning" />}

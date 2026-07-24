@@ -20,8 +20,17 @@ namespace VeloSysPro
         private readonly string _file;
         private Settings _current = new("pt_BR", true);
 
-        public SettingsManager()
+        public SettingsManager(string? settingsFile = null)
         {
+            if (!string.IsNullOrWhiteSpace(settingsFile))
+            {
+                string? parent = Path.GetDirectoryName(settingsFile);
+                if (!string.IsNullOrEmpty(parent)) Directory.CreateDirectory(parent);
+                _file = settingsFile;
+                Load();
+                return;
+            }
+
             string dir = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "VeloSysPro"

@@ -9,10 +9,7 @@ namespace VeloSysPro
     /// Executes system commands (ipconfig, sfc, dism, netsh, cleanmgr, etc.)
     /// and streams stdout/stderr to the status sink as raw (untranslatable) text.
     /// </summary>
-    /// <summary>Outcome of a command: its process exit code and whether it succeeded (exit 0).</summary>
-    public record CommandResult(int ExitCode, bool Success);
-
-    public class CommandRunner
+    public class CommandRunner : ICommandRunner
     {
         private readonly IStatusSink _sink;
         private static readonly Encoding WindowsCommandEncoding = NativeConsoleEncoding.ForCommands();

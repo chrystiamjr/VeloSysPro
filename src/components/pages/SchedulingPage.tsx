@@ -60,7 +60,12 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
             <span className="text-[11px] font-semibold text-textMuted">
               {t('scheduling.typeLabel')}
             </span>
-            <select className={selectClass} value={type} onChange={(e) => setType(e.target.value)}>
+            <select
+              data-cy="task-type"
+              className={selectClass}
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+            >
               {OPT_TYPES.map((o) => (
                 <option key={o.value} value={o.value}>
                   {t(o.labelKey)}
@@ -74,6 +79,7 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
               {t('scheduling.freqLabel')}
             </span>
             <select
+              data-cy="task-frequency"
               className={selectClass}
               value={frequency}
               onChange={(e) => setFrequency(e.target.value)}
@@ -91,6 +97,7 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
               {t('scheduling.timeLabel')}
             </span>
             <input
+              data-cy="task-time"
               type="time"
               className={selectClass}
               value={time}
@@ -99,6 +106,7 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
           </label>
 
           <Button
+            testId="task-create"
             variant="success"
             className="flex w-auto items-center gap-2 px-5"
             disabled={disabled}
@@ -132,6 +140,7 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
                   <td className="px-5 py-3 text-textMuted">{task.State}</td>
                   <td className="px-5 py-3 text-right">
                     <Button
+                      testId={`task-delete-${task.Name}`}
                       variant="danger"
                       className="ml-auto flex w-auto items-center gap-1.5 px-4 py-2"
                       disabled={disabled}

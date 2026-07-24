@@ -58,7 +58,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         onToggleCollapse={onToggleSidebar}
       />
 
-      <main className="flex h-screen flex-1 flex-col overflow-y-auto p-8">
+      <main data-cy="app-main" className="flex h-screen flex-1 flex-col overflow-y-auto p-8">
         <header className="mb-6">
           <h2 className="text-2xl font-bold text-white">{title}</h2>
           <p className="mt-1 text-xs text-textMuted">{subtitle}</p>
@@ -66,13 +66,14 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
           <div className="mt-4 rounded-xl border border-borderColor bg-bgCard p-4">
             <div className="mb-2 h-2 overflow-hidden rounded-full bg-white/10">
               <div
+                data-cy="progress-bar"
                 className="h-full bg-gradient-to-r from-primary to-success transition-all duration-300"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
             <div className="flex justify-between text-xs font-semibold text-textMuted">
-              <span>{statusMessage}</span>
-              <span>{progressPercent}%</span>
+              <span data-cy="status-message">{statusMessage}</span>
+              <span data-cy="progress-percent">{progressPercent}%</span>
             </div>
           </div>
         </header>

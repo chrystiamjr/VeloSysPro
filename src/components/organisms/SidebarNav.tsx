@@ -66,6 +66,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
         {collapsed && <Icon name="zap" className="h-6 w-6 text-primary" />}
 
         <button
+          data-cy="sidebar-toggle"
           onClick={onToggleCollapse}
           title={collapsed ? t('nav.expand') : t('nav.collapse')}
           aria-label={collapsed ? t('nav.expand') : t('nav.collapse')}
@@ -78,6 +79,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
       <nav className="flex flex-1 flex-col gap-2">
         {NAV_ITEMS.map((item) => (
           <button
+            data-cy={`nav-${item.screen}`}
             key={item.screen}
             onClick={() => onNavigate(item.screen)}
             title={collapsed ? t(item.labelKey) : undefined}
@@ -90,6 +92,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
         ))}
 
         <button
+          data-cy="open-logs"
           onClick={onOpenLogs}
           title={collapsed ? t('nav.logsFolder') : undefined}
           aria-label={t('nav.logsFolder')}

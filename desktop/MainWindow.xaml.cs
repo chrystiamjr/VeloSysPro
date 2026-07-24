@@ -63,35 +63,35 @@ namespace VeloSysPro
         {
             return new Dictionary<string, Action<string>>
             {
-                { "runQuickOptimization", _ => _optimizer.RunQuick() },
-                { "runFullOptimization", _ => _optimizer.RunFull() },
-                { "runGamingMode", _ => _optimizer.RunGaming() },
-                { "revertDefaults", _ => _optimizer.RevertDefaults() },
-                { "clearUpdateCache", _ => _optimizer.ClearUpdateCache() },
-                { "cleanPrefetch", _ => _optimizer.CleanPrefetch() },
-                { "diskHealth", _ => _optimizer.ReportDiskHealth() },
-                { "createManualBackup", _ => { _backup.CreateBackup(); PushBackups(); } },
-                { "restoreBackup", payload => _backup.RestoreBackup(payload) },
-                { "createRestorePoint", _ => { _backup.CreateRestorePoint(); PushRestorePoints(); } },
-                { "getRestorePoints", _ => PushRestorePoints() },
-                { "restoreToPoint", payload => _backup.RestoreToPoint(payload) },
-                { "getSettings", _ => EvalJs("window.onSettingsLoaded && window.onSettingsLoaded(" + _settings.GetJson() + ");") },
-                { "saveSettings", payload => {
+                { SystemActions.RunQuickOptimization, _ => _optimizer.RunQuick() },
+                { SystemActions.RunFullOptimization, _ => _optimizer.RunFull() },
+                { SystemActions.RunGamingMode, _ => _optimizer.RunGaming() },
+                { SystemActions.RevertDefaults, _ => _optimizer.RevertDefaults() },
+                { SystemActions.ClearUpdateCache, _ => _optimizer.ClearUpdateCache() },
+                { SystemActions.CleanPrefetch, _ => _optimizer.CleanPrefetch() },
+                { SystemActions.DiskHealth, _ => _optimizer.ReportDiskHealth() },
+                { SystemActions.CreateManualBackup, _ => { _backup.CreateBackup(); PushBackups(); } },
+                { SystemActions.RestoreBackup, payload => _backup.RestoreBackup(payload) },
+                { SystemActions.CreateRestorePoint, _ => { _backup.CreateRestorePoint(); PushRestorePoints(); } },
+                { SystemActions.GetRestorePoints, _ => PushRestorePoints() },
+                { SystemActions.RestoreToPoint, payload => _backup.RestoreToPoint(payload) },
+                { SystemActions.GetSettings, _ => EvalJs("window.onSettingsLoaded && window.onSettingsLoaded(" + _settings.GetJson() + ");") },
+                { SystemActions.SaveSettings, payload => {
                     var applied = _settings.Save(payload);
                     _optimizer.CreateSafetyBackupEnabled = applied.CreateBackupBeforeOptimize;
                 } },
-                { "openUrl", payload => {
+                { SystemActions.OpenUrl, payload => {
                     if (payload.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
                     {
                         Process.Start(new ProcessStartInfo { FileName = payload, UseShellExecute = true });
                     }
                 } },
-                { "openLogs", _ => Process.Start("explorer.exe", _logsDir) },
-                { "openBackups", _ => Process.Start("explorer.exe", _backupsDir) },
-                { "getBackups", _ => PushBackups() },
-                { "getTasks", _ => PushTasks() },
-                { "createTask", payload => { _scheduler.CreateTask(payload); PushTasks(); } },
-                { "deleteTask", payload => { _scheduler.DeleteTask(payload); PushTasks(); } },
+                { SystemActions.OpenLogs, _ => Process.Start("explorer.exe", _logsDir) },
+                { SystemActions.OpenBackups, _ => Process.Start("explorer.exe", _backupsDir) },
+                { SystemActions.GetBackups, _ => PushBackups() },
+                { SystemActions.GetTasks, _ => PushTasks() },
+                { SystemActions.CreateTask, payload => { _scheduler.CreateTask(payload); PushTasks(); } },
+                { SystemActions.DeleteTask, payload => { _scheduler.DeleteTask(payload); PushTasks(); } },
             };
         }
 

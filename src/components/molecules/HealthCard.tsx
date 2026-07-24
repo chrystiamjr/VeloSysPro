@@ -6,6 +6,7 @@ export interface HealthCardProps {
   value: string | number;
   variant?: 'primary' | 'success' | 'warning' | 'info' | 'purple';
   onClick?: () => void;
+  testId?: string;
 }
 
 const valueColors: Record<NonNullable<HealthCardProps['variant']>, string> = {
@@ -21,6 +22,7 @@ export const HealthCard: React.FC<HealthCardProps> = ({
   value,
   variant = 'primary',
   onClick,
+  testId,
 }) => {
   const content = (
     <>
@@ -37,6 +39,7 @@ export const HealthCard: React.FC<HealthCardProps> = ({
 
   return onClick ? (
     <button
+      data-cy={testId}
       type="button"
       onClick={onClick}
       className={`${className} cursor-pointer hover:-translate-y-0.5 hover:border-primary/50 hover:bg-bgCardHover focus:outline-none focus:ring-2 focus:ring-primary/40`}
@@ -44,6 +47,8 @@ export const HealthCard: React.FC<HealthCardProps> = ({
       {content}
     </button>
   ) : (
-    <div className={className}>{content}</div>
+    <div data-cy={testId} className={className}>
+      {content}
+    </div>
   );
 };

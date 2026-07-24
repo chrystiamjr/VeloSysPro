@@ -16,6 +16,18 @@ if (!version || !/^\d+\.\d+\.\d+/.test(version)) {
 /** @type {[string, (s: string) => string][]} */
 const edits = [
   ['package.json', (s) => s.replace(/("version":\s*")[^"]+(")/, `$1${version}$2`)],
+  [
+    'package-lock.json',
+    (s) => {
+      const lock = JSON.parse(s);
+      lock.version = version;
+      if (!lock.packages?.['']) {
+        throw new Error('package-lock.json: root package entry was not found');
+      }
+      lock.packages[''].version = version;
+      return `${JSON.stringify(lock, null, 2)}\n`;
+    },
+  ],
   ['desktop/VeloSysPro.csproj', (s) => s.replace(/(<Version>)[^<]+(<\/Version>)/, `$1${version}$2`)],
   ['desktop/app.manifest', (s) => s.replace(/(assemblyIdentity version=")[^"]+(")/, `$1${version}.0$2`)],
   ['installer/VeloSysPro.iss', (s) => s.replace(/(#define AppVersion ")[^"]+(")/, `$1${version}$2`)],

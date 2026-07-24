@@ -10,6 +10,7 @@ export interface ActionCardProps {
   disabled?: boolean;
   active?: boolean;
   onExecute: () => void;
+  testId?: string;
 }
 
 const borderStripe: Record<ButtonVariant, string> = {
@@ -31,9 +32,11 @@ export const ActionCard: React.FC<ActionCardProps> = ({
   disabled = false,
   active = false,
   onExecute,
+  testId,
 }) => {
   return (
     <div
+      data-cy={testId}
       aria-busy={active}
       className={`relative flex flex-col justify-between overflow-hidden rounded-card border bg-bgCard p-5 transition-all duration-200 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:content-[''] hover:-translate-y-1 hover:bg-bgCardHover hover:shadow-xl ${active ? 'border-primary ring-2 ring-primary/30' : 'border-borderColor'} ${borderStripe[variant]}`}
     >

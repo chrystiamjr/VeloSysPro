@@ -14,10 +14,10 @@ namespace VeloSysPro
         private record BackupInfo(string Name, string Date, string Size);
 
         private readonly string _backupsDir;
-        private readonly CommandRunner _cmd;
+        private readonly ICommandRunner _cmd;
         private readonly IStatusSink _sink;
 
-        public BackupManager(string backupsDir, CommandRunner cmd, IStatusSink sink)
+        public BackupManager(string backupsDir, ICommandRunner cmd, IStatusSink sink)
         {
             _backupsDir = backupsDir;
             _cmd = cmd;
