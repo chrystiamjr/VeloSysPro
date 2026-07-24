@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
+import { DataTable, DataTableColumn } from '../organisms/DataTable';
 import { ScheduledTaskItem } from '../../domain/types';
 import { useTranslation } from '../../infrastructure/i18nContext';
 
@@ -47,6 +48,38 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
       onDeleteTask(name);
     }
   };
+
+  const columns: DataTableColumn<ScheduledTaskItem>[] = [
+    {
+      key: 'name',
+      header: t('scheduling.colName'),
+      className: 'font-mono text-textMain',
+      sortValue: (task) => task.Name,
+      render: (task) => task.Name,
+    },
+    {
+      key: 'state',
+      header: t('scheduling.colState'),
+      sortValue: (task) => task.State,
+      render: (task) => task.State,
+    },
+    {
+      key: 'actions',
+      header: t('scheduling.colActions'),
+      align: 'right',
+      render: (task) => (
+        <Button
+          testId={`task-delete-${task.Name}`}
+          variant="danger"
+          className="ml-auto flex w-auto items-center gap-1.5 px-4 py-2"
+          disabled={disabled}
+          onClick={() => handleDelete(task.Name)}
+        >
+          <Icon name="trash" /> {t('scheduling.deleteBtn')}
+        </Button>
+      ),
+    },
+  ];
 
   return (
     <div className="flex select-none flex-col gap-6">
@@ -120,43 +153,14 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
       </div>
 
       {/* Task list */}
-      <div className="overflow-x-auto rounded-xl border border-borderColor bg-bgCard">
-        {tasks.length === 0 ? (
-          <p className="p-8 text-center text-xs text-textMuted">{t('scheduling.empty')}</p>
-        ) : (
-          <table className="w-full min-w-[640px] text-left text-xs">
-            <thead>
-              <tr className="border-b border-borderColor text-textMuted">
-                <th className="px-5 py-3 font-semibold">{t('scheduling.colName')}</th>
-                <th className="px-5 py-3 font-semibold">{t('scheduling.colState')}</th>
-                <th className="px-5 py-3 text-right font-semibold">{t('scheduling.colActions')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tasks.map((task) => (
-                <tr
-                  key={task.Name}
-                  className="border-b border-borderColor/50 last:border-none hover:bg-white/5"
-                >
-                  <td className="px-5 py-3 font-mono text-textMain">{task.Name}</td>
-                  <td className="px-5 py-3 text-textMuted">{task.State}</td>
-                  <td className="px-5 py-3 text-right">
-                    <Button
-                      testId={`task-delete-${task.Name}`}
-                      variant="danger"
-                      className="ml-auto flex w-auto items-center gap-1.5 px-4 py-2"
-                      disabled={disabled}
-                      onClick={() => handleDelete(task.Name)}
-                    >
-                      <Icon name="trash" /> {t('scheduling.deleteBtn')}
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <DataTable
+        testId="tasks-table"
+        columns={columns}
+        rows={tasks}
+        rowKey={(task) => task.Name}
+        emptyMessage={t('scheduling.empty')}
+        initialSort={{ key: 'name', dir: 'asc' }}
+      />
     </div>
   );
 };

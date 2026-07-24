@@ -275,6 +275,13 @@
       "start": "Clearing Windows Update cache..."
     }
   },
+  "table": {
+    "next": "Next",
+    "prev": "Previous",
+    "range": "Showing {{from}}–{{to}} of {{total}}",
+    "sortAsc": "Sort ascending",
+    "sortDesc": "Sort descending"
+  },
   "terminal": {
     "title": "Live Real-Time Log",
     "waiting": "[SYSTEM] Awaiting execution logs..."

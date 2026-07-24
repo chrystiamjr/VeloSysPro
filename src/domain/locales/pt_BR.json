@@ -26,7 +26,7 @@
     },
     "restorePoint": {
       "desc": "Cria um ponto de restauração verificado do Windows antes de alterações.",
-      "title": "Criar Restore Point"
+      "title": "Criar Ponto de Restauração"
     },
     "revert": {
       "confirm": "Esta ação redefinirá as configurações de IP e Winsock. Sua conexão pode oscilar temporariamente. Deseja continuar?",
@@ -183,7 +183,7 @@
     "dashboard": "Painel Inicial",
     "expand": "Expandir menu",
     "logsFolder": "Pasta de Logs",
-    "restorePoints": "Restore Points",
+    "restorePoints": "Pontos de Restauração",
     "scheduling": "Agendamento",
     "settings": "Configurações"
   },
@@ -274,6 +274,13 @@
       "done": "Cache do Windows Update limpo!",
       "start": "Limpando cache do Windows Update..."
     }
+  },
+  "table": {
+    "next": "Próxima",
+    "prev": "Anterior",
+    "range": "Mostrando {{from}}–{{to}} de {{total}}",
+    "sortAsc": "Ordenar crescente",
+    "sortDesc": "Ordenar decrescente"
   },
   "terminal": {
     "title": "Log em Tempo Real",
