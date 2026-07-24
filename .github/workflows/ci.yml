@@ -2,12 +2,16 @@ name: CI
 
 on:
   pull_request:
-    branches: [main, master]
+    branches: [main]
   push:
-    branches: [main, master]
+    branches: [main]
 
 permissions:
   contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   frontend:
@@ -20,10 +24,22 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - name: Install Cypress binary
+        run: npx cypress install
+        env:
+          CYPRESS_CACHE_FOLDER: ${{ runner.temp }}\Cypress
+      - name: Validate PR title (Conventional Commit)
+        if: github.event_name == 'pull_request'
+        shell: pwsh
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: $env:PR_TITLE | npx commitlint
       - name: Validate (type-check + Prettier + ESLint + Vitest unit)
         run: npm run validate
       - name: E2E (Cypress against Vite dev server)
         uses: cypress-io/github-action@v6
+        env:
+          CYPRESS_CACHE_FOLDER: ${{ runner.temp }}\Cypress
         with:
           install: false
           start: npm run dev
@@ -57,7 +73,7 @@ jobs:
     needs: [frontend, desktop]
     runs-on: windows-latest
     permissions:
-      contents: write # create tags, releases, and the release commit
+      contents: write # create tags and GitHub Releases
       issues: write
       pull-requests: write
     steps:
@@ -75,10 +91,9 @@ jobs:
       - run: npm ci
       - name: Install Inno Setup (for the installer)
         run: choco install innosetup -y --no-progress
-      # semantic-release decides the next version from Conventional Commits, runs
-      # scripts/sync-version.mjs + build.ps1 (via @semantic-release/exec), tags,
-      # commits the version bump + CHANGELOG, and publishes a GitHub Release with
-      # dist/VeloSysPro-Setup-<version>.exe attached.
+      # semantic-release decides the next version from Conventional Commits,
+      # builds in the runner workspace, tags the merge commit, and publishes the
+      # installer. It never commits generated version files back to main.
       - name: Semantic Release
         run: npx semantic-release
         env:
