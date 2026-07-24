@@ -1,3 +1,15 @@
+## [0.1.3](https://github.com/chrystiamjr/VeloSysPro/compare/v0.1.2...v0.1.3) (2026-07-24)
+
+### Features
+
+* expand test coverage and automate release bumps ([#15](https://github.com/chrystiamjr/VeloSysPro/issues/15)) ([651ac44](https://github.com/chrystiamjr/VeloSysPro/commit/651ac445d52dbd2b6510966fba8431a20af4bee4))
+
+### Bug Fixes
+
+* **ci:** restore documentation deployment ([#16](https://github.com/chrystiamjr/VeloSysPro/issues/16)) ([ec57201](https://github.com/chrystiamjr/VeloSysPro/commit/ec57201be292c5c06c26fb04b826428eb69426d8))
+* **ui:** improve responsive layouts and navigation ([#19](https://github.com/chrystiamjr/VeloSysPro/issues/19)) ([95efd43](https://github.com/chrystiamjr/VeloSysPro/commit/95efd43cc6e4098902feaa734c7bb2cd85e5aaff))
+* **ui:** standardize management cards ([#20](https://github.com/chrystiamjr/VeloSysPro/issues/20)) ([2096a2e](https://github.com/chrystiamjr/VeloSysPro/commit/2096a2e94e475fab49e50661c005ffbb2f64d73d))
+
 # Changelog
 
 All notable changes to VeloSys Pro are documented in this file.
