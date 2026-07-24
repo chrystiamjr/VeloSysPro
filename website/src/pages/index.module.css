@@ -3,7 +3,11 @@
   padding: 5rem 0 6rem;
   text-align: center;
   overflow: hidden;
-  background: radial-gradient(circle at 50% 20%, rgba(45, 110, 220, 0.18) 0%, rgba(18, 20, 28, 0.98) 70%);
+  background: radial-gradient(
+    circle at 50% 20%,
+    rgba(45, 110, 220, 0.18) 0%,
+    rgba(18, 20, 28, 0.98) 70%
+  );
   border-bottom: 1px solid #2a2f42;
 }
 
@@ -68,6 +72,36 @@
   color: #ffffff;
   transform: translateY(-2px);
   text-decoration: none;
+}
+
+.featureTitle {
+  color: #f0f2f5;
+}
+
+.featureText {
+  color: #9aa1b2;
+}
+
+.featureLink {
+  font-weight: 600;
+}
+
+.cliCard {
+  border-color: #2a2f42;
+  background: #181c28;
+}
+
+.cliText {
+  color: #9aa1b2;
+  font-size: 1.05rem;
+}
+
+.cliCode {
+  margin: 0;
+  border: 1px solid #2a2f42;
+  border-radius: 10px;
+  background: #12141c;
+  color: #f0f2f5;
 }
 
 @media screen and (max-width: 996px) {

@@ -1,5 +1,4 @@
-import type {ReactNode} from 'react';
-import clsx from 'clsx';
+import type { ReactNode } from 'react';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
@@ -9,7 +8,7 @@ import pkg from '../../../package.json';
 import styles from './index.module.css';
 
 function HomepageHeader() {
-  const {siteConfig} = useDocusaurusContext();
+  const { siteConfig } = useDocusaurusContext();
   return (
     <header className={styles.heroBanner}>
       <div className="container">
@@ -21,14 +20,13 @@ function HomepageHeader() {
         </Heading>
         <p className={styles.heroSubtitle}>{siteConfig.tagline}</p>
         <div className={styles.buttons}>
-          <Link
-            className={styles.primaryBtn}
-            to="/docs/intro">
+          <Link className={styles.primaryBtn} to="/docs/intro">
             Get Started 🚀
           </Link>
           <Link
             className={styles.secondaryBtn}
-            href="https://github.com/chrystiamjr/VeloSysPro/releases">
+            href="https://github.com/chrystiamjr/VeloSysPro/releases"
+          >
             Download Installer 📦
           </Link>
         </div>
@@ -38,59 +36,64 @@ function HomepageHeader() {
 }
 
 export default function Home(): ReactNode {
-  const {siteConfig} = useDocusaurusContext();
+  const { siteConfig } = useDocusaurusContext();
   return (
     <Layout
       title={`${siteConfig.title} - Windows Optimization Desktop App`}
-      description={siteConfig.tagline}>
+      description={siteConfig.tagline}
+    >
       <HomepageHeader />
-      <main className="container margin-vert--xl">
+      <main className="margin-vert--xl container">
         <div className="row">
           <div className="col col--4">
             <div className="card padding--lg margin-bottom--md">
-              <h3>🚀 High-Performance Tweaks</h3>
-              <p style={{color: '#9aa1b2'}}>
-                Automated DNS flushing, temporary file cleanup, DISM image repair, and System File Checker integration.
+              <h3 className={styles.featureTitle}>🚀 High-Performance Tweaks</h3>
+              <p className={styles.featureText}>
+                Automated DNS flushing, temporary file cleanup, DISM image repair, and System File
+                Checker integration.
               </p>
-              <Link to="/docs/user-guide/optimizations" style={{fontWeight: 600}}>
+              <Link className={styles.featureLink} to="/docs/user-guide/optimizations">
                 Learn more &rarr;
               </Link>
             </div>
           </div>
           <div className="col col--4">
             <div className="card padding--lg margin-bottom--md">
-              <h3>🎮 Gaming & Network Tuning</h3>
-              <p style={{color: '#9aa1b2'}}>
-                TCP Window Auto-Tuning, Receive-Side Scaling (RSS), and ECN optimization for low-latency gaming.
+              <h3 className={styles.featureTitle}>🎮 Gaming & Network Tuning</h3>
+              <p className={styles.featureText}>
+                TCP Window Auto-Tuning, Receive-Side Scaling (RSS), and ECN optimization for
+                low-latency gaming.
               </p>
-              <Link to="/docs/user-guide/optimizations" style={{fontWeight: 600}}>
+              <Link className={styles.featureLink} to="/docs/user-guide/optimizations">
                 Learn more &rarr;
               </Link>
             </div>
           </div>
           <div className="col col--4">
             <div className="card padding--lg margin-bottom--md">
-              <h3>🛡️ Safety & Restoration</h3>
-              <p style={{color: '#9aa1b2'}}>
-                Registry backups (`.reg`), System Restore Point integration, and non-destructive rollbacks.
+              <h3 className={styles.featureTitle}>🛡️ Safety & Restoration</h3>
+              <p className={styles.featureText}>
+                Registry backups (`.reg`), System Restore Point integration, and non-destructive
+                rollbacks.
               </p>
-              <Link to="/docs/user-guide/registry-backup" style={{fontWeight: 600}}>
+              <Link className={styles.featureLink} to="/docs/user-guide/registry-backup">
                 Learn more &rarr;
               </Link>
             </div>
           </div>
         </div>
 
-        <div className="margin-top--xl card padding--xl" style={{background: '#181c28', borderColor: '#2a2f42'}}>
+        <div className={`margin-top--xl card padding--xl ${styles.cliCard}`}>
           <div className="row align-items--center">
             <div className="col col--6">
-              <h2>💻 Headless CLI Execution</h2>
-              <p style={{color: '#9aa1b2', fontSize: '1.05rem'}}>
-                VeloSys Pro supports silent background task execution for Windows Task Scheduler or automated scripts.
+              <h2 className={styles.featureTitle}>💻 Headless CLI Execution</h2>
+              <p className={styles.cliText}>
+                VeloSys Pro supports silent background task execution for Windows Task Scheduler or
+                automated scripts.
               </p>
             </div>
             <div className="col col--6">
-              <pre style={{margin: 0, borderRadius: '10px', background: '#12141c', border: '1px solid #2a2f42'}}>
+              <pre className={styles.cliCode}>
                 <code className="language-powershell">
                   {`# Run Quick Optimization headlessly\n.\\VeloSysPro.exe --task=quick\n\n# Enable Gaming Mode optimizations\n.\\VeloSysPro.exe --task=gaming`}
                 </code>

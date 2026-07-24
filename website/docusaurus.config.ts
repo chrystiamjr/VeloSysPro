@@ -1,10 +1,11 @@
-import {themes as prismThemes} from 'prism-react-renderer';
-import type {Config} from '@docusaurus/types';
+import { themes as prismThemes } from 'prism-react-renderer';
+import type { Config } from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'VeloSys Pro',
-  tagline: 'High-performance Windows optimization, gaming tweaks, network tuning, and registry backup desktop application.',
+  tagline:
+    'High-performance Windows optimization, gaming tweaks, network tuning, and registry backup desktop application.',
   favicon: 'img/favicon.ico',
 
   url: 'https://chrystiamjr.github.io',
@@ -49,7 +50,8 @@ const config: Config = {
     image: 'img/docusaurus-social-card.jpg',
     colorMode: {
       defaultMode: 'dark',
-      respectPrefersColorScheme: true,
+      disableSwitch: true,
+      respectPrefersColorScheme: false,
     },
     navbar: {
       title: 'VeloSys Pro',
