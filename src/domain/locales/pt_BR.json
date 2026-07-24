@@ -246,7 +246,12 @@
     "langEn": "English",
     "langPt": "Português",
     "languageDesc": "Escolha o idioma da interface. A preferência é salva automaticamente.",
-    "languageTitle": "Idioma"
+    "languageTitle": "Idioma",
+    "updateAvailable": "Nova versão {{version}} disponível",
+    "updateCurrent": "Versão instalada",
+    "updateDesc": "Confira a versão instalada e baixe atualizações do VeloSys Pro.",
+    "updateLatest": "Você está na versão mais recente.",
+    "updateTitle": "Atualizações"
   },
   "status": {
     "diskHealth": {
