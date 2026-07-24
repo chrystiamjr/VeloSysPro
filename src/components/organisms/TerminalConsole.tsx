@@ -35,7 +35,7 @@ export const TerminalConsole: React.FC<TerminalConsoleProps> = ({
       <div
         className={
           expanded
-            ? 'mb-3 flex items-center justify-between gap-4'
+            ? 'mb-3 flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center sm:gap-4'
             : 'flex items-center justify-between gap-4'
         }
       >
@@ -44,7 +44,7 @@ export const TerminalConsole: React.FC<TerminalConsoleProps> = ({
           type="button"
           aria-expanded={expanded}
           onClick={onToggle}
-          className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 bg-transparent text-left focus:outline-none focus:ring-2 focus:ring-primary/40"
+          className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 bg-transparent text-left focus:outline-none focus:ring-2 focus:ring-primary/40 sm:gap-3"
         >
           <Icon
             name="file-text"
@@ -63,7 +63,7 @@ export const TerminalConsole: React.FC<TerminalConsoleProps> = ({
           <button
             data-cy="terminal-clear"
             onClick={onClear}
-            className="cursor-pointer rounded border border-borderColor bg-transparent px-3 py-1 text-[11px] text-textMuted transition-colors hover:text-white"
+            className="shrink-0 cursor-pointer self-end rounded border border-borderColor bg-transparent px-3 py-1 text-[11px] text-textMuted transition-colors hover:text-white sm:self-auto"
           >
             {t('btn.clearConsole')}
           </button>

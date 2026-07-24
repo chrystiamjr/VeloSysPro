@@ -38,27 +38,47 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   const [isNarrow, setIsNarrow] = useState<boolean>(
     typeof window !== 'undefined' ? window.innerWidth < NARROW_BREAKPOINT : false
   );
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
-    const onResize = () => setIsNarrow(window.innerWidth < NARROW_BREAKPOINT);
+    const onResize = () => {
+      const narrow = window.innerWidth < NARROW_BREAKPOINT;
+      setIsNarrow(narrow);
+      if (!narrow) setMobileSidebarOpen(false);
+    };
     window.addEventListener('resize', onResize);
     onResize();
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const effectiveCollapsed = sidebarCollapsed || isNarrow;
+  const effectiveCollapsed = isNarrow ? !mobileSidebarOpen : sidebarCollapsed;
+  const handleToggleSidebar = () => {
+    if (isNarrow) {
+      setMobileSidebarOpen((open) => !open);
+    } else {
+      onToggleSidebar();
+    }
+  };
+  const handleNavigate = (screen: AppScreen) => {
+    if (isNarrow) setMobileSidebarOpen(false);
+    onNavigate(screen);
+  };
 
   return (
     <div className="flex h-screen select-none overflow-hidden bg-bgMain text-textMain">
       <SidebarNav
         activeScreen={activeScreen}
-        onNavigate={onNavigate}
+        onNavigate={handleNavigate}
         onOpenLogs={onOpenLogs}
         collapsed={effectiveCollapsed}
-        onToggleCollapse={onToggleSidebar}
+        onToggleCollapse={handleToggleSidebar}
+        overlay={isNarrow && mobileSidebarOpen}
       />
 
-      <main data-cy="app-main" className="flex h-screen flex-1 flex-col overflow-y-auto p-8">
+      <main
+        data-cy="app-main"
+        className="flex h-screen min-w-0 flex-1 flex-col overflow-y-auto p-4 sm:p-6 lg:p-8"
+      >
         <header className="mb-6">
           <h2 className="text-2xl font-bold text-white">{title}</h2>
           <p className="mt-1 text-xs text-textMuted">{subtitle}</p>

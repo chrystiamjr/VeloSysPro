@@ -46,6 +46,15 @@ describe('BackupPage (functional Backup & Restore screen)', () => {
     expect(props.onCreateBackup).toHaveBeenCalledTimes(1);
   });
 
+  it('stacks the card content and keeps the backup table scrollable on narrow screens', () => {
+    renderPage();
+    const createButton = screen.getByRole('button', { name: /Criar Backup Agora/i });
+    const table = screen.getByRole('table');
+
+    expect(createButton.parentElement?.parentElement).toHaveClass('flex-col');
+    expect(table.parentElement).toHaveClass('overflow-x-auto');
+  });
+
   it('restores a backup only after the user confirms', () => {
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
     const props = renderPage();

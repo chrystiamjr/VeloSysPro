@@ -47,4 +47,11 @@ describe('i18n locales', () => {
     i18n.locale('en_US');
     expect(i18n.t('log.raw', { text: 'ipconfig output' })).toBe('ipconfig output');
   });
+
+  it('keeps implementation details out of the user-facing startup log', () => {
+    for (const locale of ['pt_BR', 'en_US'] as const) {
+      i18n.locale(locale);
+      expect(i18n.t('log.appStarted')).not.toMatch(/React|TypeScript|Rosetta/i);
+    }
+  });
 });

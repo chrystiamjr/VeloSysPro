@@ -34,16 +34,16 @@ export const BackupPage: React.FC<BackupPageProps> = ({
   return (
     <div className="flex select-none flex-col gap-6">
       <div className="rounded-xl border border-borderColor bg-bgCard p-6">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <h3 className="text-lg font-bold text-white">{t('backup.sectionTitle')}</h3>
             <p className="mt-1 text-xs text-textMuted">{t('backup.sectionDesc')}</p>
           </div>
-          <div className="flex shrink-0 gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row lg:shrink-0">
             <Button
               testId="backup-create"
               variant="info"
-              className="flex w-auto items-center gap-2 px-5"
+              className="items-center gap-2 px-5 sm:w-auto"
               disabled={disabled}
               onClick={onCreateBackup}
             >
@@ -52,7 +52,7 @@ export const BackupPage: React.FC<BackupPageProps> = ({
             <Button
               testId="backup-open-folder"
               variant="primary"
-              className="flex w-auto items-center gap-2 px-5"
+              className="items-center gap-2 px-5 sm:w-auto"
               onClick={onOpenFolder}
             >
               <Icon name="folder-open" /> {t('backup.openFolderBtn')}
@@ -61,11 +61,11 @@ export const BackupPage: React.FC<BackupPageProps> = ({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-borderColor bg-bgCard">
+      <div className="overflow-x-auto rounded-xl border border-borderColor bg-bgCard">
         {backups.length === 0 ? (
           <p className="p-8 text-center text-xs text-textMuted">{t('backup.empty')}</p>
         ) : (
-          <table className="w-full text-left text-xs">
+          <table className="w-full min-w-[640px] text-left text-xs">
             <thead>
               <tr className="border-b border-borderColor text-textMuted">
                 <th className="px-5 py-3 font-semibold">{t('backup.colName')}</th>

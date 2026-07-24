@@ -32,28 +32,28 @@ export const RestorePointsPage: React.FC<RestorePointsPageProps> = ({
   return (
     <div className="flex select-none flex-col gap-6">
       <div className="rounded-xl border border-borderColor bg-bgCard p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="text-lg font-bold text-white">{t('rp.sectionTitle')}</h3>
-            <p className="mt-1 text-xs text-textMuted">{t('rp.sectionDesc')}</p>
-          </div>
+        <div className="flex flex-col gap-4">
           <Button
             testId="restore-point-create"
             variant="pink"
-            className="flex w-auto shrink-0 items-center gap-2 px-5"
+            className="items-center gap-2 px-5"
             disabled={disabled}
             onClick={onCreatePoint}
           >
             <Icon name="shield-check" /> {t('rp.createBtn')}
           </Button>
+          <div>
+            <h3 className="text-lg font-bold text-white">{t('rp.sectionTitle')}</h3>
+            <p className="mt-1 text-xs text-textMuted">{t('rp.sectionDesc')}</p>
+          </div>
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-borderColor bg-bgCard">
+      <div className="overflow-x-auto rounded-xl border border-borderColor bg-bgCard">
         {points.length === 0 ? (
           <p className="p-8 text-center text-xs text-textMuted">{t('rp.empty')}</p>
         ) : (
-          <table className="w-full text-left text-xs">
+          <table className="w-full min-w-[640px] text-left text-xs">
             <thead>
               <tr className="border-b border-borderColor text-textMuted">
                 <th className="px-5 py-3 font-semibold">{t('rp.colSeq')}</th>

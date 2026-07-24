@@ -37,4 +37,21 @@ describe('TerminalConsole Organism Component', () => {
 
     expect(screen.getAllByText('A operação foi concluída com êxito.')).toHaveLength(2);
   });
+  it('stacks the expanded header controls on narrow screens', () => {
+    render(
+      <LanguageProvider>
+        <TerminalConsole
+          logs={[{ text: 'VeloSys Pro iniciado com sucesso.', type: 'success' }]}
+          expanded
+          onToggle={vi.fn()}
+          onClear={vi.fn()}
+        />
+      </LanguageProvider>
+    );
+
+    expect(screen.getByRole('button', { name: /Limpar Console/i }).parentElement).toHaveClass(
+      'flex-col',
+      'sm:flex-row'
+    );
+  });
 });
