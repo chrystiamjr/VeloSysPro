@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -16,13 +15,7 @@ namespace VeloSysPro
     public class CommandRunner
     {
         private readonly IStatusSink _sink;
-        private static readonly Encoding WindowsCommandEncoding = CreateWindowsCommandEncoding();
-
-        private static Encoding CreateWindowsCommandEncoding()
-        {
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            return Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
-        }
+        private static readonly Encoding WindowsCommandEncoding = NativeConsoleEncoding.ForCommands();
 
         public CommandRunner(IStatusSink sink)
         {

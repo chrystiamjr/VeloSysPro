@@ -44,6 +44,8 @@ jobs:
         run: npm run build
       - name: Build desktop host
         run: dotnet build desktop/VeloSysPro.csproj -c Release
+      - name: Test desktop (xUnit)
+        run: dotnet test desktop.Tests/VeloSysPro.Tests.csproj -c Release
 
   release:
     name: Release (single-file exe + installer)

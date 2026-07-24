@@ -1,5 +1,10 @@
 # VeloSys Pro - Production Build Script
 
+# Render child-process (dotnet/npm) UTF-8 output correctly in the build console.
+# This script's own messages are kept ASCII-only so they never mojibake regardless
+# of how PowerShell reads this file's encoding.
+try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
+
 $projectDir = $PSScriptRoot
 if (-not $projectDir) { $projectDir = Get-Location }
 
@@ -49,12 +54,12 @@ $rootExe = Join-Path $projectDir "VeloSysPro.exe"
 if (Test-Path $rootExe) {
     $file = Get-Item $rootExe
     Write-Host ""
-    Write-Host "SUCESSO DE COMPILAÇÃO!" -ForegroundColor Green
-    Write-Host "Executável Único: $($file.FullName)" -ForegroundColor Green
-    Write-Host "Tamanho: $([math]::Round($file.Length / 1MB, 2)) MB" -ForegroundColor Green
+    Write-Host "BUILD SUCCESS!" -ForegroundColor Green
+    Write-Host "Single executable: $($file.FullName)" -ForegroundColor Green
+    Write-Host "Size: $([math]::Round($file.Length / 1MB, 2)) MB" -ForegroundColor Green
 }
 else {
-    Write-Host "AVISO: VeloSysPro.exe não foi encontrado na raiz após o publish." -ForegroundColor Red
+    Write-Host "WARNING: VeloSysPro.exe not found at root after publish." -ForegroundColor Red
 }
 
 # 7. Build the Inno Setup installer if ISCC is available.
@@ -76,13 +81,13 @@ if ($iscc -and (Test-Path $iss)) {
     $ver = "0.1.0"
     try { $ver = (Get-Content (Join-Path $projectDir "package.json") -Raw | ConvertFrom-Json).version } catch {}
     Write-Host ""
-    Write-Host "Gerando instalador Inno Setup (v$ver)..." -ForegroundColor Cyan
+    Write-Host "Building Inno Setup installer (v$ver)..." -ForegroundColor Cyan
     & $iscc "/DAppVersion=$ver" "$iss"
     $setup = Join-Path $distDir "VeloSysPro-Setup-$ver.exe"
     if (Test-Path $setup) {
-        Write-Host "Instalador criado: $setup" -ForegroundColor Green
+        Write-Host "Installer created: $setup" -ForegroundColor Green
     }
 }
 else {
-    Write-Host "Inno Setup (ISCC) não encontrado - pulando geração do instalador." -ForegroundColor DarkYellow
+    Write-Host "Inno Setup (ISCC) not found - skipping installer generation." -ForegroundColor DarkYellow
 }
