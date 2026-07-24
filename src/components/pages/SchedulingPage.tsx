@@ -25,7 +25,7 @@ const FREQUENCIES = [
 ] as const;
 
 const selectClass =
-  'rounded-lg border border-borderColor bg-bgMain px-3.5 py-2.5 text-xs text-textMain outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20';
+  'w-full rounded-lg border border-borderColor bg-bgMain px-3.5 py-2.5 text-xs text-textMain outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20';
 
 export const SchedulingPage: React.FC<SchedulingPageProps> = ({
   tasks,
@@ -51,11 +51,13 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
   return (
     <div className="flex select-none flex-col gap-6">
       {/* Create form */}
-      <div className="rounded-xl border border-borderColor bg-bgCard p-6">
-        <h3 className="text-lg font-bold text-white">{t('scheduling.formTitle')}</h3>
-        <p className="mt-1 text-xs text-textMuted">{t('scheduling.formDesc')}</p>
+      <div className="flex flex-col gap-5 rounded-xl border border-borderColor bg-bgCard p-6">
+        <div>
+          <h3 className="text-lg font-bold text-white">{t('scheduling.formTitle')}</h3>
+          <p className="mt-1 text-xs text-textMuted">{t('scheduling.formDesc')}</p>
+        </div>
 
-        <div className="mt-5 flex flex-wrap items-end gap-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <label className="flex flex-col gap-1.5">
             <span className="text-[11px] font-semibold text-textMuted">
               {t('scheduling.typeLabel')}
@@ -104,17 +106,17 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
               onChange={(e) => setTime(e.target.value)}
             />
           </label>
-
-          <Button
-            testId="task-create"
-            variant="success"
-            className="flex w-auto items-center gap-2 px-5"
-            disabled={disabled}
-            onClick={handleCreate}
-          >
-            <Icon name="calendar" /> {t('scheduling.createBtn')}
-          </Button>
         </div>
+
+        <Button
+          testId="task-create"
+          variant="success"
+          className="items-center gap-2 px-5"
+          disabled={disabled}
+          onClick={handleCreate}
+        >
+          <Icon name="calendar" /> {t('scheduling.createBtn')}
+        </Button>
       </div>
 
       {/* Task list */}

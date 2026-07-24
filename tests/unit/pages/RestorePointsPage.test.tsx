@@ -45,14 +45,14 @@ describe('RestorePointsPage', () => {
     expect(props.onCreatePoint).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps the create action inside the card with its explanation below', () => {
+  it('renders the card heading before its full-width create action', () => {
     renderPage();
     const button = screen.getByRole('button', { name: /Criar Ponto/i });
     const heading = screen.getByRole('heading', { name: /Pontos de Restauração do Sistema/i });
     const content = button.parentElement;
 
     expect(content).toHaveClass('flex-col');
-    expect(button.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(heading.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('restores only after BOTH confirmations pass', () => {

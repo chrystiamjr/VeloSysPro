@@ -34,16 +34,16 @@ export const BackupPage: React.FC<BackupPageProps> = ({
   return (
     <div className="flex select-none flex-col gap-6">
       <div className="rounded-xl border border-borderColor bg-bgCard p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex flex-col gap-5">
           <div>
             <h3 className="text-lg font-bold text-white">{t('backup.sectionTitle')}</h3>
             <p className="mt-1 text-xs text-textMuted">{t('backup.sectionDesc')}</p>
           </div>
-          <div className="flex flex-col gap-3 sm:flex-row lg:shrink-0">
+          <div className="grid gap-3 sm:grid-cols-2">
             <Button
               testId="backup-create"
               variant="info"
-              className="items-center gap-2 px-5 sm:w-auto"
+              className="items-center gap-2 px-5"
               disabled={disabled}
               onClick={onCreateBackup}
             >
@@ -52,7 +52,7 @@ export const BackupPage: React.FC<BackupPageProps> = ({
             <Button
               testId="backup-open-folder"
               variant="primary"
-              className="items-center gap-2 px-5 sm:w-auto"
+              className="items-center gap-2 px-5"
               onClick={onOpenFolder}
             >
               <Icon name="folder-open" /> {t('backup.openFolderBtn')}
