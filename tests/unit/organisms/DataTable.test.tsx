@@ -204,4 +204,28 @@ describe('DataTable', () => {
     renderTable({ minWidthClass: 'min-w-[900px]' });
     expect(screen.getByRole('table')).toHaveClass('min-w-[900px]');
   });
+
+  it('leaves rows in their original order when initialSort names an unknown column', () => {
+    renderTable({ rows: makeRows(3), initialSort: { key: 'nope', dir: 'desc' } });
+
+    expect(bodyNames()).toEqual(['item-01', 'item-02', 'item-03']);
+    for (const header of screen.getAllByRole('columnheader')) {
+      expect(header).toHaveAttribute('aria-sort', 'none');
+    }
+  });
+
+  it('ignores initialSort pointing at a column that has no sortValue', () => {
+    renderTable({ rows: makeRows(3), initialSort: { key: 'actions', dir: 'desc' } });
+
+    expect(bodyNames()).toEqual(['item-01', 'item-02', 'item-03']);
+    expect(screen.getAllByRole('columnheader')[2]).toHaveAttribute('aria-sort', 'none');
+  });
+
+  it('does not mutate the rows array it was given', () => {
+    const rows = makeRows(3);
+    const original = [...rows];
+    renderTable({ rows, initialSort: { key: 'name', dir: 'desc' } });
+
+    expect(rows).toEqual(original);
+  });
 });
