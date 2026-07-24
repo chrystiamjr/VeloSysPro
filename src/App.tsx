@@ -62,6 +62,8 @@ function AppContent() {
   });
   const settingsLoaded = useRef(false);
   const [update, setUpdate] = useState<UpdateInfo | null>(null);
+  // Dismissing only hides the banner; Settings keeps the release reachable without a restart.
+  const [updateDismissed, setUpdateDismissed] = useState(false);
   const [logs, setLogs] = useState<LogRecord[]>([{ key: 'log.appStarted', type: 'success' }]);
   const [activeAction, setActiveAction] = useState<string | null>(null);
   const [consoleExpanded, setConsoleExpanded] = useState(false);
@@ -213,7 +215,7 @@ function AppContent() {
       statusMessage={statusMessage}
       progressPercent={progressPercent}
     >
-      {update && (
+      {update && !updateDismissed && (
         <div
           data-cy="update-banner"
           className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-primary/40 bg-primary/10 px-5 py-3"
@@ -232,7 +234,7 @@ function AppContent() {
             </button>
             <button
               data-cy="update-dismiss"
-              onClick={() => setUpdate(null)}
+              onClick={() => setUpdateDismissed(true)}
               className="cursor-pointer rounded-lg border border-borderColor bg-transparent px-3 py-2 text-xs text-textMuted transition-colors hover:text-white"
             >
               {t('updateBanner.dismiss')}
@@ -291,6 +293,8 @@ function AppContent() {
           createBackupBeforeOptimize={settings.createBackupBeforeOptimize}
           onLanguageChange={setLang}
           onToggleBackup={handleToggleBackup}
+          updateInfo={update}
+          onDownloadUpdate={(url) => handleAction(SystemActions.OPEN_URL, url)}
         />
       )}
     </MainLayout>
