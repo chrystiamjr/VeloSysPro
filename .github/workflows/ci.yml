@@ -60,6 +60,14 @@ jobs:
           start: npm run dev
           wait-on: 'http://localhost:5173'
           wait-on-timeout: 120
+      - name: Upload Cypress failure screenshots
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: cypress-failure-screenshots
+          path: cypress/screenshots
+          if-no-files-found: ignore
+          retention-days: 7
 
   desktop:
     name: Desktop (.NET 8 build + test)
@@ -95,7 +103,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # semantic-release needs full history + tags
-          persist-credentials: false
+          persist-credentials: true
       - uses: actions/setup-node@v7
         with:
           node-version: 20
@@ -107,8 +115,8 @@ jobs:
       - name: Install Inno Setup (for the installer)
         run: choco install innosetup -y --no-progress
       # semantic-release decides the next version from Conventional Commits,
-      # builds in the runner workspace, tags the merge commit, and publishes the
-      # installer. It never commits generated version files back to main.
+      # builds in the runner workspace, commits the synchronized version files
+      # with [skip ci], tags that release commit, and publishes the installer.
       - name: Semantic Release
         run: npx semantic-release
         env:

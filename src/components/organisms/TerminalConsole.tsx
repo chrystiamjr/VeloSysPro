@@ -29,6 +29,7 @@ export const TerminalConsole: React.FC<TerminalConsoleProps> = ({
 
   return (
     <div
+      data-cy="terminal"
       className={`mb-6 rounded-container border bg-bgMain p-4 ${hasError ? 'border-danger/60' : 'border-borderColor'}`}
     >
       <div
@@ -39,6 +40,7 @@ export const TerminalConsole: React.FC<TerminalConsoleProps> = ({
         }
       >
         <button
+          data-cy="terminal-toggle"
           type="button"
           aria-expanded={expanded}
           onClick={onToggle}
@@ -59,6 +61,7 @@ export const TerminalConsole: React.FC<TerminalConsoleProps> = ({
         </button>
         {expanded && (
           <button
+            data-cy="terminal-clear"
             onClick={onClear}
             className="cursor-pointer rounded border border-borderColor bg-transparent px-3 py-1 text-[11px] text-textMuted transition-colors hover:text-white"
           >
@@ -69,6 +72,7 @@ export const TerminalConsole: React.FC<TerminalConsoleProps> = ({
 
       {expanded && (
         <div
+          data-cy="terminal-content"
           ref={boxRef}
           className="h-40 overflow-y-auto rounded-lg border border-white/5 bg-bgMain p-3 font-mono text-xs leading-relaxed text-textMuted"
         >

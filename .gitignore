@@ -26,6 +26,7 @@ logs/*.txt
 backups/*.reg
 
 # Scratch & Temporary Files
+.cache/
 .gemini/
 scratch/
 *.tmp

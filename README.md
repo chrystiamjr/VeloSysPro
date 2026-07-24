@@ -81,8 +81,9 @@ npm run setup-hooks   # installs the pre-commit (validate + build) and commit-ms
 
 - **Run the UI in a browser** (IPC mocked): `npm run dev` → http://localhost:5173
 - **Validate**: `npm run validate` (type-check + Prettier + ESLint + Vitest)
+- **Browser E2E**: `npm run cypress:run` (64 isolated scenarios using a typed WebView2 IPC harness)
 - **Build the executable + installer**: `powershell -ExecutionPolicy Bypass -File .\build.ps1`
-- **C# tests**: `dotnet test desktop.Tests/VeloSysPro.Tests.csproj`
+- **C# tests**: `dotnet test desktop.Tests/VeloSysPro.Tests.csproj` (native commands are replaced by in-memory fakes)
 
 ---
 
@@ -91,5 +92,11 @@ npm run setup-hooks   # installs the pre-commit (validate + build) and commit-ms
 Commits follow **[Conventional Commits](https://www.conventionalcommits.org/)** (enforced by commitlint).
 On every push to `main`, CI runs **semantic-release**, which derives the next version, updates the
 version everywhere (`scripts/sync-version.mjs`), builds the installer, updates `CHANGELOG.md`, and
-publishes a GitHub Release with the installer attached. While pre-1.0, breaking changes bump the
-**minor** version and features/fixes bump the **patch**.
+commits the synchronized files back to `main` as `chore(release): <version> [skip ci]` before
+publishing a GitHub Release with the installer attached. The release commit is explicitly ignored
+by the commit analyzer and `[skip ci]` prevents a second workflow run. While pre-1.0, breaking
+changes bump the **minor** version and features/fixes bump the **patch**.
+
+The default-branch ruleset must allow the official **GitHub Actions** integration to bypass the
+pull-request requirement; all other branch protections remain enforced. This exception is required
+only for the release job's automated version commit.

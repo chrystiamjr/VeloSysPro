@@ -17,15 +17,15 @@ namespace VeloSysPro
 
         private const string Prefix = "VeloSysPro_";
 
-        private readonly CommandRunner _cmd;
+        private readonly ICommandRunner _cmd;
         private readonly IStatusSink _sink;
         private readonly string _exePath;
 
-        public SchedulerManager(CommandRunner cmd, IStatusSink sink)
+        public SchedulerManager(ICommandRunner cmd, IStatusSink sink, string? exePath = null)
         {
             _cmd = cmd;
             _sink = sink;
-            _exePath = Process.GetCurrentProcess().MainModule?.FileName ?? "";
+            _exePath = exePath ?? Process.GetCurrentProcess().MainModule?.FileName ?? "";
         }
 
         /// <summary>Creates a scheduled task from a JSON payload: {type, frequency, time}.</summary>

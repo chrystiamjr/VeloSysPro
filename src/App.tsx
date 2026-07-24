@@ -214,19 +214,24 @@ function AppContent() {
       progressPercent={progressPercent}
     >
       {update && (
-        <div className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-primary/40 bg-primary/10 px-5 py-3">
+        <div
+          data-cy="update-banner"
+          className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-primary/40 bg-primary/10 px-5 py-3"
+        >
           <span className="flex items-center gap-2 text-xs font-semibold text-textMain">
             <Icon name="info" className="h-4 w-4 text-primary" />{' '}
             {t('updateBanner.text', { version: update.version })}
           </span>
           <div className="flex items-center gap-2">
             <button
+              data-cy="update-download"
               onClick={() => handleAction(SystemActions.OPEN_URL, update.url)}
               className="cursor-pointer rounded-lg border-none bg-primary px-4 py-2 text-xs font-bold text-white transition-all hover:bg-primary-hover"
             >
               {t('updateBanner.btn')}
             </button>
             <button
+              data-cy="update-dismiss"
               onClick={() => setUpdate(null)}
               className="cursor-pointer rounded-lg border border-borderColor bg-transparent px-3 py-2 text-xs text-textMuted transition-colors hover:text-white"
             >

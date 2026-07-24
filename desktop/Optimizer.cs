@@ -9,7 +9,7 @@ namespace VeloSysPro
     /// </summary>
     public class Optimizer
     {
-        private readonly CommandRunner _cmd;
+        private readonly ICommandRunner _cmd;
         private readonly BackupManager _backup;
         private readonly IStatusSink _sink;
         private readonly Action? _onBackupsChanged;
@@ -17,7 +17,7 @@ namespace VeloSysPro
         /// <summary>When true, a registry safety backup is taken before an optimization.</summary>
         public bool CreateSafetyBackupEnabled { get; set; } = true;
 
-        public Optimizer(CommandRunner cmd, BackupManager backup, IStatusSink sink, Action? onBackupsChanged = null)
+        public Optimizer(ICommandRunner cmd, BackupManager backup, IStatusSink sink, Action? onBackupsChanged = null)
         {
             _cmd = cmd;
             _backup = backup;

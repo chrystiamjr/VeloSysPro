@@ -9,7 +9,8 @@
           { "breaking": true, "release": "minor" },
           { "type": "feat", "release": "patch" },
           { "type": "fix", "release": "patch" },
-          { "type": "perf", "release": "patch" }
+          { "type": "perf", "release": "patch" },
+          { "type": "chore", "scope": "release", "release": false }
         ]
       }
     ],
@@ -18,9 +19,31 @@
       { "preset": "conventionalcommits" }
     ],
     [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "CHANGELOG.md"
+      }
+    ],
+    [
       "@semantic-release/exec",
       {
         "prepareCmd": "node scripts/sync-version.mjs ${nextRelease.version} && powershell -ExecutionPolicy Bypass -File build.ps1"
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": [
+          "CHANGELOG.md",
+          "package.json",
+          "package-lock.json",
+          "desktop/VeloSysPro.csproj",
+          "desktop/app.manifest",
+          "installer/VeloSysPro.iss",
+          "src/domain/locales/pt_BR.json",
+          "src/domain/locales/en_US.json"
+        ],
+        "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
     ],
     [

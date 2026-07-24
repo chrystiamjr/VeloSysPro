@@ -31,12 +31,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         <p className="mt-1 text-xs text-textMuted">{t('settings.languageDesc')}</p>
         <div className="mt-4 flex gap-3">
           <button
+            data-cy="language-pt"
             className={langButtonClass(language === 'pt_BR')}
             onClick={() => onLanguageChange('pt_BR')}
           >
             🇧🇷 {t('settings.langPt')}
           </button>
           <button
+            data-cy="language-en"
             className={langButtonClass(language === 'en_US')}
             onClick={() => onLanguageChange('en_US')}
           >
@@ -54,6 +56,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           </div>
           <label className="flex cursor-pointer items-center gap-2 pt-1">
             <input
+              data-cy="safety-backup-toggle"
               type="checkbox"
               className="h-4 w-4 accent-primary"
               checked={createBackupBeforeOptimize}

@@ -9,6 +9,7 @@ export interface ButtonProps {
   variant?: ButtonVariant;
   disabled?: boolean;
   className?: string;
+  testId?: string;
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
@@ -27,9 +28,11 @@ export const Button: React.FC<ButtonProps> = ({
   variant = 'primary',
   disabled = false,
   className = '',
+  testId,
 }) => {
   return (
     <button
+      data-cy={testId}
       disabled={disabled}
       onClick={onClick}
       className={`flex w-full items-center justify-center gap-2 rounded-lg border-none px-4 py-3 text-xs font-bold text-textMain shadow-md transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${variantClasses[variant]} ${className}`}

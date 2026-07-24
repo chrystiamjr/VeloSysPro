@@ -38,6 +38,7 @@ export const RestorePointsPage: React.FC<RestorePointsPageProps> = ({
             <p className="mt-1 text-xs text-textMuted">{t('rp.sectionDesc')}</p>
           </div>
           <Button
+            testId="restore-point-create"
             variant="pink"
             className="flex w-auto shrink-0 items-center gap-2 px-5"
             disabled={disabled}
@@ -72,6 +73,7 @@ export const RestorePointsPage: React.FC<RestorePointsPageProps> = ({
                   <td className="px-5 py-3 text-textMuted">{point.Description}</td>
                   <td className="px-5 py-3 text-right">
                     <Button
+                      testId={`restore-point-restore-${point.Sequence}`}
                       variant="warning"
                       className="ml-auto flex w-auto items-center gap-1.5 px-4 py-2"
                       disabled={disabled}

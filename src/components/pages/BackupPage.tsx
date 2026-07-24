@@ -41,6 +41,7 @@ export const BackupPage: React.FC<BackupPageProps> = ({
           </div>
           <div className="flex shrink-0 gap-3">
             <Button
+              testId="backup-create"
               variant="info"
               className="flex w-auto items-center gap-2 px-5"
               disabled={disabled}
@@ -49,6 +50,7 @@ export const BackupPage: React.FC<BackupPageProps> = ({
               <Icon name="hard-drive" /> {t('backup.createBtn')}
             </Button>
             <Button
+              testId="backup-open-folder"
               variant="primary"
               className="flex w-auto items-center gap-2 px-5"
               onClick={onOpenFolder}
@@ -83,6 +85,7 @@ export const BackupPage: React.FC<BackupPageProps> = ({
                   <td className="px-5 py-3 text-textMuted">{backup.Size}</td>
                   <td className="px-5 py-3 text-right">
                     <Button
+                      testId={`backup-restore-${backup.Name}`}
                       variant="warning"
                       className="ml-auto flex w-auto items-center gap-1.5 px-4 py-2"
                       disabled={disabled}
