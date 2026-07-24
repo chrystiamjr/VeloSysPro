@@ -141,6 +141,9 @@
       "start": "Aplicando ajustes de rede para baixa latência (Modo Gaming)..."
     },
     "hostReady": "Host .NET 8 WPF + Edge Chromium WebView2 inicializado (UI embutida).",
+    "op": {
+      "completedWithErrors": "Operação concluída com erros. Verifique o log acima."
+    },
     "prefetch": {
       "done": "Prefetch limpo com sucesso.",
       "start": "Limpando pasta Prefetch..."

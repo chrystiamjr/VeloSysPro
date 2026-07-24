@@ -10,6 +10,9 @@ namespace VeloSysPro
     /// Executes system commands (ipconfig, sfc, dism, netsh, cleanmgr, etc.)
     /// and streams stdout/stderr to the status sink as raw (untranslatable) text.
     /// </summary>
+    /// <summary>Outcome of a command: its process exit code and whether it succeeded (exit 0).</summary>
+    public record CommandResult(int ExitCode, bool Success);
+
     public class CommandRunner
     {
         private readonly IStatusSink _sink;
@@ -26,7 +29,12 @@ namespace VeloSysPro
             _sink = sink;
         }
 
-        public void Run(string exe, string args)
+        /// <summary>
+        /// Runs a command, streaming stdout/stderr to the sink, and returns its result.
+        /// stderr is logged as 'error' only when the process failed (non-zero exit); many
+        /// Windows tools write to stderr on success, so on exit 0 it is logged as 'info'.
+        /// </summary>
+        public CommandResult Run(string exe, string args)
         {
             try
             {
@@ -44,20 +52,25 @@ namespace VeloSysPro
 
                 using (Process? proc = Process.Start(psi))
                 {
-                    if (proc != null)
-                    {
-                        string stdout = proc.StandardOutput.ReadToEnd();
-                        string stderr = proc.StandardError.ReadToEnd();
-                        proc.WaitForExit();
+                    if (proc == null) return new CommandResult(-1, false);
 
-                        if (!string.IsNullOrWhiteSpace(stdout)) _sink.LogRaw(stdout.Trim(), "info");
-                        if (!string.IsNullOrWhiteSpace(stderr)) _sink.LogRaw(stderr.Trim(), "error");
-                    }
+                    string stdout = proc.StandardOutput.ReadToEnd();
+                    string stderr = proc.StandardError.ReadToEnd();
+                    proc.WaitForExit();
+
+                    int exitCode = proc.ExitCode;
+                    bool success = exitCode == 0;
+
+                    if (!string.IsNullOrWhiteSpace(stdout)) _sink.LogRaw(stdout.Trim(), "info");
+                    if (!string.IsNullOrWhiteSpace(stderr)) _sink.LogRaw(stderr.Trim(), success ? "info" : "error");
+
+                    return new CommandResult(exitCode, success);
                 }
             }
             catch (Exception ex)
             {
                 _sink.Log("log.cmdError", "error", new { exe, message = ex.Message });
+                return new CommandResult(-1, false);
             }
         }
 

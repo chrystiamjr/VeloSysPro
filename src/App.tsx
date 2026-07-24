@@ -30,6 +30,7 @@ import {
   subscribeRestorePoints,
   subscribeSettings,
   subscribeUpdate,
+  subscribeActionFinished,
 } from './infrastructure/bridge';
 
 const SCREEN_HEADERS: Record<AppScreen, { title: string; subtitle: string }> = {
@@ -65,7 +66,8 @@ function AppContent() {
   const [activeAction, setActiveAction] = useState<string | null>(null);
   const [consoleExpanded, setConsoleExpanded] = useState(false);
   const [executionHasError, setExecutionHasError] = useState(false);
-  const actionLockRef = useRef(false);
+  // Holds the name of the in-flight mutating action (null = idle). Serves as the UI lock.
+  const activeActionRef = useRef<string | null>(null);
 
   const [health, setHealth] = useState<SystemHealth>({
     admin: 'Sim',
@@ -91,8 +93,9 @@ function AppContent() {
     subscribeProgress((percent) => {
       setProgressPercent(percent);
       setHealth((prev) => ({ ...prev, status: percent < 100 ? 'executing' : 'ready' }));
+      // Secondary release (the authoritative one is onActionFinished below).
       if (percent >= 100) {
-        actionLockRef.current = false;
+        activeActionRef.current = null;
         setActiveAction(null);
       }
     });
@@ -123,6 +126,14 @@ function AppContent() {
 
     subscribeUpdate((info) => {
       setUpdate(info);
+    });
+
+    // Authoritative lock release: fires when the action's handler completes (ok or error).
+    subscribeActionFinished((action) => {
+      if (action === activeActionRef.current) {
+        activeActionRef.current = null;
+        setActiveAction(null);
+      }
     });
 
     sendAction(SystemActions.GET_BACKUPS);
@@ -162,15 +173,19 @@ function AppContent() {
   };
 
   const handleDashboardAction = (action: string) => {
-    if (actionLockRef.current) return;
-    actionLockRef.current = true;
+    if (activeActionRef.current) return;
+    activeActionRef.current = action;
     setActiveAction(action);
     setExecutionHasError(false);
     sendAction(action);
   };
 
+  // Every elevated mutation now acquires the lock too, so the whole UI blocks
+  // overlapping mutations until the action reports finished.
   const handleSystemMutation = (action: string, payload?: string) => {
-    if (actionLockRef.current) return;
+    if (activeActionRef.current) return;
+    activeActionRef.current = action;
+    setActiveAction(action);
     sendAction(action, payload);
   };
 

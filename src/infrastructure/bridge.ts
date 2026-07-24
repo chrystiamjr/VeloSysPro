@@ -27,6 +27,7 @@ declare global {
     onRestorePointsLoaded?: (pointsJson: string | RestorePointItem[]) => void;
     onSettingsLoaded?: (settingsJson: string | AppSettings) => void;
     onUpdateAvailable?: (info: UpdateInfo) => void;
+    onActionFinished?: (action: string, ok: boolean) => void;
   }
 }
 
@@ -116,5 +117,11 @@ export function subscribeSettings(callback: (data: AppSettings) => void): void {
 export function subscribeUpdate(callback: (info: UpdateInfo) => void): void {
   window.onUpdateAvailable = (info) => {
     if (typeof callback === 'function' && info && info.version) callback(info);
+  };
+}
+
+export function subscribeActionFinished(callback: (action: string, ok: boolean) => void): void {
+  window.onActionFinished = (action, ok) => {
+    if (typeof callback === 'function') callback(action, ok);
   };
 }

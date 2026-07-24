@@ -141,6 +141,9 @@
       "start": "Applying low-latency network tweaks (Gaming Mode)..."
     },
     "hostReady": ".NET 8 WPF + Edge Chromium WebView2 host initialized (embedded UI).",
+    "op": {
+      "completedWithErrors": "Operation completed with errors. Check the log above."
+    },
     "prefetch": {
       "done": "Prefetch cleaned successfully.",
       "start": "Cleaning Prefetch folder..."

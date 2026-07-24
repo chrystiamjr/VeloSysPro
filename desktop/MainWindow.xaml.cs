@@ -227,6 +227,7 @@ namespace VeloSysPro
         {
             ThreadPool.QueueUserWorkItem(_ =>
             {
+                bool ok = true;
                 try
                 {
                     if (_actionHandlers.TryGetValue(action, out var handler))
@@ -236,13 +237,27 @@ namespace VeloSysPro
                     else
                     {
                         LogRaw("Unknown action requested: '" + action + "'", "warning");
+                        ok = false;
                     }
                 }
                 catch (Exception ex)
                 {
                     LogRaw("Action '" + action + "' failed: " + ex.Message, "error");
+                    ok = false;
+                }
+                finally
+                {
+                    // Authoritative signal so the UI always releases its action lock,
+                    // even when an action errors before emitting 100% progress.
+                    EmitActionFinished(action, ok);
                 }
             });
+        }
+
+        private void EmitActionFinished(string action, bool ok)
+        {
+            string actionLiteral = JsonSerializer.Serialize(action);
+            EvalJs("window.onActionFinished && window.onActionFinished(" + actionLiteral + ", " + (ok ? "true" : "false") + ");");
         }
 
         private void PushBackups()

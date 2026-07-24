@@ -5,6 +5,7 @@ namespace VeloSysPro
     /// <summary>
     /// System optimization orchestration, decoupled from the WPF window so it can be
     /// driven by both the UI and the headless CLI mode. Emits i18n keys via IStatusSink.
+    /// Final result is derived from command exit codes (not stderr presence).
     /// </summary>
     public class Optimizer
     {
@@ -31,23 +32,31 @@ namespace VeloSysPro
             _onBackupsChanged?.Invoke();
         }
 
+        /// <summary>Emits the final log: the op's "done" key on success, or a shared error key.</summary>
+        private void Finish(bool ok, string doneKey)
+        {
+            if (ok) _sink.Log(doneKey, "success");
+            else _sink.Log("log.op.completedWithErrors", "error");
+        }
+
         public void RunQuick()
         {
             _sink.Status("status.quick.start", 10);
             _sink.Log("log.quick.start", "info");
             CreateSafetyBackup();
 
+            bool ok = true;
             _sink.Status("status.quick.dns", 30);
-            _cmd.Run("ipconfig.exe", "/flushdns");
+            ok &= _cmd.Run("ipconfig.exe", "/flushdns").Success;
 
             _sink.Status("status.quick.cleanmgr", 65);
-            _cmd.Run("cleanmgr.exe", "/verylowdisk");
+            ok &= _cmd.Run("cleanmgr.exe", "/verylowdisk").Success;
 
             _sink.Status("status.quick.temp", 90);
             _cmd.CleanTempFolder();
 
             _sink.Status("status.quick.done", 100);
-            _sink.Log("log.quick.done", "success");
+            Finish(ok, "log.quick.done");
         }
 
         public void RunFull()
@@ -56,20 +65,21 @@ namespace VeloSysPro
             _sink.Log("log.full.start", "info");
             CreateSafetyBackup();
 
+            bool ok = true;
             _sink.Status("status.full.sfc", 25);
-            _cmd.Run("sfc.exe", "/scannow");
+            ok &= _cmd.Run("sfc.exe", "/scannow").Success;
 
             _sink.Status("status.full.dism", 50);
-            _cmd.Run("dism.exe", "/online /cleanup-image /restorehealth");
+            ok &= _cmd.Run("dism.exe", "/online /cleanup-image /restorehealth").Success;
 
             _sink.Status("status.full.dns", 75);
-            _cmd.Run("ipconfig.exe", "/flushdns");
+            ok &= _cmd.Run("ipconfig.exe", "/flushdns").Success;
 
             _sink.Status("status.full.temp", 90);
             _cmd.CleanTempFolder();
 
             _sink.Status("status.full.done", 100);
-            _sink.Log("log.full.done", "success");
+            Finish(ok, "log.full.done");
         }
 
         public void RunGaming()
@@ -78,17 +88,18 @@ namespace VeloSysPro
             _sink.Log("log.gaming.start", "info");
             CreateSafetyBackup();
 
+            bool ok = true;
             _sink.Status("status.gaming.rss", 40);
-            _cmd.Run("netsh.exe", "int tcp set global rss=enabled");
+            ok &= _cmd.Run("netsh.exe", "int tcp set global rss=enabled").Success;
 
             _sink.Status("status.gaming.autotuning", 70);
-            _cmd.Run("netsh.exe", "int tcp set global autotuninglevel=normal");
+            ok &= _cmd.Run("netsh.exe", "int tcp set global autotuninglevel=normal").Success;
 
             _sink.Status("status.gaming.dns", 90);
-            _cmd.Run("ipconfig.exe", "/flushdns");
+            ok &= _cmd.Run("ipconfig.exe", "/flushdns").Success;
 
             _sink.Status("status.gaming.done", 100);
-            _sink.Log("log.gaming.done", "success");
+            Finish(ok, "log.gaming.done");
         }
 
         public void RevertDefaults()
@@ -96,17 +107,18 @@ namespace VeloSysPro
             _sink.Status("status.revert.start", 10);
             _sink.Log("log.revert.start", "info");
 
+            bool ok = true;
             _sink.Status("status.revert.ip", 40);
-            _cmd.Run("netsh.exe", "int ip reset");
+            ok &= _cmd.Run("netsh.exe", "int ip reset").Success;
 
             _sink.Status("status.revert.winsock", 70);
-            _cmd.Run("netsh.exe", "winsock reset");
+            ok &= _cmd.Run("netsh.exe", "winsock reset").Success;
 
             _sink.Status("status.revert.dns", 90);
-            _cmd.Run("ipconfig.exe", "/flushdns");
+            ok &= _cmd.Run("ipconfig.exe", "/flushdns").Success;
 
             _sink.Status("status.revert.done", 100);
-            _sink.Log("log.revert.done", "success");
+            Finish(ok, "log.revert.done");
         }
 
         public void ClearUpdateCache()
@@ -114,13 +126,14 @@ namespace VeloSysPro
             _sink.Status("status.updateCache.start", 20);
             _sink.Log("log.updateCache.start", "info");
 
-            _cmd.Run("net.exe", "stop wuauserv");
+            bool ok = true;
+            ok &= _cmd.Run("net.exe", "stop wuauserv").Success;
             string windir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
             _cmd.ClearDirectory(System.IO.Path.Combine(windir, "SoftwareDistribution", "Download"));
-            _cmd.Run("net.exe", "start wuauserv");
+            ok &= _cmd.Run("net.exe", "start wuauserv").Success;
 
             _sink.Status("status.updateCache.done", 100);
-            _sink.Log("log.updateCache.done", "success");
+            Finish(ok, "log.updateCache.done");
         }
 
         public void CleanPrefetch()
