@@ -1,0 +1,101 @@
+/**
+ * VeloSys Pro Design System Tokens for Docusaurus
+ * Matching tailwind.config.js & src/index.css
+ */
+
+:root {
+  --ifm-font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --ifm-color-primary: #2d6edc;
+  --ifm-color-primary-dark: #245dc0;
+  --ifm-color-primary-darker: #2156b3;
+  --ifm-color-primary-darkest: #1b4793;
+  --ifm-color-primary-light: #447fe1;
+  --ifm-color-primary-lighter: #5087e3;
+  --ifm-color-primary-lightest: #73a0e8;
+  --ifm-code-font-size: 92%;
+  --docusaurus-highlighted-code-line-bg: rgba(45, 110, 220, 0.1);
+}
+
+[data-theme='dark'] {
+  /* Primary token from design system: #2d6edc */
+  --ifm-color-primary: #2d6edc;
+  --ifm-color-primary-dark: #245dc0;
+  --ifm-color-primary-darker: #2156b3;
+  --ifm-color-primary-darkest: #1b4793;
+  --ifm-color-primary-light: #447fe1;
+  --ifm-color-primary-lighter: #5087e3;
+  --ifm-color-primary-lightest: #73a0e8;
+  
+  /* Exact App Theme Colors: bgMain (#12141c), bgSidebar (#181c28), bgCard (#1c1f2b), borderColor (#2a2f42) */
+  --ifm-background-color: #12141c;
+  --ifm-background-surface-color: #1c1f2b;
+  --ifm-navbar-background-color: rgba(24, 28, 40, 0.9);
+  --ifm-footer-background-color: #181c28;
+  --ifm-toc-border-color: #2a2f42;
+  --ifm-contents-border-color: #2a2f42;
+  
+  --ifm-card-background-color: #1c1f2b;
+  --ifm-border-color: #2a2f42;
+  --ifm-font-color-base: #f0f2f5;
+  
+  --docusaurus-highlighted-code-line-bg: rgba(45, 110, 220, 0.15);
+}
+
+/* Glassmorphism Navbar Header */
+.navbar {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--ifm-border-color);
+}
+
+/* Custom Scrollbar matching src/index.css */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #12141c;
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: #2e3548;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f4861;
+}
+
+/* Glassmorphic Feature & Doc Cards */
+.card {
+  border: 1px solid var(--ifm-border-color);
+  border-radius: 14px;
+  background: #1c1f2b;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  border-color: #2d6edc;
+  box-shadow: 0 12px 28px -6px rgba(45, 110, 220, 0.25);
+}
+
+/* Code Blocks Styling */
+div[class*='codeBlockContainer'] {
+  border: 1px solid var(--ifm-border-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Badge styling */
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: rgba(45, 110, 220, 0.12);
+  color: #3b7cf0;
+  border: 1px solid rgba(45, 110, 220, 0.3);
+  margin-bottom: 1rem;
+}
