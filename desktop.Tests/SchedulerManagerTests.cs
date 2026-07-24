@@ -101,6 +101,42 @@ public class SchedulerManagerTests
     }
 
     [Fact]
+    public void GetTasksJson_QueriesPowerShellForTheLiveTaskState()
+    {
+        var runner = new FakeCommandRunner { CapturedOutput = "[]" };
+        var scheduler = new SchedulerManager(runner, new RecordingStatusSink(), "VeloSysPro.exe");
+
+        scheduler.GetTasksJson();
+
+        var (exe, args) = Assert.Single(runner.Runs);
+        Assert.Equal("powershell.exe", exe);
+        Assert.Contains("-ExecutionPolicy Bypass -Command", args);
+        // State must come from the .NET enum, not from the localized schtasks status column.
+        Assert.Contains("Get-ScheduledTask", args);
+        Assert.Contains("State = [string]$_.State", args);
+        Assert.Contains("$_.TaskName -like 'VeloSysPro_*'", args);
+        Assert.Contains("ConvertTo-Json -Compress", args);
+        // Quotes must stay balanced or the whole -Command payload breaks at runtime.
+        Assert.Equal(0, args.Count(c => c == '"') % 2);
+    }
+
+    [Fact]
+    public void GetTasksJson_ReadsTheLiveStateRatherThanAnyStoredIndex()
+    {
+        var runner = new FakeCommandRunner();
+        runner.CapturedOutputs["powershell.exe"] = "[]";
+        var scheduler = new SchedulerManager(runner, new RecordingStatusSink(), "VeloSysPro.exe");
+
+        scheduler.CreateTask("""{"type":"quick","frequency":"DAILY","time":"03:00"}""");
+        string json = scheduler.GetTasksJson();
+
+        // A task the app just created is absent once Windows no longer reports it, proving the
+        // listing has no sidecar index that could outlive the real scheduled task.
+        Assert.Equal("[]", json);
+        Assert.DoesNotContain("VeloSysPro_Quick_Daily_0300", json);
+    }
+
+    [Fact]
     public void GetTasksJson_ReturnsThePowerShellArrayVerbatim()
     {
         var runner = new FakeCommandRunner
@@ -137,20 +173,56 @@ public class SchedulerManagerTests
     [Fact]
     public void GetTasksJson_FallsBackToSchtasksCsvWhenPowerShellYieldsNothing()
     {
+        var runner = new FakeCommandRunner();
+        runner.CapturedOutputs["powershell.exe"] = "";
+        runner.CapturedOutputs["schtasks.exe"] =
+            "\"\\VeloSysPro_Quick_Daily_0300\",\"N/A\",\"Ready\"\n"
+            + "\"\\Unrelated\",\"N/A\",\"Ready\"\n"
+            + "\"\\VeloSysPro_Gaming_Weekly_MON_0430\",\"N/A\",\"Running\"";
+        var scheduler = new SchedulerManager(runner, new RecordingStatusSink(), "VeloSysPro.exe");
+
+        string json = scheduler.GetTasksJson();
+
+        // Both tools were consulted, in order, and the CSV rows survived the fallback parse.
+        Assert.Collection(
+            runner.Runs,
+            first => Assert.Equal("powershell.exe", first.Exe),
+            second =>
+            {
+                Assert.Equal("schtasks.exe", second.Exe);
+                Assert.Equal("/query /fo CSV /nh", second.Args);
+            }
+        );
+        Assert.Contains("VeloSysPro_Quick_Daily_0300", json);
+        Assert.Contains("VeloSysPro_Gaming_Weekly_MON_0430", json);
+        Assert.DoesNotContain("Unrelated", json);
+    }
+
+    [Fact]
+    public void GetTasksJson_ReturnsAnEmptyArrayWhenNeitherToolReportsAnything()
+    {
+        var runner = new FakeCommandRunner { CapturedOutput = "" };
+        var scheduler = new SchedulerManager(runner, new RecordingStatusSink(), "VeloSysPro.exe");
+
+        Assert.Equal("[]", scheduler.GetTasksJson());
+    }
+
+    [Fact]
+    public void GetTasksJson_IgnoresSurroundingWhitespaceFromPowerShell()
+    {
         var runner = new FakeCommandRunner
         {
             CapturedOutput =
-                "\"\\VeloSysPro_Quick_Daily_0300\",\"N/A\",\"Ready\"\n"
-                + "\"\\Unrelated\",\"N/A\",\"Ready\"\n"
-                + "\"\\VeloSysPro_Gaming_Weekly_MON_0430\",\"N/A\",\"Running\"",
+                "\r\n  [{\"Name\":\"VeloSysPro_Quick_Daily_0300\",\"State\":\"Ready\",\"Path\":\"\\\\VeloSysPro_Quick_Daily_0300\"}]  \r\n",
         };
         var scheduler = new SchedulerManager(runner, new RecordingStatusSink(), "VeloSysPro.exe");
 
         string json = scheduler.GetTasksJson();
 
+        Assert.StartsWith("[", json);
         Assert.Contains("VeloSysPro_Quick_Daily_0300", json);
-        Assert.Contains("VeloSysPro_Gaming_Weekly_MON_0430", json);
-        Assert.DoesNotContain("Unrelated", json);
+        // The PowerShell result was usable, so the CSV fallback must not have been consulted.
+        Assert.Single(runner.Runs);
     }
 
     [Fact]
