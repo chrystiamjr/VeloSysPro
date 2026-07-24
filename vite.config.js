@@ -7,6 +7,12 @@ import path from 'path';
 export default defineConfig({
   base: './',
   plugins: [react()],
+  server: {
+    watch: {
+      // Runtime/generated dirs — WebView2 keeps files here locked (EBUSY on watch).
+      ignored: ['**/webview_data/**', '**/logs/**', '**/backups/**', '**/dist/**', '**/ui/**'],
+    },
+  },
   build: {
     outDir: 'ui',
     emptyOutDir: true,

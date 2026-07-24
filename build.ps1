@@ -73,7 +73,7 @@ foreach ($c in $isccCandidates) { if ($c -and (Test-Path $c)) { $iscc = $c; brea
 
 if ($iscc -and (Test-Path $iss)) {
     # Read the version from package.json so exe/installer stay aligned.
-    $ver = "1.0.0"
+    $ver = "0.1.0"
     try { $ver = (Get-Content (Join-Path $projectDir "package.json") -Raw | ConvertFrom-Json).version } catch {}
     Write-Host ""
     Write-Host "Gerando instalador Inno Setup (v$ver)..." -ForegroundColor Cyan
