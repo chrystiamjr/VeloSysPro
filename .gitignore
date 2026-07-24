@@ -27,6 +27,9 @@ scratch/
 *.tmp
 *.log
 
+# Local-only notes & handover docs (not versioned)
+.local/
+
 # IDE & OS Files
 .vscode/
 .idea/
