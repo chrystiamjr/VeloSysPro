@@ -46,12 +46,16 @@ describe('BackupPage (functional Backup & Restore screen)', () => {
     expect(props.onCreateBackup).toHaveBeenCalledTimes(1);
   });
 
-  it('stacks the card content and keeps the backup table scrollable on narrow screens', () => {
+  it('uses the shared heading-first card layout and keeps the table scrollable', () => {
     renderPage();
     const createButton = screen.getByRole('button', { name: /Criar Backup Agora/i });
+    const heading = screen.getByRole('heading', { name: /Backups do Registro/i });
     const table = screen.getByRole('table');
 
-    expect(createButton.parentElement?.parentElement).toHaveClass('flex-col');
+    expect(
+      heading.compareDocumentPosition(createButton) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(createButton.parentElement).toHaveClass('grid', 'sm:grid-cols-2');
     expect(table.parentElement).toHaveClass('overflow-x-auto');
   });
 

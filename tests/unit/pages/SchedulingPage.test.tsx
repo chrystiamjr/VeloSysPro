@@ -47,6 +47,17 @@ describe('SchedulingPage (functional scheduler)', () => {
     expect(payload).toMatchObject({ type: 'quick', frequency: 'DAILY', time: '03:00' });
   });
 
+  it('renders controls before the full-width scheduling action', () => {
+    renderPage();
+    const button = screen.getByRole('button', { name: /Agendar/i });
+    const typeSelect = screen.getByLabelText(/Otimização/i);
+
+    expect(
+      typeSelect.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(button.parentElement).toHaveClass('flex-col', 'gap-5');
+  });
+
   it('deletes a task only after confirmation', () => {
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
     const props = renderPage();

@@ -32,7 +32,11 @@ export const RestorePointsPage: React.FC<RestorePointsPageProps> = ({
   return (
     <div className="flex select-none flex-col gap-6">
       <div className="rounded-xl border border-borderColor bg-bgCard p-6">
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-5">
+          <div>
+            <h3 className="text-lg font-bold text-white">{t('rp.sectionTitle')}</h3>
+            <p className="mt-1 text-xs text-textMuted">{t('rp.sectionDesc')}</p>
+          </div>
           <Button
             testId="restore-point-create"
             variant="pink"
@@ -42,10 +46,6 @@ export const RestorePointsPage: React.FC<RestorePointsPageProps> = ({
           >
             <Icon name="shield-check" /> {t('rp.createBtn')}
           </Button>
-          <div>
-            <h3 className="text-lg font-bold text-white">{t('rp.sectionTitle')}</h3>
-            <p className="mt-1 text-xs text-textMuted">{t('rp.sectionDesc')}</p>
-          </div>
         </div>
       </div>
 
