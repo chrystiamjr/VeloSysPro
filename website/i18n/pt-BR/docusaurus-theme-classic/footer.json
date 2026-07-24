@@ -1,0 +1,38 @@
+{
+  "link.title.Docs": {
+    "message": "Documentação",
+    "description": "The title of footer link group Docs"
+  },
+  "link.title.Community & Source": {
+    "message": "Comunidade e Código Fonte",
+    "description": "The title of footer link group Community & Source"
+  },
+  "link.title.Organization": {
+    "message": "Organização",
+    "description": "The title of footer link group Organization"
+  },
+  "link.item.label.Introduction": {
+    "message": "Introdução",
+    "description": "The label of footer link Introduction"
+  },
+  "link.item.label.Installation": {
+    "message": "Instalação",
+    "description": "The label of footer link Installation"
+  },
+  "link.item.label.User Guide": {
+    "message": "Guia do Usuário",
+    "description": "The label of footer link User Guide"
+  },
+  "link.item.label.GitHub Repository": {
+    "message": "Repositório GitHub",
+    "description": "The label of footer link GitHub Repository"
+  },
+  "link.item.label.Releases & Downloads": {
+    "message": "Releases e Downloads",
+    "description": "The label of footer link Releases & Downloads"
+  },
+  "link.item.label.Envolvo Systems LTDA.": {
+    "message": "Envolvo Systems LTDA.",
+    "description": "The label of footer link Envolvo Systems LTDA."
+  }
+}

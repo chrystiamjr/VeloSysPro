@@ -22,6 +22,7 @@ DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 OutputDir=..\dist
 OutputBaseFilename=VeloSysPro-Setup-{#AppVersion}
+SetupIconFile=..\desktop\assets\app.ico
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern

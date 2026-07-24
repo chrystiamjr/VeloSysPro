@@ -5,6 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6.svg)]()
 [![Build](https://img.shields.io/badge/Build-C%23%20%2B%20React%2018%20%2B%20TypeScript-0078D6.svg)]()
+[![Documentation](https://img.shields.io/badge/Docs-Docusaurus%203-00a86b.svg)](https://chrystiamjr.github.io/VeloSysPro/)
 
 ---
 
