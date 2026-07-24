@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { SidebarNav } from '../organisms/SidebarNav';
 import { AppScreen } from '../../domain/types';
 
@@ -6,6 +6,8 @@ export interface MainLayoutProps {
   activeScreen: AppScreen;
   onNavigate: (screen: AppScreen) => void;
   onOpenLogs: () => void;
+  sidebarCollapsed: boolean;
+  onToggleSidebar: () => void;
   title: string;
   subtitle: string;
   statusMessage: string;
@@ -13,24 +15,48 @@ export interface MainLayoutProps {
   children: React.ReactNode;
 }
 
+const NARROW_BREAKPOINT = 1024;
+
 /**
  * Application shell (Atomic Design "template" layer): sidebar navigation plus a
  * header with the active screen's title, subtitle, and global progress bar.
- * Page content is injected via `children`.
+ * The sidebar collapses on narrow windows automatically, and honors the user's
+ * saved manual preference (`sidebarCollapsed`) when the window is wide.
  */
 export const MainLayout: React.FC<MainLayoutProps> = ({
   activeScreen,
   onNavigate,
   onOpenLogs,
+  sidebarCollapsed,
+  onToggleSidebar,
   title,
   subtitle,
   statusMessage,
   progressPercent,
   children,
 }) => {
+  const [isNarrow, setIsNarrow] = useState<boolean>(
+    typeof window !== 'undefined' ? window.innerWidth < NARROW_BREAKPOINT : false
+  );
+
+  useEffect(() => {
+    const onResize = () => setIsNarrow(window.innerWidth < NARROW_BREAKPOINT);
+    window.addEventListener('resize', onResize);
+    onResize();
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const effectiveCollapsed = sidebarCollapsed || isNarrow;
+
   return (
     <div className="flex h-screen select-none overflow-hidden bg-bgMain text-textMain">
-      <SidebarNav activeScreen={activeScreen} onNavigate={onNavigate} onOpenLogs={onOpenLogs} />
+      <SidebarNav
+        activeScreen={activeScreen}
+        onNavigate={onNavigate}
+        onOpenLogs={onOpenLogs}
+        collapsed={effectiveCollapsed}
+        onToggleCollapse={onToggleSidebar}
+      />
 
       <main className="flex h-screen flex-1 flex-col overflow-y-auto p-8">
         <header className="mb-6">

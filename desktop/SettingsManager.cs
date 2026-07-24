@@ -9,7 +9,7 @@ namespace VeloSysPro
     /// </summary>
     public class SettingsManager
     {
-        public record Settings(string Language, bool CreateBackupBeforeOptimize);
+        public record Settings(string Language, bool CreateBackupBeforeOptimize, bool SidebarCollapsed = false);
 
         private static readonly JsonSerializerOptions Opts = new()
         {

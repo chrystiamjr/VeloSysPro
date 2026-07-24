@@ -39,6 +39,7 @@ export enum AppScreen {
 export interface AppSettings {
   language: 'pt_BR' | 'en_US';
   createBackupBeforeOptimize: boolean;
+  sidebarCollapsed: boolean;
 }
 
 export interface UpdateInfo {

@@ -176,7 +176,9 @@
   },
   "nav": {
     "backup": "Backup & Restauração",
+    "collapse": "Recolher menu",
     "dashboard": "Painel Inicial",
+    "expand": "Expandir menu",
     "logsFolder": "Pasta de Logs",
     "restorePoints": "Restore Points",
     "scheduling": "Agendamento",

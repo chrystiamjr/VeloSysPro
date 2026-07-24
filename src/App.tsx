@@ -57,6 +57,7 @@ function AppContent() {
   const [settings, setSettings] = useState<AppSettings>({
     language: 'pt_BR',
     createBackupBeforeOptimize: true,
+    sidebarCollapsed: false,
   });
   const settingsLoaded = useRef(false);
   const [update, setUpdate] = useState<UpdateInfo | null>(null);
@@ -148,6 +149,14 @@ function AppContent() {
     });
   };
 
+  const handleToggleSidebar = () => {
+    setSettings((prev) => {
+      const next = { ...prev, sidebarCollapsed: !prev.sidebarCollapsed };
+      sendAction(SystemActions.SAVE_SETTINGS, JSON.stringify(next));
+      return next;
+    });
+  };
+
   const handleAction = (action: string, payload?: string) => {
     sendAction(action, payload);
   };
@@ -182,6 +191,8 @@ function AppContent() {
       activeScreen={activeScreen}
       onNavigate={setActiveScreen}
       onOpenLogs={() => handleAction(SystemActions.OPEN_LOGS)}
+      sidebarCollapsed={settings.sidebarCollapsed}
+      onToggleSidebar={handleToggleSidebar}
       title={t(header.title)}
       subtitle={t(header.subtitle)}
       statusMessage={statusMessage}
