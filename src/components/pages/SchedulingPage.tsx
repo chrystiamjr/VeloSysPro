@@ -1,8 +1,18 @@
 import React, { useState } from 'react';
+import { Badge } from '../atoms/Badge';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
 import { DataTable, DataTableColumn } from '../organisms/DataTable';
 import { ScheduledTaskItem } from '../../domain/types';
+import {
+  FREQUENCIES,
+  MONTH_DAYS,
+  OPT_TYPES,
+  WEEKDAYS,
+  describeSchedule,
+  describeTaskState,
+  taskDisplayName,
+} from '../../domain/scheduling';
 import { useTranslation } from '../../infrastructure/i18nContext';
 
 export interface SchedulingPageProps {
@@ -11,19 +21,6 @@ export interface SchedulingPageProps {
   onDeleteTask: (name: string) => void;
   disabled?: boolean;
 }
-
-const OPT_TYPES = [
-  { value: 'quick', labelKey: 'act.quick.title' },
-  { value: 'full', labelKey: 'act.full.title' },
-  { value: 'gaming', labelKey: 'act.gaming.title' },
-  { value: 'revert', labelKey: 'act.revert.title' },
-] as const;
-
-const FREQUENCIES = [
-  { value: 'DAILY', labelKey: 'scheduling.freqDaily' },
-  { value: 'WEEKLY', labelKey: 'scheduling.freqWeekly' },
-  { value: 'MONTHLY', labelKey: 'scheduling.freqMonthly' },
-] as const;
 
 const selectClass =
   'w-full rounded-lg border border-borderColor bg-bgMain px-3.5 py-2.5 text-xs text-textMain outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20';
@@ -38,9 +35,15 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
   const [type, setType] = useState<string>('quick');
   const [frequency, setFrequency] = useState<string>('DAILY');
   const [time, setTime] = useState<string>('03:00');
+  const [weekday, setWeekday] = useState<string>('MON');
+  const [monthDay, setMonthDay] = useState<string>('1');
+
+  // The host ignores `day` for DAILY, but sending the active selection keeps the payload
+  // aligned with what the form shows.
+  const day = frequency === 'WEEKLY' ? weekday : frequency === 'MONTHLY' ? monthDay : '';
 
   const handleCreate = () => {
-    onCreateTask(JSON.stringify({ type, frequency, time }));
+    onCreateTask(JSON.stringify({ type, frequency, time, day }));
   };
 
   const handleDelete = (name: string) => {
@@ -53,15 +56,24 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
     {
       key: 'name',
       header: t('scheduling.colName'),
-      className: 'font-mono text-textMain',
-      sortValue: (task) => task.Name,
-      render: (task) => task.Name,
+      className: 'font-semibold text-textMain',
+      sortValue: (task) => taskDisplayName(task.Name, t),
+      render: (task) => taskDisplayName(task.Name, t),
+    },
+    {
+      key: 'schedule',
+      header: t('scheduling.colSchedule'),
+      sortValue: (task) => describeSchedule(task.Name, t),
+      render: (task) => describeSchedule(task.Name, t),
     },
     {
       key: 'state',
       header: t('scheduling.colState'),
-      sortValue: (task) => task.State,
-      render: (task) => task.State,
+      sortValue: (task) => describeTaskState(task.State, t).label,
+      render: (task) => {
+        const { label, variant } = describeTaskState(task.State, t);
+        return <Badge text={label} variant={variant} />;
+      },
     },
     {
       key: 'actions',
@@ -126,6 +138,46 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
               ))}
             </select>
           </label>
+
+          {frequency === 'WEEKLY' && (
+            <label className="flex flex-col gap-1.5">
+              <span className="text-[11px] font-semibold text-textMuted">
+                {t('scheduling.weekdayLabel')}
+              </span>
+              <select
+                data-cy="task-weekday"
+                className={selectClass}
+                value={weekday}
+                onChange={(e) => setWeekday(e.target.value)}
+              >
+                {WEEKDAYS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {t(o.labelKey)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          {frequency === 'MONTHLY' && (
+            <label className="flex flex-col gap-1.5">
+              <span className="text-[11px] font-semibold text-textMuted">
+                {t('scheduling.dayOfMonthLabel')}
+              </span>
+              <select
+                data-cy="task-monthday"
+                className={selectClass}
+                value={monthDay}
+                onChange={(e) => setMonthDay(e.target.value)}
+              >
+                {MONTH_DAYS.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
 
           <label className="flex flex-col gap-1.5">
             <span className="text-[11px] font-semibold text-textMuted">

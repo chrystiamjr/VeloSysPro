@@ -203,8 +203,10 @@
   "scheduling": {
     "colActions": "Actions",
     "colName": "Task",
+    "colSchedule": "Schedule",
     "colState": "State",
     "createBtn": "Schedule",
+    "dayOfMonthLabel": "Day of month",
     "deleteBtn": "Remove",
     "deleteConfirm": "Remove this scheduled task? The automatic optimization will no longer run.",
     "empty": "No scheduled tasks. Create your first one above.",
@@ -214,8 +216,27 @@
     "freqLabel": "Frequency",
     "freqMonthly": "Monthly",
     "freqWeekly": "Weekly",
+    "scheduleDaily": "Every day at {{time}}",
+    "scheduleMonthly": "Every month on day {{day}} at {{time}}",
+    "scheduleUnknown": "—",
+    "scheduleWeekly": "Every {{day}} at {{time}}",
+    "stateDisabled": "Disabled",
+    "stateReady": "Ready",
+    "stateRunning": "Running",
+    "stateUnknown": "Unknown",
+    "taskLabel": "{{frequency}} - {{optimization}}",
     "timeLabel": "Time",
-    "typeLabel": "Optimization"
+    "typeLabel": "Optimization",
+    "weekday": {
+      "fri": "Friday",
+      "mon": "Monday",
+      "sat": "Saturday",
+      "sun": "Sunday",
+      "thu": "Thursday",
+      "tue": "Tuesday",
+      "wed": "Wednesday"
+    },
+    "weekdayLabel": "Day of week"
   },
   "settings": {
     "backupDesc": "Automatically create a registry backup before every optimization.",

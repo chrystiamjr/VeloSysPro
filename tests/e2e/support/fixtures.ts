@@ -18,8 +18,16 @@ export const backups: BackupItem[] = [
 ];
 
 export const tasks: ScheduledTaskItem[] = [
-  { Name: 'VeloSysPro_Quick', State: 'Ready', Path: '\\VeloSysPro_Quick' },
-  { Name: 'VeloSysPro_Gaming', State: 'Running', Path: '\\VeloSysPro_Gaming' },
+  {
+    Name: 'VeloSysPro_Quick_Daily_0300',
+    State: 'Ready',
+    Path: '\\VeloSysPro_Quick_Daily_0300',
+  },
+  {
+    Name: 'VeloSysPro_Gaming_Weekly_MON_0430',
+    State: 'Running',
+    Path: '\\VeloSysPro_Gaming_Weekly_MON_0430',
+  },
 ];
 
 export const restorePoints: RestorePointItem[] = [

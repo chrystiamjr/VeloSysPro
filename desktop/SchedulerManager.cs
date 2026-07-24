@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace VeloSysPro
 {
@@ -10,12 +12,31 @@ namespace VeloSysPro
     /// Manages Windows Task Scheduler entries that run VeloSys Pro optimizations
     /// headlessly (VeloSysPro.exe --task=&lt;type&gt;) via schtasks.exe.
     /// </summary>
+    /// <remarks>
+    /// Task names encode the whole schedule (VeloSysPro_Quick_Daily_0300,
+    /// VeloSysPro_Gaming_Weekly_MON_0430, VeloSysPro_Full_Monthly_15_0200). That keeps names
+    /// unique so several schedules of the same optimization can coexist, makes re-creating an
+    /// identical schedule idempotent, and lets the UI describe a task without a sidecar index
+    /// that could drift from the Windows Task Scheduler.
+    /// </remarks>
     public class SchedulerManager
     {
         /// <summary>Serializable shape matching ScheduledTaskItem in the React frontend.</summary>
         private record TaskInfo(string Name, string State, string Path);
 
         private const string Prefix = "VeloSysPro_";
+
+        private static readonly string[] ValidTypes = { "quick", "full", "gaming", "revert" };
+        private static readonly string[] ValidWeekdays =
+        {
+            "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN",
+        };
+
+        private static readonly Regex TimePattern =
+            new(@"^([01]\d|2[0-3]):[0-5]\d$", RegexOptions.Compiled);
+
+        private static readonly Regex TaskNamePattern =
+            new(@"^VeloSysPro_[A-Za-z0-9_]+$", RegexOptions.Compiled);
 
         private readonly ICommandRunner _cmd;
         private readonly IStatusSink _sink;
@@ -28,7 +49,11 @@ namespace VeloSysPro
             _exePath = exePath ?? Process.GetCurrentProcess().MainModule?.FileName ?? "";
         }
 
-        /// <summary>Creates a scheduled task from a JSON payload: {type, frequency, time}.</summary>
+        /// <summary>
+        /// Creates a scheduled task from a JSON payload: {type, frequency, time, day}.
+        /// `day` is a weekday token (MON..SUN) for WEEKLY and a day of month (1..31) for MONTHLY;
+        /// it is ignored for DAILY.
+        /// </summary>
         public void CreateTask(string payloadJson)
         {
             try
@@ -36,19 +61,38 @@ namespace VeloSysPro
                 using JsonDocument doc = JsonDocument.Parse(payloadJson);
                 JsonElement root = doc.RootElement;
 
-                string type = GetString(root, "type", "quick");
-                string frequency = GetString(root, "frequency", "DAILY").ToUpperInvariant();
-                string time = GetString(root, "time", "03:00");
+                // Every part below is whitelisted before reaching the command line, because both
+                // the arguments and the derived task name are interpolated into it.
+                string type = GetString(root, "type", "quick").ToLowerInvariant();
+                if (Array.IndexOf(ValidTypes, type) < 0)
+                    type = "quick";
 
+                string frequency = GetString(root, "frequency", "DAILY").ToUpperInvariant();
                 if (frequency != "DAILY" && frequency != "WEEKLY" && frequency != "MONTHLY")
                     frequency = "DAILY";
 
-                string taskName = Prefix + Capitalize(type);
+                string time = GetString(root, "time", "03:00");
+                if (!TimePattern.IsMatch(time))
+                    time = "03:00";
+
+                string day = NormalizeDay(GetString(root, "day", ""), frequency);
+                string dayArgument = day.Length == 0 ? "" : " /d " + day;
+                string daySuffix = day.Length == 0 ? "" : "_" + day;
+
+                string taskName =
+                    Prefix
+                    + Capitalize(type)
+                    + "_"
+                    + Capitalize(frequency)
+                    + daySuffix
+                    + "_"
+                    + time.Replace(":", "");
+
                 string tr = "\\\"" + _exePath + "\\\" --task=" + type;
 
                 _cmd.Run(
                     "schtasks.exe",
-                    $"/create /tn \"{taskName}\" /tr \"{tr}\" /sc {frequency} /st {time} /rl HIGHEST /f"
+                    $"/create /tn \"{taskName}\" /tr \"{tr}\" /sc {frequency}{dayArgument} /st {time} /rl HIGHEST /f"
                 );
                 _sink.Log("log.task.created", "success", new { name = taskName });
             }
@@ -58,8 +102,71 @@ namespace VeloSysPro
             }
         }
 
+        /// <summary>Validates the day component for the given frequency; empty for DAILY.</summary>
+        private static string NormalizeDay(string day, string frequency)
+        {
+            if (frequency == "WEEKLY")
+            {
+                string weekday = day.ToUpperInvariant();
+                return Array.IndexOf(ValidWeekdays, weekday) >= 0 ? weekday : "MON";
+            }
+
+            if (frequency == "MONTHLY")
+            {
+                bool parsed = int.TryParse(
+                    day,
+                    NumberStyles.Integer,
+                    CultureInfo.InvariantCulture,
+                    out int dayOfMonth
+                );
+                if (!parsed || dayOfMonth < 1 || dayOfMonth > 31)
+                    dayOfMonth = 1;
+
+                return dayOfMonth.ToString(CultureInfo.InvariantCulture);
+            }
+
+            return "";
+        }
+
         /// <summary>Returns VeloSys Pro scheduled tasks as JSON [{Name, State, Path}].</summary>
+        /// <remarks>
+        /// Prefers Get-ScheduledTask because its State is a .NET enum (Ready/Running/Disabled),
+        /// while `schtasks /query` prints a status translated to the Windows display language and
+        /// therefore cannot be mapped to a UI badge. Falls back to the CSV parser when PowerShell
+        /// is unavailable so the list never disappears.
+        /// </remarks>
         public string GetTasksJson()
+        {
+            try
+            {
+                const string ps =
+                    "Get-ScheduledTask -TaskPath '\\' | "
+                    + "Where-Object { $_.TaskName -like 'VeloSysPro_*' } | "
+                    + "ForEach-Object { [PSCustomObject]@{ "
+                    + "Name = $_.TaskName; "
+                    + "State = [string]$_.State; "
+                    + "Path = $_.TaskPath + $_.TaskName } } | ConvertTo-Json -Compress";
+
+                string raw = _cmd
+                    .RunCapture("powershell.exe", "-ExecutionPolicy Bypass -Command \"" + ps + "\"")
+                    .Trim();
+
+                if (raw.StartsWith("[", StringComparison.Ordinal))
+                    return raw;
+                // ConvertTo-Json emits an object (not an array) when there is a single task.
+                if (raw.StartsWith("{", StringComparison.Ordinal))
+                    return "[" + raw + "]";
+            }
+            catch
+            {
+                // Fall through to the schtasks fallback below.
+            }
+
+            return GetTasksJsonFromSchtasks();
+        }
+
+        /// <summary>Legacy listing path used when the PowerShell query yields nothing.</summary>
+        private string GetTasksJsonFromSchtasks()
         {
             try
             {
@@ -91,6 +198,13 @@ namespace VeloSysPro
 
         public void DeleteTask(string name)
         {
+            // The name reaches a command line, so only accept the shape this app creates.
+            if (string.IsNullOrEmpty(name) || !TaskNamePattern.IsMatch(name))
+            {
+                _sink.Log("log.task.failed", "error", new { message = "invalid task name" });
+                return;
+            }
+
             try
             {
                 _cmd.Run("schtasks.exe", $"/delete /tn \"{name}\" /f");
