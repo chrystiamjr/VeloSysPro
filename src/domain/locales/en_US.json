@@ -1,181 +1,282 @@
 {
-  "brandSubtitle": "Envolvo Systems LTDA.",
-  "adminBadge": "Administrator Active",
-  "version": "Version 1.0.0 (C# / React Build)",
-  "navDashboard": "Dashboard",
-  "navScheduling": "Scheduler",
-  "navBackup": "Backup & Restore",
-  "navLogsFolder": "Logs Folder",
-  "navRestorePoints": "Restore Points",
-  "navSettings": "Settings",
-
-  "headerDashboardTitle": "Optimization Dashboard",
-  "headerDashboardSubtitle": "Windows maintenance, network acceleration, and recovery",
-  "headerSchedulingTitle": "Automated Task Scheduler",
-  "headerSchedulingSubtitle": "Configure recurring Windows optimization tasks",
-  "headerBackupTitle": "Backup & Registry Recovery",
-  "headerBackupSubtitle": "Manage manual registry backups and system restore points",
-  "headerRestorePointsTitle": "System Restore Points",
-  "headerRestorePointsSubtitle": "Create and roll back Windows system restore points",
-  "headerSettingsTitle": "Settings",
-  "headerSettingsSubtitle": "Application preferences and optimization behavior",
-
-  "healthAdmin": "Administrator",
-  "healthBackups": "Backups Created",
-  "healthLatestBackup": "Latest Backup",
-  "healthTasks": "Scheduled Tasks",
-  "healthStatus": "State",
-  "healthStatusReady": "Ready",
-  "healthStatusExecuting": "Executing...",
-  "healthNone": "None",
-  "healthYes": "Yes",
-  "healthNo": "No",
-
-  "actQuickTitle": "Quick Optimization",
-  "actQuickDesc": "Flushes DNS cache, cleans temp files, and runs lightweight maintenance.",
-  "actFullTitle": "Full Optimization",
-  "actFullDesc": "Runs SFC scannow, DISM repair, disk check, DNS flush, and temp clean.",
-  "actGamingTitle": "Gaming Mode",
-  "actGamingDesc": "Tunes TCP stack (RSS, Autotuning) for low latency and online gaming.",
-  "actRevertTitle": "Revert Defaults",
-  "actRevertDesc": "Resets IP and Winsock network settings back to factory defaults.",
-  "actRestorePointTitle": "Create Restore Point",
-  "actRestorePointDesc": "Creates a verified System Restore Point prior to system changes.",
-  "actBackupTitle": "Registry Backup",
-  "actBackupDesc": "Exports immediate safety backup of TCP/IP network registry settings.",
-  "actUpdateCacheTitle": "Clear Windows Update Cache",
-  "actUpdateCacheDesc": "Stops the service, clears the Windows Update download cache, and restarts it.",
-  "actPrefetchTitle": "Clean Prefetch",
-  "actPrefetchDesc": "Removes prefetch files so the app launch cache is rebuilt fresh.",
-  "actDiskHealthTitle": "Disk Health",
-  "actDiskHealthDesc": "Generates a physical-disk status (SMART/health) report in the terminal.",
-
-  "btnExecuteNow": "Execute Now",
-  "btnApplyMode": "Apply Mode",
-  "btnRevert": "Revert",
-  "btnCreateNow": "Create Now",
-  "btnOpenView": "Open View",
-  "btnClean": "Clean",
-  "btnViewReport": "View Report",
-  "btnClearConsole": "Clear Console",
-
-  "terminalTitle": "Live Real-Time Log",
-  "terminalWaiting": "[SYSTEM] Awaiting execution logs...",
-
-  "schedulingFormTitle": "Schedule Optimization",
-  "schedulingFormDesc": "Create a recurring Windows Task Scheduler entry that runs the optimization in the background.",
-  "schedulingTypeLabel": "Optimization",
-  "schedulingFreqLabel": "Frequency",
-  "schedulingTimeLabel": "Time",
-  "schedulingCreateBtn": "Schedule",
-  "schedFreqDaily": "Daily",
-  "schedFreqWeekly": "Weekly",
-  "schedFreqMonthly": "Monthly",
-  "schedulingEmpty": "No scheduled tasks. Create your first one above.",
-  "schedulingColName": "Task",
-  "schedulingColState": "State",
-  "schedulingColActions": "Actions",
-  "schedulingDeleteBtn": "Remove",
-  "schedulingDeleteConfirm": "Remove this scheduled task? The automatic optimization will no longer run.",
-
-  "rpSectionTitle": "System Restore Points",
-  "rpSectionDesc": "Create a restore point before changes, or roll Windows back to an earlier state.",
-  "rpCreateBtn": "Create Restore Point",
-  "rpColSeq": "#",
-  "rpColDate": "Date",
-  "rpColDescription": "Description",
-  "rpColActions": "Actions",
-  "rpRestoreBtn": "Restore",
-  "rpEmpty": "No restore points found. Create your first one above.",
-  "rpRestoreConfirm1": "Restoring the system to this point will undo recent changes. Continue?",
-  "rpRestoreConfirm2": "WARNING: the computer will REBOOT to complete the restore. Confirm?",
-
-  "settingsLanguageTitle": "Language",
-  "settingsLanguageDesc": "Choose the interface language. Your preference is saved automatically.",
-  "settingsLangPt": "Português",
-  "settingsLangEn": "English",
-  "settingsBackupTitle": "Safety Backup",
-  "settingsBackupDesc": "Automatically create a registry backup before every optimization.",
-  "settingsEnabled": "Enabled",
-  "settingsDisabled": "Disabled",
-
-  "updateBannerText": "New version {{version}} available!",
-  "updateBannerBtn": "Download",
-  "updateBannerDismiss": "Dismiss",
-
-  "backupSectionTitle": "Registry Backups",
-  "backupSectionDesc": "Export safety copies of TCP/IP network settings and restore them when needed.",
-  "backupCreateBtn": "Create Backup Now",
-  "backupOpenFolderBtn": "Open Backups Folder",
-  "backupRestoreBtn": "Restore",
-  "backupRestoreConfirm": "Restoring this backup will overwrite current registry settings. Do you want to continue?",
-  "backupEmpty": "No backups found. Create your first registry backup.",
-  "backupColName": "File",
-  "backupColDate": "Date",
-  "backupColSize": "Size",
-  "backupColActions": "Actions",
-
-  "statusIdle": "Awaiting action",
-  "statusQuickStart": "Starting Quick Optimization...",
-  "statusQuickDns": "[1/3] Flushing DNS cache...",
-  "statusQuickCleanmgr": "[2/3] Running temp files cleanup...",
-  "statusQuickTemp": "[3/3] Finalizing file cleanup...",
-  "statusQuickDone": "Quick Optimization completed successfully!",
-  "statusFullStart": "Starting Full Optimization...",
-  "statusFullSfc": "[1/4] Verifying system files (SFC)...",
-  "statusFullDism": "[2/4] Repairing system image (DISM)...",
-  "statusFullDns": "[3/4] Flushing DNS cache...",
-  "statusFullTemp": "[4/4] Cleaning temporary files...",
-  "statusFullDone": "Full Optimization completed!",
-  "statusGamingStart": "Applying Gaming Mode...",
-  "statusGamingRss": "Enabling RSS...",
-  "statusGamingAutotuning": "Adjusting autotuning...",
-  "statusGamingDns": "Flushing DNS...",
-  "statusGamingDone": "Gaming Mode applied successfully!",
-  "statusRevertStart": "Reverting settings...",
-  "statusRevertIp": "Resetting IP stack...",
-  "statusRevertWinsock": "Resetting Winsock...",
-  "statusRevertDns": "Flushing DNS...",
-  "statusRevertDone": "Settings reverted to defaults!",
-  "statusRestorePointCreating": "Creating Restore Point...",
-  "statusRestorePointDone": "Restore point created!",
-  "statusUpdateCacheStart": "Clearing Windows Update cache...",
-  "statusUpdateCacheDone": "Windows Update cache cleared!",
-  "statusPrefetchStart": "Cleaning Prefetch...",
-  "statusPrefetchDone": "Prefetch cleaned!",
-  "statusDiskHealthStart": "Analyzing disk health...",
-  "statusDiskHealthDone": "Disk report generated!",
-
-  "logAppStarted": "[SYSTEM] VeloSys Pro started successfully (React 18 + TypeScript + Rosetta i18n).",
-  "logHostReady": ".NET 8 WPF + Edge Chromium WebView2 host initialized (embedded UI).",
-  "logQuickStart": "Starting Quick Optimization...",
-  "logQuickDone": "Quick Optimization completed successfully.",
-  "logFullStart": "Starting Full Optimization...",
-  "logFullDone": "Full Optimization completed successfully.",
-  "logGamingStart": "Applying low-latency network tweaks (Gaming Mode)...",
-  "logGamingDone": "Gaming Mode applied successfully.",
-  "logRevertStart": "Reverting network settings to defaults...",
-  "logRevertDone": "Settings reverted successfully.",
-  "logUpdateCacheStart": "Clearing Windows Update cache...",
-  "logUpdateCacheDone": "Windows Update cache cleared successfully.",
-  "logPrefetchStart": "Cleaning Prefetch folder...",
-  "logPrefetchDone": "Prefetch cleaned successfully.",
-  "logDiskHealthStart": "Generating disk health report...",
-  "logDiskHealthDone": "Disk health report completed.",
-  "logBackupCreated": "Registry backup created: {{file}}",
-  "logBackupFailed": "Failed to create backup: {{message}}",
-  "logBackupRestored": "Backup restored: {{name}}",
-  "logBackupNotFound": "Backup file not found: {{name}}",
-  "logRestoreFailed": "Failed to restore backup: {{message}}",
-  "logRestorePointCreating": "Creating System Restore Point...",
-  "logRestorePointDone": "Restore Point created successfully.",
-  "logRestorePointFailed": "Failed to create restore point: {{message}}",
-  "logCmdError": "Error running {{exe}}: {{message}}",
-  "logTaskCreated": "Scheduled task created: {{name}}",
-  "logTaskDeleted": "Scheduled task removed: {{name}}",
-  "logTaskFailed": "Scheduling operation failed: {{message}}",
-  "logRestoreToPointStart": "Starting restore to point {{sequence}} (the system will reboot)...",
-  "logRestoreToPointDone": "Restore to point {{sequence}} initiated.",
-  "logRestoreToPointFailed": "Failed to restore the system: {{message}}",
-  "logRaw": "{{text}}"
+  "act": {
+    "backup": {
+      "desc": "Exports immediate safety backup of TCP/IP network registry settings.",
+      "title": "Registry Backup"
+    },
+    "diskHealth": {
+      "desc": "Generates a physical-disk status (SMART/health) report in the terminal.",
+      "title": "Disk Health"
+    },
+    "full": {
+      "desc": "Runs SFC scannow, DISM repair, disk check, DNS flush, and temp clean.",
+      "title": "Full Optimization"
+    },
+    "gaming": {
+      "desc": "Tunes TCP stack (RSS, Autotuning) for low latency and online gaming.",
+      "title": "Gaming Mode"
+    },
+    "prefetch": {
+      "desc": "Removes prefetch files so the app launch cache is rebuilt fresh.",
+      "title": "Clean Prefetch"
+    },
+    "quick": {
+      "desc": "Flushes DNS cache, cleans temp files, and runs lightweight maintenance.",
+      "title": "Quick Optimization"
+    },
+    "restorePoint": {
+      "desc": "Creates a verified System Restore Point prior to system changes.",
+      "title": "Create Restore Point"
+    },
+    "revert": {
+      "confirm": "This action will reset IP and Winsock settings. Your connection may be temporarily interrupted. Do you want to continue?",
+      "desc": "Resets IP and Winsock network settings back to factory defaults.",
+      "title": "Revert Defaults"
+    },
+    "updateCache": {
+      "desc": "Stops the service, clears the Windows Update download cache, and restarts it.",
+      "title": "Clear Windows Update Cache"
+    }
+  },
+  "backup": {
+    "colActions": "Actions",
+    "colDate": "Date",
+    "colName": "File",
+    "colSize": "Size",
+    "createBtn": "Create Backup Now",
+    "empty": "No backups found. Create your first registry backup.",
+    "openFolderBtn": "Open Backups Folder",
+    "restoreBtn": "Restore",
+    "restoreConfirm": "Restoring this backup will overwrite current registry settings. Do you want to continue?",
+    "sectionDesc": "Export safety copies of TCP/IP network settings and restore them when needed.",
+    "sectionTitle": "Registry Backups"
+  },
+  "brand": {
+    "adminBadge": "Administrator Active",
+    "subtitle": "Envolvo Systems LTDA.",
+    "version": "Version 1.0.0 (C# / React Build)"
+  },
+  "btn": {
+    "applyMode": "Apply Mode",
+    "clean": "Clean",
+    "clearConsole": "Clear Console",
+    "createNow": "Create Now",
+    "executeNow": "Execute Now",
+    "openView": "Open View",
+    "revert": "Revert",
+    "viewReport": "View Report"
+  },
+  "dashboard": {
+    "maintenance": {
+      "desc": "Windows diagnostics and targeted cleanup tools.",
+      "title": "Maintenance"
+    },
+    "primary": {
+      "desc": "Choose the routine that best fits your system optimization needs.",
+      "title": "Primary actions"
+    },
+    "recovery": {
+      "desc": "Backups, restore points, and network reset tools.",
+      "title": "Safety and recovery"
+    },
+    "tools": {
+      "desc": "Tools organized by purpose and impact level.",
+      "title": "Tools"
+    }
+  },
+  "header": {
+    "backup": {
+      "subtitle": "Manage manual registry backups and system restore points",
+      "title": "Backup & Registry Recovery"
+    },
+    "dashboard": {
+      "subtitle": "Windows maintenance, network acceleration, and recovery",
+      "title": "Optimization Dashboard"
+    },
+    "restorePoints": {
+      "subtitle": "Create and roll back Windows system restore points",
+      "title": "System Restore Points"
+    },
+    "scheduling": {
+      "subtitle": "Configure recurring Windows optimization tasks",
+      "title": "Automated Task Scheduler"
+    },
+    "settings": {
+      "subtitle": "Application preferences and optimization behavior",
+      "title": "Settings"
+    }
+  },
+  "health": {
+    "admin": "Administrator",
+    "backups": "Backups Created",
+    "latestBackup": "Latest Backup",
+    "no": "No",
+    "none": "None",
+    "status": "State",
+    "statusExecuting": "Executing...",
+    "statusReady": "Ready",
+    "tasks": "Scheduled Tasks",
+    "yes": "Yes"
+  },
+  "log": {
+    "appStarted": "[SYSTEM] VeloSys Pro started successfully (React 18 + TypeScript + Rosetta i18n).",
+    "backup": {
+      "created": "Registry backup created: {{file}}",
+      "failed": "Failed to create backup: {{message}}",
+      "notFound": "Backup file not found: {{name}}",
+      "restoreFailed": "Failed to restore backup: {{message}}",
+      "restored": "Backup restored: {{name}}"
+    },
+    "cmdError": "Error running {{exe}}: {{message}}",
+    "diskHealth": {
+      "done": "Disk health report completed.",
+      "start": "Generating disk health report..."
+    },
+    "full": {
+      "done": "Full Optimization completed successfully.",
+      "start": "Starting Full Optimization..."
+    },
+    "gaming": {
+      "done": "Gaming Mode applied successfully.",
+      "start": "Applying low-latency network tweaks (Gaming Mode)..."
+    },
+    "hostReady": ".NET 8 WPF + Edge Chromium WebView2 host initialized (embedded UI).",
+    "prefetch": {
+      "done": "Prefetch cleaned successfully.",
+      "start": "Cleaning Prefetch folder..."
+    },
+    "quick": {
+      "done": "Quick Optimization completed successfully.",
+      "start": "Starting Quick Optimization..."
+    },
+    "raw": "{{text}}",
+    "restorePoint": {
+      "creating": "Creating System Restore Point...",
+      "done": "Restore Point created successfully.",
+      "failed": "Failed to create restore point: {{message}}"
+    },
+    "restoreToPoint": {
+      "done": "Restore to point {{sequence}} initiated.",
+      "failed": "Failed to restore the system: {{message}}",
+      "start": "Starting restore to point {{sequence}} (the system will reboot)..."
+    },
+    "revert": {
+      "done": "Settings reverted successfully.",
+      "start": "Reverting network settings to defaults..."
+    },
+    "task": {
+      "created": "Scheduled task created: {{name}}",
+      "deleted": "Scheduled task removed: {{name}}",
+      "failed": "Scheduling operation failed: {{message}}"
+    },
+    "updateCache": {
+      "done": "Windows Update cache cleared successfully.",
+      "start": "Clearing Windows Update cache..."
+    }
+  },
+  "nav": {
+    "backup": "Backup & Restore",
+    "dashboard": "Dashboard",
+    "logsFolder": "Logs Folder",
+    "restorePoints": "Restore Points",
+    "scheduling": "Scheduler",
+    "settings": "Settings"
+  },
+  "rp": {
+    "colActions": "Actions",
+    "colDate": "Date",
+    "colDescription": "Description",
+    "colSeq": "#",
+    "createBtn": "Create Restore Point",
+    "empty": "No restore points found. Create your first one above.",
+    "restoreBtn": "Restore",
+    "restoreConfirm1": "Restoring the system to this point will undo recent changes. Continue?",
+    "restoreConfirm2": "WARNING: the computer will REBOOT to complete the restore. Confirm?",
+    "sectionDesc": "Create a restore point before changes, or roll Windows back to an earlier state.",
+    "sectionTitle": "System Restore Points"
+  },
+  "scheduling": {
+    "colActions": "Actions",
+    "colName": "Task",
+    "colState": "State",
+    "createBtn": "Schedule",
+    "deleteBtn": "Remove",
+    "deleteConfirm": "Remove this scheduled task? The automatic optimization will no longer run.",
+    "empty": "No scheduled tasks. Create your first one above.",
+    "formDesc": "Create a recurring Windows Task Scheduler entry that runs the optimization in the background.",
+    "formTitle": "Schedule Optimization",
+    "freqDaily": "Daily",
+    "freqLabel": "Frequency",
+    "freqMonthly": "Monthly",
+    "freqWeekly": "Weekly",
+    "timeLabel": "Time",
+    "typeLabel": "Optimization"
+  },
+  "settings": {
+    "backupDesc": "Automatically create a registry backup before every optimization.",
+    "backupTitle": "Safety Backup",
+    "disabled": "Disabled",
+    "enabled": "Enabled",
+    "langEn": "English",
+    "langPt": "Português",
+    "languageDesc": "Choose the interface language. Your preference is saved automatically.",
+    "languageTitle": "Language"
+  },
+  "status": {
+    "diskHealth": {
+      "done": "Disk report generated!",
+      "start": "Analyzing disk health..."
+    },
+    "full": {
+      "dism": "[2/4] Repairing system image (DISM)...",
+      "dns": "[3/4] Flushing DNS cache...",
+      "done": "Full Optimization completed!",
+      "sfc": "[1/4] Verifying system files (SFC)...",
+      "start": "Starting Full Optimization...",
+      "temp": "[4/4] Cleaning temporary files..."
+    },
+    "gaming": {
+      "autotuning": "Adjusting autotuning...",
+      "dns": "Flushing DNS...",
+      "done": "Gaming Mode applied successfully!",
+      "rss": "Enabling RSS...",
+      "start": "Applying Gaming Mode..."
+    },
+    "idle": "Awaiting action",
+    "prefetch": {
+      "done": "Prefetch cleaned!",
+      "start": "Cleaning Prefetch..."
+    },
+    "quick": {
+      "cleanmgr": "[2/3] Running temp files cleanup...",
+      "dns": "[1/3] Flushing DNS cache...",
+      "done": "Quick Optimization completed successfully!",
+      "start": "Starting Quick Optimization...",
+      "temp": "[3/3] Finalizing file cleanup..."
+    },
+    "restorePoint": {
+      "creating": "Creating Restore Point...",
+      "done": "Restore point created!"
+    },
+    "revert": {
+      "dns": "Flushing DNS...",
+      "done": "Settings reverted to defaults!",
+      "ip": "Resetting IP stack...",
+      "start": "Reverting settings...",
+      "winsock": "Resetting Winsock..."
+    },
+    "updateCache": {
+      "done": "Windows Update cache cleared!",
+      "start": "Clearing Windows Update cache..."
+    }
+  },
+  "terminal": {
+    "title": "Live Real-Time Log",
+    "waiting": "[SYSTEM] Awaiting execution logs..."
+  },
+  "updateBanner": {
+    "btn": "Download",
+    "dismiss": "Dismiss",
+    "text": "New version {{version}} available!"
+  }
 }

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from '../atoms/Button';
+import { Icon } from '../atoms/Icon';
 import { RestorePointItem } from '../../domain/types';
 import { useTranslation } from '../../infrastructure/i18nContext';
 
@@ -7,6 +8,7 @@ export interface RestorePointsPageProps {
   points: RestorePointItem[];
   onCreatePoint: () => void;
   onRestore: (sequence: number) => void;
+  disabled?: boolean;
 }
 
 /**
@@ -17,11 +19,12 @@ export const RestorePointsPage: React.FC<RestorePointsPageProps> = ({
   points,
   onCreatePoint,
   onRestore,
+  disabled = false,
 }) => {
   const { t } = useTranslation();
 
   const handleRestore = (sequence: number) => {
-    if (window.confirm(t('rpRestoreConfirm1')) && window.confirm(t('rpRestoreConfirm2'))) {
+    if (window.confirm(t('rp.restoreConfirm1')) && window.confirm(t('rp.restoreConfirm2'))) {
       onRestore(sequence);
     }
   };
@@ -31,26 +34,31 @@ export const RestorePointsPage: React.FC<RestorePointsPageProps> = ({
       <div className="rounded-xl border border-borderColor bg-bgCard p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-lg font-bold text-white">{t('rpSectionTitle')}</h3>
-            <p className="mt-1 text-xs text-textMuted">{t('rpSectionDesc')}</p>
+            <h3 className="text-lg font-bold text-white">{t('rp.sectionTitle')}</h3>
+            <p className="mt-1 text-xs text-textMuted">{t('rp.sectionDesc')}</p>
           </div>
-          <Button variant="pink" className="w-auto shrink-0 px-5" onClick={onCreatePoint}>
-            🛡️ {t('rpCreateBtn')}
+          <Button
+            variant="pink"
+            className="flex w-auto shrink-0 items-center gap-2 px-5"
+            disabled={disabled}
+            onClick={onCreatePoint}
+          >
+            <Icon name="shield-check" /> {t('rp.createBtn')}
           </Button>
         </div>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-borderColor bg-bgCard">
         {points.length === 0 ? (
-          <p className="p-8 text-center text-xs text-textMuted">{t('rpEmpty')}</p>
+          <p className="p-8 text-center text-xs text-textMuted">{t('rp.empty')}</p>
         ) : (
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-borderColor text-textMuted">
-                <th className="px-5 py-3 font-semibold">{t('rpColSeq')}</th>
-                <th className="px-5 py-3 font-semibold">{t('rpColDate')}</th>
-                <th className="px-5 py-3 font-semibold">{t('rpColDescription')}</th>
-                <th className="px-5 py-3 text-right font-semibold">{t('rpColActions')}</th>
+                <th className="px-5 py-3 font-semibold">{t('rp.colSeq')}</th>
+                <th className="px-5 py-3 font-semibold">{t('rp.colDate')}</th>
+                <th className="px-5 py-3 font-semibold">{t('rp.colDescription')}</th>
+                <th className="px-5 py-3 text-right font-semibold">{t('rp.colActions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -65,10 +73,11 @@ export const RestorePointsPage: React.FC<RestorePointsPageProps> = ({
                   <td className="px-5 py-3 text-right">
                     <Button
                       variant="warning"
-                      className="w-auto px-4 py-2"
+                      className="ml-auto flex w-auto items-center gap-1.5 px-4 py-2"
+                      disabled={disabled}
                       onClick={() => handleRestore(point.Sequence)}
                     >
-                      ↺ {t('rpRestoreBtn')}
+                      <Icon name="rotate-ccw" /> {t('rp.restoreBtn')}
                     </Button>
                   </td>
                 </tr>

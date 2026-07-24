@@ -27,6 +27,9 @@ namespace VeloSysPro
         private readonly SchedulerManager _scheduler;
         private readonly SettingsManager _settings;
 
+        // Command table mapping IPC action names to hibernated delegates
+        private readonly Dictionary<string, Action<string>> _actionHandlers;
+
         // Maps normalized (forward-slash) embedded resource names to their real manifest names.
         private Dictionary<string, string> _resourceMap = new();
 
@@ -51,7 +54,45 @@ namespace VeloSysPro
             _settings = new SettingsManager();
             _optimizer.CreateSafetyBackupEnabled = _settings.Current.CreateBackupBeforeOptimize;
 
+            _actionHandlers = RegisterActionHandlers();
+
             Loaded += MainWindow_Loaded;
+        }
+
+        private Dictionary<string, Action<string>> RegisterActionHandlers()
+        {
+            return new Dictionary<string, Action<string>>
+            {
+                { "runQuickOptimization", _ => _optimizer.RunQuick() },
+                { "runFullOptimization", _ => _optimizer.RunFull() },
+                { "runGamingMode", _ => _optimizer.RunGaming() },
+                { "revertDefaults", _ => _optimizer.RevertDefaults() },
+                { "clearUpdateCache", _ => _optimizer.ClearUpdateCache() },
+                { "cleanPrefetch", _ => _optimizer.CleanPrefetch() },
+                { "diskHealth", _ => _optimizer.ReportDiskHealth() },
+                { "createManualBackup", _ => { _backup.CreateBackup(); PushBackups(); } },
+                { "restoreBackup", payload => _backup.RestoreBackup(payload) },
+                { "createRestorePoint", _ => { _backup.CreateRestorePoint(); PushRestorePoints(); } },
+                { "getRestorePoints", _ => PushRestorePoints() },
+                { "restoreToPoint", payload => _backup.RestoreToPoint(payload) },
+                { "getSettings", _ => EvalJs("window.onSettingsLoaded && window.onSettingsLoaded(" + _settings.GetJson() + ");") },
+                { "saveSettings", payload => {
+                    var applied = _settings.Save(payload);
+                    _optimizer.CreateSafetyBackupEnabled = applied.CreateBackupBeforeOptimize;
+                } },
+                { "openUrl", payload => {
+                    if (payload.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Process.Start(new ProcessStartInfo { FileName = payload, UseShellExecute = true });
+                    }
+                } },
+                { "openLogs", _ => Process.Start("explorer.exe", _logsDir) },
+                { "openBackups", _ => Process.Start("explorer.exe", _backupsDir) },
+                { "getBackups", _ => PushBackups() },
+                { "getTasks", _ => PushTasks() },
+                { "createTask", payload => { _scheduler.CreateTask(payload); PushTasks(); } },
+                { "deleteTask", payload => { _scheduler.DeleteTask(payload); PushTasks(); } },
+            };
         }
 
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -101,7 +142,7 @@ namespace VeloSysPro
 
                 webView.CoreWebView2.Navigate("https://velosys.app/index.html");
 
-                Log("logHostReady", "success");
+                Log("log.hostReady", "success");
             }
             catch (Exception ex)
             {
@@ -188,79 +229,13 @@ namespace VeloSysPro
             {
                 try
                 {
-                    switch (action)
+                    if (_actionHandlers.TryGetValue(action, out var handler))
                     {
-                        case "runQuickOptimization":
-                            _optimizer.RunQuick();
-                            break;
-                        case "runFullOptimization":
-                            _optimizer.RunFull();
-                            break;
-                        case "runGamingMode":
-                            _optimizer.RunGaming();
-                            break;
-                        case "revertDefaults":
-                            _optimizer.RevertDefaults();
-                            break;
-                        case "clearUpdateCache":
-                            _optimizer.ClearUpdateCache();
-                            break;
-                        case "cleanPrefetch":
-                            _optimizer.CleanPrefetch();
-                            break;
-                        case "diskHealth":
-                            _optimizer.ReportDiskHealth();
-                            break;
-                        case "createManualBackup":
-                            _backup.CreateBackup();
-                            PushBackups();
-                            break;
-                        case "restoreBackup":
-                            _backup.RestoreBackup(payload);
-                            break;
-                        case "createRestorePoint":
-                            _backup.CreateRestorePoint();
-                            PushRestorePoints();
-                            break;
-                        case "getRestorePoints":
-                            PushRestorePoints();
-                            break;
-                        case "restoreToPoint":
-                            _backup.RestoreToPoint(payload);
-                            break;
-                        case "getSettings":
-                            EvalJs("window.onSettingsLoaded && window.onSettingsLoaded(" + _settings.GetJson() + ");");
-                            break;
-                        case "saveSettings":
-                            var applied = _settings.Save(payload);
-                            _optimizer.CreateSafetyBackupEnabled = applied.CreateBackupBeforeOptimize;
-                            break;
-                        case "openUrl":
-                            if (payload.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-                            {
-                                Process.Start(new ProcessStartInfo { FileName = payload, UseShellExecute = true });
-                            }
-                            break;
-                        case "openLogs":
-                            Process.Start("explorer.exe", _logsDir);
-                            break;
-                        case "openBackups":
-                            Process.Start("explorer.exe", _backupsDir);
-                            break;
-                        case "getBackups":
-                            PushBackups();
-                            break;
-                        case "getTasks":
-                            PushTasks();
-                            break;
-                        case "createTask":
-                            _scheduler.CreateTask(payload);
-                            PushTasks();
-                            break;
-                        case "deleteTask":
-                            _scheduler.DeleteTask(payload);
-                            PushTasks();
-                            break;
+                        handler(payload);
+                    }
+                    else
+                    {
+                        LogRaw("Unknown action requested: '" + action + "'", "warning");
                     }
                 }
                 catch (Exception ex)
@@ -321,7 +296,7 @@ namespace VeloSysPro
         public void LogRaw(string text, string type)
         {
             WriteFileLog(text, type == "error" ? _errorLogFile : _logFile);
-            string payload = JsonSerializer.Serialize(new { key = "logRaw", args = new { text } });
+            string payload = JsonSerializer.Serialize(new { key = "log.raw", args = new { text } });
             EvalJs("window.onLogReceived && window.onLogReceived(" + payload + ", '" + type + "');");
         }
 

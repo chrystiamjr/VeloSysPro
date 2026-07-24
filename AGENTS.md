@@ -72,3 +72,10 @@ All components in `src/components/` MUST strictly follow this hierarchy using Ty
 1. **WebView2 IPC Mocking**: In Vitest and Cypress test environments, `window.chrome.webview` is not available natively. The infrastructure layer (`bridge.ts`) automatically mocks message sending during tests.
 2. **UAC Administrator Rights**: System commands (`sfc`, `dism`, `netsh`, `Checkpoint-Computer`) require elevated privileges, managed by `app.manifest` in the C# host application.
 
+---
+
+## 📝 Learned Rules
+
+- **Full-Stack Cross-Layer Synchronization**: In hybrid desktop applications (C# .NET 8 WPF + React WebView2), any modification to i18n keys, IPC event contracts, payload schemas, or pre-commit validation MUST synchronously update both the C# backend emitter classes (`desktop/*.cs`) and the React TS frontend handler components (`src/`), and MUST be validated with both `npm run validate` and `dotnet build`.
+- **Environment-Aware Interactive Question Tools**: When soliciting design feedback, feature selection, or presenting multi-option choices, ALWAYS use the environment's native interactive question tool instead of static markdown text lists (Antigravity: `ask_question`, Claude Code: `AskUserQuestion`, Codex: `AskUser`). Prefix primary recommendations with `(Recommended)` / `(Recomendado)` and set multi-select checkboxes (`is_multi_select: true`) when multiple options apply.
+- **Empirical Windows Process-Boundary Validation**: When changing native Windows command execution, redirected output, logging, or completion state, NEVER assume UTF-8 or infer success solely from control flow. Detect the current Windows OEM encoding, preserve stdout/stderr and exit-code semantics, and validate the boundary with at least one representative localized command before changing React display logic; then run `npm run validate`, `dotnet build desktop/VeloSysPro.csproj`, and the affected E2E flow.

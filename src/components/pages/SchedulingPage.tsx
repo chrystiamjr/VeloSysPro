@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '../atoms/Button';
+import { Icon } from '../atoms/Icon';
 import { ScheduledTaskItem } from '../../domain/types';
 import { useTranslation } from '../../infrastructure/i18nContext';
 
@@ -7,19 +8,20 @@ export interface SchedulingPageProps {
   tasks: ScheduledTaskItem[];
   onCreateTask: (payload: string) => void;
   onDeleteTask: (name: string) => void;
+  disabled?: boolean;
 }
 
 const OPT_TYPES = [
-  { value: 'quick', labelKey: 'actQuickTitle' },
-  { value: 'full', labelKey: 'actFullTitle' },
-  { value: 'gaming', labelKey: 'actGamingTitle' },
-  { value: 'revert', labelKey: 'actRevertTitle' },
+  { value: 'quick', labelKey: 'act.quick.title' },
+  { value: 'full', labelKey: 'act.full.title' },
+  { value: 'gaming', labelKey: 'act.gaming.title' },
+  { value: 'revert', labelKey: 'act.revert.title' },
 ] as const;
 
 const FREQUENCIES = [
-  { value: 'DAILY', labelKey: 'schedFreqDaily' },
-  { value: 'WEEKLY', labelKey: 'schedFreqWeekly' },
-  { value: 'MONTHLY', labelKey: 'schedFreqMonthly' },
+  { value: 'DAILY', labelKey: 'scheduling.freqDaily' },
+  { value: 'WEEKLY', labelKey: 'scheduling.freqWeekly' },
+  { value: 'MONTHLY', labelKey: 'scheduling.freqMonthly' },
 ] as const;
 
 const selectClass =
@@ -29,6 +31,7 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
   tasks,
   onCreateTask,
   onDeleteTask,
+  disabled = false,
 }) => {
   const { t } = useTranslation();
   const [type, setType] = useState<string>('quick');
@@ -40,7 +43,7 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
   };
 
   const handleDelete = (name: string) => {
-    if (window.confirm(t('schedulingDeleteConfirm'))) {
+    if (window.confirm(t('scheduling.deleteConfirm'))) {
       onDeleteTask(name);
     }
   };
@@ -49,13 +52,13 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
     <div className="flex select-none flex-col gap-6">
       {/* Create form */}
       <div className="rounded-xl border border-borderColor bg-bgCard p-6">
-        <h3 className="text-lg font-bold text-white">{t('schedulingFormTitle')}</h3>
-        <p className="mt-1 text-xs text-textMuted">{t('schedulingFormDesc')}</p>
+        <h3 className="text-lg font-bold text-white">{t('scheduling.formTitle')}</h3>
+        <p className="mt-1 text-xs text-textMuted">{t('scheduling.formDesc')}</p>
 
         <div className="mt-5 flex flex-wrap items-end gap-4">
           <label className="flex flex-col gap-1.5">
             <span className="text-[11px] font-semibold text-textMuted">
-              {t('schedulingTypeLabel')}
+              {t('scheduling.typeLabel')}
             </span>
             <select className={selectClass} value={type} onChange={(e) => setType(e.target.value)}>
               {OPT_TYPES.map((o) => (
@@ -68,7 +71,7 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
 
           <label className="flex flex-col gap-1.5">
             <span className="text-[11px] font-semibold text-textMuted">
-              {t('schedulingFreqLabel')}
+              {t('scheduling.freqLabel')}
             </span>
             <select
               className={selectClass}
@@ -85,7 +88,7 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
 
           <label className="flex flex-col gap-1.5">
             <span className="text-[11px] font-semibold text-textMuted">
-              {t('schedulingTimeLabel')}
+              {t('scheduling.timeLabel')}
             </span>
             <input
               type="time"
@@ -95,8 +98,13 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
             />
           </label>
 
-          <Button variant="success" className="w-auto px-5" onClick={handleCreate}>
-            📅 {t('schedulingCreateBtn')}
+          <Button
+            variant="success"
+            className="flex w-auto items-center gap-2 px-5"
+            disabled={disabled}
+            onClick={handleCreate}
+          >
+            <Icon name="calendar" /> {t('scheduling.createBtn')}
           </Button>
         </div>
       </div>
@@ -104,14 +112,14 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
       {/* Task list */}
       <div className="overflow-hidden rounded-xl border border-borderColor bg-bgCard">
         {tasks.length === 0 ? (
-          <p className="p-8 text-center text-xs text-textMuted">{t('schedulingEmpty')}</p>
+          <p className="p-8 text-center text-xs text-textMuted">{t('scheduling.empty')}</p>
         ) : (
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-borderColor text-textMuted">
-                <th className="px-5 py-3 font-semibold">{t('schedulingColName')}</th>
-                <th className="px-5 py-3 font-semibold">{t('schedulingColState')}</th>
-                <th className="px-5 py-3 text-right font-semibold">{t('schedulingColActions')}</th>
+                <th className="px-5 py-3 font-semibold">{t('scheduling.colName')}</th>
+                <th className="px-5 py-3 font-semibold">{t('scheduling.colState')}</th>
+                <th className="px-5 py-3 text-right font-semibold">{t('scheduling.colActions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -125,10 +133,11 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
                   <td className="px-5 py-3 text-right">
                     <Button
                       variant="danger"
-                      className="w-auto px-4 py-2"
+                      className="ml-auto flex w-auto items-center gap-1.5 px-4 py-2"
+                      disabled={disabled}
                       onClick={() => handleDelete(task.Name)}
                     >
-                      🗑️ {t('schedulingDeleteBtn')}
+                      <Icon name="trash" /> {t('scheduling.deleteBtn')}
                     </Button>
                   </td>
                 </tr>

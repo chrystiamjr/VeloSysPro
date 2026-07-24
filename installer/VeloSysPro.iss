@@ -67,10 +67,11 @@ end;
 
 // True when no compatible WebView2 Runtime is registered (per-machine or per-user).
 function WebView2Missing: Boolean;
-const
-  ClientKey = 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}';
-  ClientKeyWow = 'SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}';
+var
+  ClientKey, ClientKeyWow: String;
 begin
+  ClientKey := 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}';
+  ClientKeyWow := 'SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}';
   Result := not (
     WebView2ClientPresent(HKLM, ClientKeyWow) or
     WebView2ClientPresent(HKLM, ClientKey) or

@@ -62,8 +62,12 @@ $iss = Join-Path $projectDir "installer\VeloSysPro.iss"
 $iscc = $null
 $isccCandidates = @(
     (Get-Command ISCC.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -ErrorAction SilentlyContinue),
+    "C:\Program Files\Inno Setup 7\ISCC.exe",
+    "C:\Program Files (x86)\Inno Setup 7\ISCC.exe",
+    "C:\Program Files\Inno Setup 6\ISCC.exe",
     "C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
-    "C:\Program Files\Inno Setup 6\ISCC.exe"
+    "$env:LOCALAPPDATA\Programs\Inno Setup 7\ISCC.exe",
+    "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe"
 )
 foreach ($c in $isccCandidates) { if ($c -and (Test-Path $c)) { $iscc = $c; break } }
 

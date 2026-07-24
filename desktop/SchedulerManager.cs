@@ -50,11 +50,11 @@ namespace VeloSysPro
                     "schtasks.exe",
                     $"/create /tn \"{taskName}\" /tr \"{tr}\" /sc {frequency} /st {time} /rl HIGHEST /f"
                 );
-                _sink.Log("logTaskCreated", "success", new { name = taskName });
+                _sink.Log("log.task.created", "success", new { name = taskName });
             }
             catch (Exception ex)
             {
-                _sink.Log("logTaskFailed", "error", new { message = ex.Message });
+                _sink.Log("log.task.failed", "error", new { message = ex.Message });
             }
         }
 
@@ -94,11 +94,11 @@ namespace VeloSysPro
             try
             {
                 _cmd.Run("schtasks.exe", $"/delete /tn \"{name}\" /f");
-                _sink.Log("logTaskDeleted", "success", new { name });
+                _sink.Log("log.task.deleted", "success", new { name });
             }
             catch (Exception ex)
             {
-                _sink.Log("logTaskFailed", "error", new { message = ex.Message });
+                _sink.Log("log.task.failed", "error", new { message = ex.Message });
             }
         }
 

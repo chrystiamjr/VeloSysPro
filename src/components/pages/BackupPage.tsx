@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from '../atoms/Button';
+import { Icon } from '../atoms/Icon';
 import { BackupItem } from '../../domain/types';
 import { useTranslation } from '../../infrastructure/i18nContext';
 
@@ -8,6 +9,7 @@ export interface BackupPageProps {
   onCreateBackup: () => void;
   onRestoreBackup: (name: string) => void;
   onOpenFolder: () => void;
+  disabled?: boolean;
 }
 
 /**
@@ -19,11 +21,12 @@ export const BackupPage: React.FC<BackupPageProps> = ({
   onCreateBackup,
   onRestoreBackup,
   onOpenFolder,
+  disabled = false,
 }) => {
   const { t } = useTranslation();
 
   const handleRestore = (name: string) => {
-    if (window.confirm(t('backupRestoreConfirm'))) {
+    if (window.confirm(t('backup.restoreConfirm'))) {
       onRestoreBackup(name);
     }
   };
@@ -33,15 +36,24 @@ export const BackupPage: React.FC<BackupPageProps> = ({
       <div className="rounded-xl border border-borderColor bg-bgCard p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-lg font-bold text-white">{t('backupSectionTitle')}</h3>
-            <p className="mt-1 text-xs text-textMuted">{t('backupSectionDesc')}</p>
+            <h3 className="text-lg font-bold text-white">{t('backup.sectionTitle')}</h3>
+            <p className="mt-1 text-xs text-textMuted">{t('backup.sectionDesc')}</p>
           </div>
           <div className="flex shrink-0 gap-3">
-            <Button variant="info" className="w-auto px-5" onClick={onCreateBackup}>
-              💾 {t('backupCreateBtn')}
+            <Button
+              variant="info"
+              className="flex w-auto items-center gap-2 px-5"
+              disabled={disabled}
+              onClick={onCreateBackup}
+            >
+              <Icon name="hard-drive" /> {t('backup.createBtn')}
             </Button>
-            <Button variant="primary" className="w-auto px-5" onClick={onOpenFolder}>
-              📂 {t('backupOpenFolderBtn')}
+            <Button
+              variant="primary"
+              className="flex w-auto items-center gap-2 px-5"
+              onClick={onOpenFolder}
+            >
+              <Icon name="folder-open" /> {t('backup.openFolderBtn')}
             </Button>
           </div>
         </div>
@@ -49,15 +61,15 @@ export const BackupPage: React.FC<BackupPageProps> = ({
 
       <div className="overflow-hidden rounded-xl border border-borderColor bg-bgCard">
         {backups.length === 0 ? (
-          <p className="p-8 text-center text-xs text-textMuted">{t('backupEmpty')}</p>
+          <p className="p-8 text-center text-xs text-textMuted">{t('backup.empty')}</p>
         ) : (
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-borderColor text-textMuted">
-                <th className="px-5 py-3 font-semibold">{t('backupColName')}</th>
-                <th className="px-5 py-3 font-semibold">{t('backupColDate')}</th>
-                <th className="px-5 py-3 font-semibold">{t('backupColSize')}</th>
-                <th className="px-5 py-3 text-right font-semibold">{t('backupColActions')}</th>
+                <th className="px-5 py-3 font-semibold">{t('backup.colName')}</th>
+                <th className="px-5 py-3 font-semibold">{t('backup.colDate')}</th>
+                <th className="px-5 py-3 font-semibold">{t('backup.colSize')}</th>
+                <th className="px-5 py-3 text-right font-semibold">{t('backup.colActions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -72,10 +84,11 @@ export const BackupPage: React.FC<BackupPageProps> = ({
                   <td className="px-5 py-3 text-right">
                     <Button
                       variant="warning"
-                      className="w-auto px-4 py-2"
+                      className="ml-auto flex w-auto items-center gap-1.5 px-4 py-2"
+                      disabled={disabled}
                       onClick={() => handleRestore(backup.Name)}
                     >
-                      ↺ {t('backupRestoreBtn')}
+                      <Icon name="rotate-ccw" /> {t('backup.restoreBtn')}
                     </Button>
                   </td>
                 </tr>

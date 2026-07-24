@@ -33,28 +33,28 @@ namespace VeloSysPro
                 string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
                 string file = Path.Combine(_backupsDir, "backup_rede_" + timestamp + ".reg");
                 _cmd.Run("reg.exe", "export \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\" \"" + file + "\" /y");
-                _sink.Log("logBackupCreated", "success", new { file });
+                _sink.Log("log.backup.created", "success", new { file });
             }
             catch (Exception ex)
             {
-                _sink.Log("logBackupFailed", "error", new { message = ex.Message });
+                _sink.Log("log.backup.failed", "error", new { message = ex.Message });
             }
         }
 
         public void CreateRestorePoint()
         {
-            _sink.Status("statusRestorePointCreating", 20);
-            _sink.Log("logRestorePointCreating", "info");
+            _sink.Status("status.restorePoint.creating", 20);
+            _sink.Log("log.restorePoint.creating", "info");
             try
             {
                 string psCmd = "Checkpoint-Computer -Description 'VeloSysPro_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + "' -RestorePointType 'MODIFY_SETTINGS'";
                 _cmd.Run("powershell.exe", "-ExecutionPolicy Bypass -Command \"" + psCmd + "\"");
-                _sink.Status("statusRestorePointDone", 100);
-                _sink.Log("logRestorePointDone", "success");
+                _sink.Status("status.restorePoint.done", 100);
+                _sink.Log("log.restorePoint.done", "success");
             }
             catch (Exception ex)
             {
-                _sink.Log("logRestorePointFailed", "error", new { message = ex.Message });
+                _sink.Log("log.restorePoint.failed", "error", new { message = ex.Message });
             }
         }
 
@@ -96,16 +96,16 @@ namespace VeloSysPro
                 if (File.Exists(filePath))
                 {
                     _cmd.Run("reg.exe", "import \"" + filePath + "\"");
-                    _sink.Log("logBackupRestored", "success", new { name = backupName });
+                    _sink.Log("log.backup.restored", "success", new { name = backupName });
                 }
                 else
                 {
-                    _sink.Log("logBackupNotFound", "error", new { name = backupName });
+                    _sink.Log("log.backup.notFound", "error", new { name = backupName });
                 }
             }
             catch (Exception ex)
             {
-                _sink.Log("logRestoreFailed", "error", new { message = ex.Message });
+                _sink.Log("log.backup.restoreFailed", "error", new { message = ex.Message });
             }
         }
 
@@ -137,19 +137,19 @@ namespace VeloSysPro
             string seq = new string(sequence.Where(char.IsDigit).ToArray());
             if (seq.Length == 0)
             {
-                _sink.Log("logRestoreToPointFailed", "error", new { message = "invalid sequence number" });
+                _sink.Log("log.restoreToPoint.failed", "error", new { message = "invalid sequence number" });
                 return;
             }
 
-            _sink.Log("logRestoreToPointStart", "info", new { sequence = seq });
+            _sink.Log("log.restoreToPoint.start", "info", new { sequence = seq });
             try
             {
                 _cmd.Run("powershell.exe", "-ExecutionPolicy Bypass -Command \"Restore-Computer -RestorePoint " + seq + "\"");
-                _sink.Log("logRestoreToPointDone", "success", new { sequence = seq });
+                _sink.Log("log.restoreToPoint.done", "success", new { sequence = seq });
             }
             catch (Exception ex)
             {
-                _sink.Log("logRestoreToPointFailed", "error", new { message = ex.Message });
+                _sink.Log("log.restoreToPoint.failed", "error", new { message = ex.Message });
             }
         }
     }

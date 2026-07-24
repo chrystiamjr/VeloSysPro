@@ -1,13 +1,23 @@
 import React, { useRef, useEffect } from 'react';
 import { LogEntryItem } from '../../domain/types';
 import { useTranslation } from '../../infrastructure/i18nContext';
+import { Icon } from '../atoms/Icon';
 
 export interface TerminalConsoleProps {
   logs?: LogEntryItem[];
   onClear: () => void;
+  expanded: boolean;
+  hasError?: boolean;
+  onToggle: () => void;
 }
 
-export const TerminalConsole: React.FC<TerminalConsoleProps> = ({ logs = [], onClear }) => {
+export const TerminalConsole: React.FC<TerminalConsoleProps> = ({
+  logs = [],
+  onClear,
+  expanded,
+  hasError = false,
+  onToggle,
+}) => {
   const { t } = useTranslation();
   const boxRef = useRef<HTMLDivElement>(null);
 
@@ -18,42 +28,70 @@ export const TerminalConsole: React.FC<TerminalConsoleProps> = ({ logs = [], onC
   }, [logs]);
 
   return (
-    <div className="mb-6 rounded-container border border-borderColor bg-[#0d0f15] p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="flex items-center gap-2 text-xs font-bold text-textMain">
-          <span>📜</span> {t('terminalTitle')}
-        </h3>
-        <button
-          onClick={onClear}
-          className="cursor-pointer rounded border border-borderColor bg-transparent px-3 py-1 text-[11px] text-textMuted transition-colors hover:text-white"
-        >
-          {t('btnClearConsole')}
-        </button>
-      </div>
-
+    <div
+      className={`mb-6 rounded-container border bg-bgMain p-4 ${hasError ? 'border-danger/60' : 'border-borderColor'}`}
+    >
       <div
-        ref={boxRef}
-        className="h-40 overflow-y-auto rounded-lg border border-white/5 bg-[#090a0e] p-3 font-mono text-xs leading-relaxed text-gray-300"
+        className={
+          expanded
+            ? 'mb-3 flex items-center justify-between gap-4'
+            : 'flex items-center justify-between gap-4'
+        }
       >
-        {logs.length === 0 ? (
-          <div className="italic text-textMuted">{t('terminalWaiting')}</div>
-        ) : (
-          logs.map((log, idx) => (
-            <div
-              key={idx}
-              className={`mb-1 ${
-                log.type === 'error'
-                  ? 'text-rose-400'
-                  : log.type === 'success'
-                    ? 'text-emerald-400'
-                    : 'text-sky-400'
-              }`}
-            >
-              {log.text}
-            </div>
-          ))
+        <button
+          type="button"
+          aria-expanded={expanded}
+          onClick={onToggle}
+          className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 bg-transparent text-left focus:outline-none focus:ring-2 focus:ring-primary/40"
+        >
+          <Icon
+            name="file-text"
+            className={`h-4 w-4 shrink-0 ${hasError ? 'text-danger' : 'text-primary'}`}
+          />
+          <span className="shrink-0 text-xs font-bold text-textMain">{t('terminal.title')}</span>
+          <span className={`truncate text-xs ${hasError ? 'text-danger' : 'text-textMuted'}`}>
+            {logs.length > 0 ? logs[logs.length - 1].text : t('terminal.waiting')}
+          </span>
+          <Icon
+            name={expanded ? 'chevron-down' : 'chevron-right'}
+            className="h-4 w-4 shrink-0 text-textMuted"
+          />
+        </button>
+        {expanded && (
+          <button
+            onClick={onClear}
+            className="cursor-pointer rounded border border-borderColor bg-transparent px-3 py-1 text-[11px] text-textMuted transition-colors hover:text-white"
+          >
+            {t('btn.clearConsole')}
+          </button>
         )}
       </div>
+
+      {expanded && (
+        <div
+          ref={boxRef}
+          className="h-40 overflow-y-auto rounded-lg border border-white/5 bg-bgMain p-3 font-mono text-xs leading-relaxed text-textMuted"
+        >
+          {logs.length === 0 ? (
+            <div className="italic text-textMuted">{t('terminal.waiting')}</div>
+          ) : (
+            logs.map((log, idx) => (
+              <div
+                key={idx}
+                className={`mb-1 ${
+                  log.type === 'error'
+                    ? 'text-danger'
+                    : log.type === 'success'
+                      ? 'text-success'
+                      : 'text-info'
+                }`}
+              >
+                {log.text}
+              </div>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 };

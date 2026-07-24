@@ -33,120 +33,120 @@ namespace VeloSysPro
 
         public void RunQuick()
         {
-            _sink.Status("statusQuickStart", 10);
-            _sink.Log("logQuickStart", "info");
+            _sink.Status("status.quick.start", 10);
+            _sink.Log("log.quick.start", "info");
             CreateSafetyBackup();
 
-            _sink.Status("statusQuickDns", 30);
+            _sink.Status("status.quick.dns", 30);
             _cmd.Run("ipconfig.exe", "/flushdns");
 
-            _sink.Status("statusQuickCleanmgr", 65);
+            _sink.Status("status.quick.cleanmgr", 65);
             _cmd.Run("cleanmgr.exe", "/verylowdisk");
 
-            _sink.Status("statusQuickTemp", 90);
+            _sink.Status("status.quick.temp", 90);
             _cmd.CleanTempFolder();
 
-            _sink.Status("statusQuickDone", 100);
-            _sink.Log("logQuickDone", "success");
+            _sink.Status("status.quick.done", 100);
+            _sink.Log("log.quick.done", "success");
         }
 
         public void RunFull()
         {
-            _sink.Status("statusFullStart", 10);
-            _sink.Log("logFullStart", "info");
+            _sink.Status("status.full.start", 10);
+            _sink.Log("log.full.start", "info");
             CreateSafetyBackup();
 
-            _sink.Status("statusFullSfc", 25);
+            _sink.Status("status.full.sfc", 25);
             _cmd.Run("sfc.exe", "/scannow");
 
-            _sink.Status("statusFullDism", 50);
+            _sink.Status("status.full.dism", 50);
             _cmd.Run("dism.exe", "/online /cleanup-image /restorehealth");
 
-            _sink.Status("statusFullDns", 75);
+            _sink.Status("status.full.dns", 75);
             _cmd.Run("ipconfig.exe", "/flushdns");
 
-            _sink.Status("statusFullTemp", 90);
+            _sink.Status("status.full.temp", 90);
             _cmd.CleanTempFolder();
 
-            _sink.Status("statusFullDone", 100);
-            _sink.Log("logFullDone", "success");
+            _sink.Status("status.full.done", 100);
+            _sink.Log("log.full.done", "success");
         }
 
         public void RunGaming()
         {
-            _sink.Status("statusGamingStart", 10);
-            _sink.Log("logGamingStart", "info");
+            _sink.Status("status.gaming.start", 10);
+            _sink.Log("log.gaming.start", "info");
             CreateSafetyBackup();
 
-            _sink.Status("statusGamingRss", 40);
+            _sink.Status("status.gaming.rss", 40);
             _cmd.Run("netsh.exe", "int tcp set global rss=enabled");
 
-            _sink.Status("statusGamingAutotuning", 70);
+            _sink.Status("status.gaming.autotuning", 70);
             _cmd.Run("netsh.exe", "int tcp set global autotuninglevel=normal");
 
-            _sink.Status("statusGamingDns", 90);
+            _sink.Status("status.gaming.dns", 90);
             _cmd.Run("ipconfig.exe", "/flushdns");
 
-            _sink.Status("statusGamingDone", 100);
-            _sink.Log("logGamingDone", "success");
+            _sink.Status("status.gaming.done", 100);
+            _sink.Log("log.gaming.done", "success");
         }
 
         public void RevertDefaults()
         {
-            _sink.Status("statusRevertStart", 10);
-            _sink.Log("logRevertStart", "info");
+            _sink.Status("status.revert.start", 10);
+            _sink.Log("log.revert.start", "info");
 
-            _sink.Status("statusRevertIp", 40);
+            _sink.Status("status.revert.ip", 40);
             _cmd.Run("netsh.exe", "int ip reset");
 
-            _sink.Status("statusRevertWinsock", 70);
+            _sink.Status("status.revert.winsock", 70);
             _cmd.Run("netsh.exe", "winsock reset");
 
-            _sink.Status("statusRevertDns", 90);
+            _sink.Status("status.revert.dns", 90);
             _cmd.Run("ipconfig.exe", "/flushdns");
 
-            _sink.Status("statusRevertDone", 100);
-            _sink.Log("logRevertDone", "success");
+            _sink.Status("status.revert.done", 100);
+            _sink.Log("log.revert.done", "success");
         }
 
         public void ClearUpdateCache()
         {
-            _sink.Status("statusUpdateCacheStart", 20);
-            _sink.Log("logUpdateCacheStart", "info");
+            _sink.Status("status.updateCache.start", 20);
+            _sink.Log("log.updateCache.start", "info");
 
             _cmd.Run("net.exe", "stop wuauserv");
             string windir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
             _cmd.ClearDirectory(System.IO.Path.Combine(windir, "SoftwareDistribution", "Download"));
             _cmd.Run("net.exe", "start wuauserv");
 
-            _sink.Status("statusUpdateCacheDone", 100);
-            _sink.Log("logUpdateCacheDone", "success");
+            _sink.Status("status.updateCache.done", 100);
+            _sink.Log("log.updateCache.done", "success");
         }
 
         public void CleanPrefetch()
         {
-            _sink.Status("statusPrefetchStart", 30);
-            _sink.Log("logPrefetchStart", "info");
+            _sink.Status("status.prefetch.start", 30);
+            _sink.Log("log.prefetch.start", "info");
 
             string windir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
             _cmd.ClearDirectory(System.IO.Path.Combine(windir, "Prefetch"));
 
-            _sink.Status("statusPrefetchDone", 100);
-            _sink.Log("logPrefetchDone", "success");
+            _sink.Status("status.prefetch.done", 100);
+            _sink.Log("log.prefetch.done", "success");
         }
 
         public void ReportDiskHealth()
         {
-            _sink.Status("statusDiskHealthStart", 40);
-            _sink.Log("logDiskHealthStart", "info");
+            _sink.Status("status.diskHealth.start", 40);
+            _sink.Log("log.diskHealth.start", "info");
 
             const string ps =
                 "Get-PhysicalDisk | Select-Object FriendlyName, MediaType, HealthStatus, " +
                 "@{N='Size(GB)';E={[math]::Round($_.Size/1GB,1)}} | Format-Table -AutoSize | Out-String";
             _cmd.Run("powershell.exe", "-ExecutionPolicy Bypass -Command \"" + ps + "\"");
 
-            _sink.Status("statusDiskHealthDone", 100);
-            _sink.Log("logDiskHealthDone", "success");
+            _sink.Status("status.diskHealth.done", 100);
+            _sink.Log("log.diskHealth.done", "success");
         }
 
         /// <summary>Runs an optimization by its CLI task name (used by headless mode).</summary>

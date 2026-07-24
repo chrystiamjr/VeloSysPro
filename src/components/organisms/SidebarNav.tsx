@@ -1,6 +1,7 @@
 import React from 'react';
 import { AppScreen } from '../../domain/types';
 import { Badge } from '../atoms/Badge';
+import { Icon } from '../atoms/Icon';
 import { useTranslation } from '../../infrastructure/i18nContext';
 
 export interface SidebarNavProps {
@@ -9,19 +10,17 @@ export interface SidebarNavProps {
   onOpenLogs: () => void;
 }
 
-export const SidebarNav: React.FC<SidebarNavProps> = ({
-  activeScreen,
-  onNavigate,
-  onOpenLogs,
-}) => {
+export const SidebarNav: React.FC<SidebarNavProps> = ({ activeScreen, onNavigate, onOpenLogs }) => {
   const { lang, setLang, t } = useTranslation();
 
   return (
     <aside className="flex h-screen w-64 select-none flex-col border-r border-borderColor bg-bgSidebar p-6">
       <div className="mb-5 flex items-start justify-between border-b border-borderColor pb-5">
         <div>
-          <h1 className="flex items-center gap-2 text-xl font-bold text-white">⚡ VeloSys Pro</h1>
-          <p className="mt-1 text-[11px] text-textMuted">{t('brandSubtitle')}</p>
+          <h1 className="flex items-center gap-2 text-xl font-bold text-white">
+            <Icon name="zap" className="h-6 w-6 text-primary" /> VeloSys Pro
+          </h1>
+          <p className="mt-1 text-[11px] text-textMuted">{t('brand.subtitle')}</p>
         </div>
 
         {/* Language Switcher */}
@@ -54,7 +53,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
               : 'bg-transparent text-textMuted hover:bg-white/5 hover:text-white'
           }`}
         >
-          <span>🚀</span> {t('navDashboard')}
+          <Icon name="rocket" /> {t('nav.dashboard')}
         </button>
 
         <button
@@ -65,7 +64,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
               : 'bg-transparent text-textMuted hover:bg-white/5 hover:text-white'
           }`}
         >
-          <span>📅</span> {t('navScheduling')}
+          <Icon name="calendar" /> {t('nav.scheduling')}
         </button>
 
         <button
@@ -76,7 +75,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
               : 'bg-transparent text-textMuted hover:bg-white/5 hover:text-white'
           }`}
         >
-          <span>💾</span> {t('navBackup')}
+          <Icon name="hard-drive" /> {t('nav.backup')}
         </button>
 
         <button
@@ -87,7 +86,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
               : 'bg-transparent text-textMuted hover:bg-white/5 hover:text-white'
           }`}
         >
-          <span>🛡️</span> {t('navRestorePoints')}
+          <Icon name="shield-check" /> {t('nav.restorePoints')}
         </button>
 
         <button
@@ -98,20 +97,20 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
               : 'bg-transparent text-textMuted hover:bg-white/5 hover:text-white'
           }`}
         >
-          <span>⚙️</span> {t('navSettings')}
+          <Icon name="settings" /> {t('nav.settings')}
         </button>
 
         <button
           onClick={onOpenLogs}
           className="flex cursor-pointer items-center gap-3 rounded-lg border-none bg-transparent px-4 py-3 text-xs font-semibold text-textMuted transition-all hover:bg-white/5 hover:text-white"
         >
-          <span>📂</span> {t('navLogsFolder')}
+          <Icon name="folder-open" /> {t('nav.logsFolder')}
         </button>
       </nav>
 
       <div className="border-t border-borderColor pt-4">
-        <Badge text={t('adminBadge')} variant="success" />
-        <p className="mt-3 text-[11px] text-textMuted">{t('version')}</p>
+        <Badge text={t('brand.adminBadge')} variant="success" />
+        <p className="mt-3 text-[11px] text-textMuted">{t('brand.version')}</p>
       </div>
     </aside>
   );

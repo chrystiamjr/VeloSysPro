@@ -7,6 +7,8 @@ export interface ActionCardProps {
   icon: React.ReactNode;
   variant?: ButtonVariant;
   buttonText?: string;
+  disabled?: boolean;
+  active?: boolean;
   onExecute: () => void;
 }
 
@@ -26,11 +28,14 @@ export const ActionCard: React.FC<ActionCardProps> = ({
   icon,
   variant = 'primary',
   buttonText = 'Executar Agora',
+  disabled = false,
+  active = false,
   onExecute,
 }) => {
   return (
     <div
-      className={`relative flex flex-col justify-between overflow-hidden rounded-card border border-borderColor bg-bgCard p-5 transition-all duration-200 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:content-[''] hover:-translate-y-1 hover:bg-bgCardHover hover:shadow-xl ${borderStripe[variant]}`}
+      aria-busy={active}
+      className={`relative flex flex-col justify-between overflow-hidden rounded-card border bg-bgCard p-5 transition-all duration-200 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:content-[''] hover:-translate-y-1 hover:bg-bgCardHover hover:shadow-xl ${active ? 'border-primary ring-2 ring-primary/30' : 'border-borderColor'} ${borderStripe[variant]}`}
     >
       <div>
         <div className="mb-2 flex items-center gap-3">
@@ -41,7 +46,7 @@ export const ActionCard: React.FC<ActionCardProps> = ({
         </div>
         <p className="mb-5 text-xs leading-relaxed text-textMuted">{desc}</p>
       </div>
-      <Button variant={variant} onClick={onExecute}>
+      <Button variant={variant} disabled={disabled} onClick={onExecute}>
         {buttonText}
       </Button>
     </div>

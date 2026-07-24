@@ -1,7 +1,10 @@
 import React from 'react';
 import { HealthCard } from '../molecules/HealthCard';
+import { CompactActionItem } from '../molecules/CompactActionItem';
 import { ActionCard } from '../organisms/ActionCard';
+import { ActionGroup } from '../organisms/ActionGroup';
 import { TerminalConsole } from '../organisms/TerminalConsole';
+import { Icon } from '../atoms/Icon';
 import { SystemHealth, LogEntryItem, SystemActions } from '../../domain/types';
 import { useTranslation } from '../../infrastructure/i18nContext';
 
@@ -11,6 +14,12 @@ export interface DashboardPageProps {
   onAction: (action: string) => void;
   onClearLogs: () => void;
   onNavigateToBackup: () => void;
+  onNavigateToRestorePoints: () => void;
+  onNavigateToScheduling: () => void;
+  activeAction: string | null;
+  consoleExpanded: boolean;
+  executionHasError: boolean;
+  onToggleConsole: () => void;
 }
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({
@@ -19,118 +28,166 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   onAction,
   onClearLogs,
   onNavigateToBackup,
+  onNavigateToRestorePoints,
+  onNavigateToScheduling,
+  activeAction,
+  consoleExpanded,
+  executionHasError,
+  onToggleConsole,
 }) => {
   const { t } = useTranslation();
+  const actionsDisabled = activeAction !== null;
+
+  const handleRevert = () => {
+    if (window.confirm(t('act.revert.confirm'))) {
+      onAction(SystemActions.REVERT_DEFAULTS);
+    }
+  };
 
   return (
     <div className="flex select-none flex-col gap-6">
-      {/* Health Grid */}
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <HealthCard
-          title={t('healthAdmin')}
-          value={health.admin === 'Sim' ? t('healthYes') : t('healthNo')}
-          variant="success"
-        />
-        <HealthCard title={t('healthBackups')} value={health.backupsCount} variant="info" />
-        <HealthCard
-          title={t('healthLatestBackup')}
-          value={health.latestBackup === 'Nenhum' ? t('healthNone') : health.latestBackup}
-          variant="purple"
-        />
-        <HealthCard title={t('healthTasks')} value={health.tasksCount} variant="warning" />
-        <HealthCard
-          title={t('healthStatus')}
-          value={t(health.status === 'executing' ? 'healthStatusExecuting' : 'healthStatusReady')}
-          variant="primary"
-        />
-      </div>
-
-      {/* Action Cards Grid */}
-      <div className="grid grid-cols-3 gap-5">
-        <ActionCard
-          title={t('actQuickTitle')}
-          desc={t('actQuickDesc')}
-          icon="🚀"
-          variant="success"
-          buttonText={t('btnExecuteNow')}
-          onExecute={() => onAction(SystemActions.RUN_QUICK_OPTIMIZATION)}
-        />
-
-        <ActionCard
-          title={t('actFullTitle')}
-          desc={t('actFullDesc')}
-          icon="⚙️"
-          variant="primary"
-          buttonText={t('btnExecuteNow')}
-          onExecute={() => onAction(SystemActions.RUN_FULL_OPTIMIZATION)}
-        />
-
-        <ActionCard
-          title={t('actGamingTitle')}
-          desc={t('actGamingDesc')}
-          icon="🎮"
-          variant="purple"
-          buttonText={t('btnApplyMode')}
-          onExecute={() => onAction(SystemActions.RUN_GAMING_MODE)}
-        />
-
-        <ActionCard
-          title={t('actRevertTitle')}
-          desc={t('actRevertDesc')}
-          icon="↺"
-          variant="warning"
-          buttonText={t('btnRevert')}
-          onExecute={() => onAction(SystemActions.REVERT_DEFAULTS)}
-        />
-
-        <ActionCard
-          title={t('actRestorePointTitle')}
-          desc={t('actRestorePointDesc')}
-          icon="🛡️"
-          variant="pink"
-          buttonText={t('btnCreateNow')}
-          onExecute={() => onAction(SystemActions.CREATE_RESTORE_POINT)}
-        />
-
-        <ActionCard
-          title={t('actBackupTitle')}
-          desc={t('actBackupDesc')}
-          icon="💾"
+          title={t('health.backups')}
+          value={health.backupsCount}
           variant="info"
-          buttonText={t('btnOpenView')}
-          onExecute={onNavigateToBackup}
+          onClick={onNavigateToBackup}
         />
-
-        <ActionCard
-          title={t('actUpdateCacheTitle')}
-          desc={t('actUpdateCacheDesc')}
-          icon="🔄"
-          variant="primary"
-          buttonText={t('btnClean')}
-          onExecute={() => onAction(SystemActions.CLEAR_UPDATE_CACHE)}
+        <HealthCard
+          title={t('health.latestBackup')}
+          value={health.latestBackup === 'Nenhum' ? t('health.none') : health.latestBackup}
+          variant="purple"
+          onClick={onNavigateToBackup}
         />
-
-        <ActionCard
-          title={t('actPrefetchTitle')}
-          desc={t('actPrefetchDesc')}
-          icon="⚡"
+        <HealthCard
+          title={t('health.tasks')}
+          value={health.tasksCount}
           variant="warning"
-          buttonText={t('btnClean')}
-          onExecute={() => onAction(SystemActions.CLEAN_PREFETCH)}
-        />
-
-        <ActionCard
-          title={t('actDiskHealthTitle')}
-          desc={t('actDiskHealthDesc')}
-          icon="🩺"
-          variant="success"
-          buttonText={t('btnViewReport')}
-          onExecute={() => onAction(SystemActions.DISK_HEALTH)}
+          onClick={onNavigateToScheduling}
         />
       </div>
 
-      {/* Terminal Console */}
-      <TerminalConsole logs={logs} onClear={onClearLogs} />
+      <section>
+        <div className="mb-3">
+          <h3 className="text-sm font-bold text-textMain">{t('dashboard.primary.title')}</h3>
+          <p className="mt-1 text-xs text-textMuted">{t('dashboard.primary.desc')}</p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+          <ActionCard
+            title={t('act.quick.title')}
+            desc={t('act.quick.desc')}
+            icon={<Icon name="rocket" className="h-5 w-5 text-success" />}
+            variant="success"
+            buttonText={t('btn.executeNow')}
+            disabled={actionsDisabled}
+            active={activeAction === SystemActions.RUN_QUICK_OPTIMIZATION}
+            onExecute={() => onAction(SystemActions.RUN_QUICK_OPTIMIZATION)}
+          />
+          <ActionCard
+            title={t('act.full.title')}
+            desc={t('act.full.desc')}
+            icon={<Icon name="settings" className="h-5 w-5 text-primary" />}
+            variant="primary"
+            buttonText={t('btn.executeNow')}
+            disabled={actionsDisabled}
+            active={activeAction === SystemActions.RUN_FULL_OPTIMIZATION}
+            onExecute={() => onAction(SystemActions.RUN_FULL_OPTIMIZATION)}
+          />
+          <ActionCard
+            title={t('act.gaming.title')}
+            desc={t('act.gaming.desc')}
+            icon={<Icon name="gamepad" className="h-5 w-5 text-purple" />}
+            variant="purple"
+            buttonText={t('btn.applyMode')}
+            disabled={actionsDisabled}
+            active={activeAction === SystemActions.RUN_GAMING_MODE}
+            onExecute={() => onAction(SystemActions.RUN_GAMING_MODE)}
+          />
+        </div>
+      </section>
+
+      <section>
+        <div className="mb-3">
+          <h3 className="text-sm font-bold text-textMain">{t('dashboard.tools.title')}</h3>
+          <p className="mt-1 text-xs text-textMuted">{t('dashboard.tools.desc')}</p>
+        </div>
+        <div className="flex flex-col gap-3">
+          <ActionGroup
+            title={t('dashboard.maintenance.title')}
+            description={t('dashboard.maintenance.desc')}
+            itemCount={3}
+            defaultExpanded
+          >
+            <CompactActionItem
+              title={t('act.diskHealth.title')}
+              desc={t('act.diskHealth.desc')}
+              icon={<Icon name="hard-drive" className="h-5 w-5 text-success" />}
+              variant="success"
+              buttonText={t('btn.viewReport')}
+              disabled={actionsDisabled}
+              onExecute={() => onAction(SystemActions.DISK_HEALTH)}
+            />
+            <CompactActionItem
+              title={t('act.updateCache.title')}
+              desc={t('act.updateCache.desc')}
+              icon={<Icon name="refresh-cw" className="h-5 w-5 text-primary" />}
+              variant="primary"
+              buttonText={t('btn.clean')}
+              disabled={actionsDisabled}
+              onExecute={() => onAction(SystemActions.CLEAR_UPDATE_CACHE)}
+            />
+            <CompactActionItem
+              title={t('act.prefetch.title')}
+              desc={t('act.prefetch.desc')}
+              icon={<Icon name="zap" className="h-5 w-5 text-warning" />}
+              variant="warning"
+              buttonText={t('btn.clean')}
+              disabled={actionsDisabled}
+              onExecute={() => onAction(SystemActions.CLEAN_PREFETCH)}
+            />
+          </ActionGroup>
+
+          <ActionGroup
+            title={t('dashboard.recovery.title')}
+            description={t('dashboard.recovery.desc')}
+            itemCount={3}
+          >
+            <CompactActionItem
+              title={t('act.backup.title')}
+              desc={t('act.backup.desc')}
+              icon={<Icon name="hard-drive" className="h-5 w-5 text-info" />}
+              variant="info"
+              buttonText={t('btn.openView')}
+              onExecute={onNavigateToBackup}
+            />
+            <CompactActionItem
+              title={t('act.restorePoint.title')}
+              desc={t('act.restorePoint.desc')}
+              icon={<Icon name="shield-check" className="h-5 w-5 text-pink" />}
+              variant="pink"
+              buttonText={t('btn.openView')}
+              onExecute={onNavigateToRestorePoints}
+            />
+            <CompactActionItem
+              title={t('act.revert.title')}
+              desc={t('act.revert.desc')}
+              icon={<Icon name="rotate-ccw" className="h-5 w-5 text-warning" />}
+              variant="warning"
+              buttonText={t('btn.revert')}
+              disabled={actionsDisabled}
+              onExecute={handleRevert}
+            />
+          </ActionGroup>
+        </div>
+      </section>
+
+      <TerminalConsole
+        logs={logs}
+        onClear={onClearLogs}
+        expanded={consoleExpanded}
+        hasError={executionHasError}
+        onToggle={onToggleConsole}
+      />
     </div>
   );
 };

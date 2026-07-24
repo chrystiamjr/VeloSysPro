@@ -27,20 +27,20 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
     <div className="flex select-none flex-col gap-6">
       {/* Language */}
       <div className="rounded-xl border border-borderColor bg-bgCard p-6">
-        <h3 className="text-lg font-bold text-white">{t('settingsLanguageTitle')}</h3>
-        <p className="mt-1 text-xs text-textMuted">{t('settingsLanguageDesc')}</p>
+        <h3 className="text-lg font-bold text-white">{t('settings.languageTitle')}</h3>
+        <p className="mt-1 text-xs text-textMuted">{t('settings.languageDesc')}</p>
         <div className="mt-4 flex gap-3">
           <button
             className={langButtonClass(language === 'pt_BR')}
             onClick={() => onLanguageChange('pt_BR')}
           >
-            🇧🇷 {t('settingsLangPt')}
+            🇧🇷 {t('settings.langPt')}
           </button>
           <button
             className={langButtonClass(language === 'en_US')}
             onClick={() => onLanguageChange('en_US')}
           >
-            🇺🇸 {t('settingsLangEn')}
+            🇺🇸 {t('settings.langEn')}
           </button>
         </div>
       </div>
@@ -49,8 +49,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       <div className="rounded-xl border border-borderColor bg-bgCard p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-lg font-bold text-white">{t('settingsBackupTitle')}</h3>
-            <p className="mt-1 text-xs text-textMuted">{t('settingsBackupDesc')}</p>
+            <h3 className="text-lg font-bold text-white">{t('settings.backupTitle')}</h3>
+            <p className="mt-1 text-xs text-textMuted">{t('settings.backupDesc')}</p>
           </div>
           <label className="flex cursor-pointer items-center gap-2 pt-1">
             <input
@@ -60,7 +60,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
               onChange={(e) => onToggleBackup(e.target.checked)}
             />
             <span className="text-xs font-semibold text-textMain">
-              {createBackupBeforeOptimize ? t('settingsEnabled') : t('settingsDisabled')}
+              {createBackupBeforeOptimize ? t('settings.enabled') : t('settings.disabled')}
             </span>
           </label>
         </div>

@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Text;
 
 namespace VeloSysPro
 {
@@ -11,6 +13,13 @@ namespace VeloSysPro
     public class CommandRunner
     {
         private readonly IStatusSink _sink;
+        private static readonly Encoding WindowsCommandEncoding = CreateWindowsCommandEncoding();
+
+        private static Encoding CreateWindowsCommandEncoding()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            return Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
+        }
 
         public CommandRunner(IStatusSink sink)
         {
@@ -28,7 +37,9 @@ namespace VeloSysPro
                     UseShellExecute = false,
                     CreateNoWindow = true,
                     RedirectStandardOutput = true,
-                    RedirectStandardError = true
+                    RedirectStandardError = true,
+                    StandardOutputEncoding = WindowsCommandEncoding,
+                    StandardErrorEncoding = WindowsCommandEncoding
                 };
 
                 using (Process? proc = Process.Start(psi))
@@ -46,7 +57,7 @@ namespace VeloSysPro
             }
             catch (Exception ex)
             {
-                _sink.Log("logCmdError", "error", new { exe, message = ex.Message });
+                _sink.Log("log.cmdError", "error", new { exe, message = ex.Message });
             }
         }
 
@@ -62,7 +73,9 @@ namespace VeloSysPro
                     UseShellExecute = false,
                     CreateNoWindow = true,
                     RedirectStandardOutput = true,
-                    RedirectStandardError = true
+                    RedirectStandardError = true,
+                    StandardOutputEncoding = WindowsCommandEncoding,
+                    StandardErrorEncoding = WindowsCommandEncoding
                 };
 
                 using (Process? proc = Process.Start(psi))
@@ -76,7 +89,7 @@ namespace VeloSysPro
             }
             catch (Exception ex)
             {
-                _sink.Log("logCmdError", "error", new { exe, message = ex.Message });
+                _sink.Log("log.cmdError", "error", new { exe, message = ex.Message });
                 return "";
             }
         }
