@@ -49,7 +49,7 @@ namespace VeloSysPro
                 if (File.Exists(_file))
                 {
                     Settings? s = JsonSerializer.Deserialize<Settings>(File.ReadAllText(_file), Opts);
-                    if (s != null && !string.IsNullOrEmpty(s.Language)) _current = s;
+                    if (IsValid(s)) _current = s!;
                 }
             }
             catch { }
@@ -63,14 +63,26 @@ namespace VeloSysPro
             try
             {
                 Settings? s = JsonSerializer.Deserialize<Settings>(payloadJson, Opts);
-                if (s != null && !string.IsNullOrEmpty(s.Language))
+                if (IsValid(s))
                 {
-                    _current = s;
+                    _current = s!;
                     File.WriteAllText(_file, JsonSerializer.Serialize(_current, Opts));
                 }
             }
             catch { }
             return _current;
         }
+
+        public Settings Save(Settings settings)
+        {
+            if (!IsValid(settings)) throw new ArgumentException("Invalid preferences.");
+            _current = settings;
+            File.WriteAllText(_file, JsonSerializer.Serialize(_current, Opts));
+            return _current;
+        }
+
+        private static bool IsValid(Settings? settings) =>
+            settings != null
+            && (settings.Language == "pt_BR" || settings.Language == "en_US");
     }
 }

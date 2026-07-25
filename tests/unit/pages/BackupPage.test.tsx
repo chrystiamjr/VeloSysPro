@@ -5,7 +5,11 @@ import { BackupItem } from '../../../src/domain/types';
 import { LanguageProvider } from '../../../src/infrastructure/i18nContext';
 
 const backups: BackupItem[] = [
-  { Name: 'backup_rede_2026-07-23_03-15-12.reg', Date: '23/07/2026 03:15', Size: '39.0 KB' },
+  {
+    Name: 'backup_rede_2026-07-23_03-15-12.reg',
+    CreatedAt: '2026-07-23T06:15:00.000Z',
+    SizeBytes: 39936,
+  },
 ];
 
 const renderPage = (props: Partial<React.ComponentProps<typeof BackupPage>> = {}) => {
@@ -38,7 +42,7 @@ describe('BackupPage (functional Backup & Restore screen)', () => {
   it('lists existing backups from the IPC data', () => {
     renderPage();
     expect(screen.getByText('backup_rede_2026-07-23_03-15-12.reg')).toBeInTheDocument();
-    expect(screen.getByText('39.0 KB')).toBeInTheDocument();
+    expect(screen.getByText('39,0 KB')).toBeInTheDocument();
   });
 
   it('shows an empty state when there are no backups', () => {
@@ -83,21 +87,20 @@ describe('BackupPage (functional Backup & Restore screen)', () => {
   it('lists the newest backup first', () => {
     renderPage({
       backups: [
-        { Name: 'older.reg', Date: '31/12/2025 23:00', Size: '10.0 KB' },
-        { Name: 'newer.reg', Date: '01/01/2026 00:00', Size: '10.0 KB' },
+        { Name: 'older.reg', CreatedAt: '2025-12-31T23:00:00.000Z', SizeBytes: 10240 },
+        { Name: 'newer.reg', CreatedAt: '2026-01-01T00:00:00.000Z', SizeBytes: 10240 },
       ],
     });
 
-    // Sorting the raw display strings would put 31/12 last.
     expect(columnTexts(0)).toEqual(['newer.reg', 'older.reg']);
   });
 
   it('sorts sizes by magnitude even when the host groups thousands', () => {
     const { container } = renderPage({
       backups: [
-        { Name: 'small.reg', Date: '01/07/2026 10:00', Size: '999,9 KB' },
-        { Name: 'big.reg', Date: '02/07/2026 10:00', Size: '1.234,5 KB' },
-        { Name: 'tiny.reg', Date: '03/07/2026 10:00', Size: '45,6 KB' },
+        { Name: 'small.reg', CreatedAt: '2026-07-01T10:00:00.000Z', SizeBytes: 1023898 },
+        { Name: 'big.reg', CreatedAt: '2026-07-02T10:00:00.000Z', SizeBytes: 1264128 },
+        { Name: 'tiny.reg', CreatedAt: '2026-07-03T10:00:00.000Z', SizeBytes: 46694 },
       ],
     });
 

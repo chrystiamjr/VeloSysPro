@@ -57,7 +57,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         <HealthCard
           testId="health-latest-backup"
           title={t('health.latestBackup')}
-          value={health.latestBackup === 'Nenhum' ? t('health.none') : health.latestBackup}
+          value={health.latestBackup || t('health.none')}
           variant="purple"
           onClick={onNavigateToBackup}
         />

@@ -1,55 +1,109 @@
 /**
- * VeloSys Pro - TypeScript IPC Bridge Infrastructure Layer
+ * VeloSys Pro IPC Bridge.
+ *
+ * React sends Actions to the Windows host. The host emits facts through one WebView2 Event
+ * channel, and this module owns dispatch plus runtime validation for every Event payload.
  */
 import { z } from 'zod';
 import {
-  BackupItem,
-  ScheduledTaskItem,
-  RestorePointItem,
-  AppSettings,
-  UpdateInfo,
-  LocalizedMessage,
-  LogType,
-} from '../domain/types';
-import {
+  ActionFinishedPayloadSchema,
   AppSettingsSchema,
   BackupItemSchema,
+  IpcEventEnvelopeSchema,
   LocalizedMessageSchema,
-  LogTypeSchema,
+  LogReceivedPayloadSchema,
   RestorePointItemSchema,
   ScheduledTaskItemSchema,
   UpdateInfoSchema,
+  type AppSettings,
+  type BackupItem,
+  type IpcEventName,
+  type LocalizedMessage,
+  type LogType,
+  type RestorePointItem,
+  type ScheduledTaskItem,
+  type UpdateInfo,
 } from '../domain/schemas';
+
+interface WebViewMessageEvent extends Event {
+  data: unknown;
+}
 
 declare global {
   interface Window {
     chrome?: {
       webview?: {
-        postMessage: (message: { action: string; payload: string }) => void;
-        addEventListener: (type: string, listener: (event: Event) => void) => void;
+        postMessage: (message: { action: string; payload: unknown }) => void;
+        addEventListener: (type: 'message', listener: (event: WebViewMessageEvent) => void) => void;
+        removeEventListener?: (
+          type: 'message',
+          listener: (event: WebViewMessageEvent) => void
+        ) => void;
       };
     };
-    onLogReceived?: (message: LocalizedMessage, type: LogType) => void;
-    onStatusUpdated?: (status: LocalizedMessage) => void;
-    onProgressUpdated?: (percent: number) => void;
-    onBackupsLoaded?: (backupsJson: string | BackupItem[]) => void;
-    onTasksLoaded?: (tasksJson: string | ScheduledTaskItem[]) => void;
-    onRestorePointsLoaded?: (pointsJson: string | RestorePointItem[]) => void;
-    onSettingsLoaded?: (settingsJson: string | AppSettings) => void;
-    onUpdateAvailable?: (info: UpdateInfo) => void;
-    onActionFinished?: (action: string, ok: boolean) => void;
   }
 }
 
-export function sendAction(action: string, payload: string = ''): void {
+type EventListener = (payload: unknown) => void;
+type Unsubscribe = () => void;
+type WebViewTransport = NonNullable<NonNullable<Window['chrome']>['webview']>;
+
+const listeners = new Map<IpcEventName, Set<EventListener>>();
+let listeningWebView: WebViewTransport | undefined;
+
+function reject(channel: string, issues: unknown): void {
+  console.error(`[IPC Bridge] ${channel} payload rejected`, issues);
+}
+
+function readPayload<T>(channel: string, schema: z.ZodType<T>, raw: unknown): T | null {
+  const result = schema.safeParse(raw);
+  if (!result.success) {
+    reject(channel, result.error.issues);
+    return null;
+  }
+  return result.data;
+}
+
+function dispatchHostEvent(raw: unknown): void {
+  const envelope = IpcEventEnvelopeSchema.safeParse(raw);
+  if (!envelope.success) {
+    reject('event envelope', envelope.error.issues);
+    return;
+  }
+
+  for (const listener of listeners.get(envelope.data.event) ?? []) {
+    listener(envelope.data.payload);
+  }
+}
+
+function onWebViewMessage(event: WebViewMessageEvent): void {
+  dispatchHostEvent(event.data);
+}
+
+function ensureEventChannel(): void {
+  const webview = window.chrome?.webview;
+  if (!webview || webview === listeningWebView) return;
+
+  listeningWebView?.removeEventListener?.('message', onWebViewMessage);
+  webview.addEventListener('message', onWebViewMessage);
+  listeningWebView = webview;
+}
+
+function subscribe(event: IpcEventName, listener: EventListener): Unsubscribe {
+  ensureEventChannel();
+  const eventListeners = listeners.get(event) ?? new Set<EventListener>();
+  eventListeners.add(listener);
+  listeners.set(event, eventListeners);
+  return () => {
+    eventListeners.delete(listener);
+  };
+}
+
+export function sendAction(action: string, payload: unknown = null): void {
   try {
-    const winExt = (
-      window as unknown as { external?: { ExecuteAction?: (a: string, p: string) => void } }
-    ).external;
-    if (winExt && typeof winExt.ExecuteAction === 'function') {
-      winExt.ExecuteAction(action, payload);
-    } else if (window.chrome && window.chrome.webview) {
-      window.chrome.webview.postMessage({ action, payload });
+    const webview = window.chrome?.webview;
+    if (webview) {
+      webview.postMessage({ action, payload });
     } else {
       console.info(`[IPC Bridge Mock] Action triggered: ${action}`, payload);
     }
@@ -58,120 +112,76 @@ export function sendAction(action: string, payload: string = ''): void {
   }
 }
 
-/**
- * Validates one inbound payload as received.
- *
- * Returns `null` and logs the reason on failure, so a host contract change becomes a
- * diagnosable console error instead of a blank screen. Callers decide the fallback.
- */
-function readPayload<T>(channel: string, schema: z.ZodType<T>, raw: unknown): T | null {
-  const result = schema.safeParse(raw);
-  if (!result.success) {
-    console.error(`[IPC Bridge] ${channel} payload rejected`, result.error.issues);
-    return null;
-  }
-
-  return result.data;
+export function subscribeLogs(
+  callback: (message: LocalizedMessage, type: LogType) => void
+): Unsubscribe {
+  return subscribe('logReceived', (raw) => {
+    const payload = readPayload('logReceived', LogReceivedPayloadSchema, raw);
+    if (payload) callback(payload.message, payload.type);
+  });
 }
 
-/**
- * Same, for the channels the host may send either as an object or as a JSON string.
- *
- * Kept separate on purpose: unwrapping every string as JSON would break channels whose payload
- * is legitimately a bare string, such as a log severity.
- */
-function readJsonPayload<T>(channel: string, schema: z.ZodType<T>, raw: unknown): T | null {
-  if (typeof raw !== 'string') return readPayload(channel, schema, raw);
-
-  try {
-    return readPayload(channel, schema, JSON.parse(raw));
-  } catch {
-    console.error(`[IPC Bridge] ${channel} received malformed JSON`);
-    return null;
-  }
+export function subscribeStatus(callback: (status: LocalizedMessage) => void): Unsubscribe {
+  return subscribe('statusUpdated', (raw) => {
+    const payload = readPayload('statusUpdated', LocalizedMessageSchema, raw);
+    if (payload) callback(payload);
+  });
 }
 
-export function subscribeLogs(callback: (message: LocalizedMessage, type: LogType) => void): void {
-  window.onLogReceived = (message, type) => {
-    if (typeof callback !== 'function') return;
-
-    const parsedMessage = readPayload('onLogReceived', LocalizedMessageSchema, message);
-    const parsedType = readPayload('onLogReceived.type', LogTypeSchema, type);
-    if (!parsedMessage || !parsedType) return;
-
-    callback(parsedMessage, parsedType);
-  };
+export function subscribeProgress(callback: (percent: number) => void): Unsubscribe {
+  return subscribe('progressUpdated', (raw) => {
+    const payload = readPayload('progressUpdated', z.number().finite(), raw);
+    if (payload !== null) callback(payload);
+  });
 }
 
-export function subscribeStatus(callback: (status: LocalizedMessage) => void): void {
-  window.onStatusUpdated = (status) => {
-    if (typeof callback !== 'function') return;
-
-    const parsed = readPayload('onStatusUpdated', LocalizedMessageSchema, status);
-    if (parsed) callback(parsed);
-  };
+function subscribeCollection<T>(
+  event: IpcEventName,
+  schema: z.ZodType<T>,
+  callback: (data: T) => void
+): Unsubscribe {
+  return subscribe(event, (raw) => {
+    const payload = readPayload(event, schema, raw);
+    if (payload) callback(payload);
+  });
 }
 
-export function subscribeProgress(callback: (percent: number) => void): void {
-  window.onProgressUpdated = (percent) => {
-    if (typeof callback === 'function') callback(percent);
-  };
+export function subscribeBackups(callback: (data: BackupItem[]) => void): Unsubscribe {
+  return subscribeCollection('backupsLoaded', z.array(BackupItemSchema), callback);
 }
 
-export function subscribeBackups(callback: (data: BackupItem[]) => void): void {
-  window.onBackupsLoaded = (backupsJson) => {
-    if (typeof callback !== 'function') return;
-
-    const data = readJsonPayload('onBackupsLoaded', z.array(BackupItemSchema), backupsJson);
-    callback(data ?? []);
-  };
+export function subscribeTasks(callback: (data: ScheduledTaskItem[]) => void): Unsubscribe {
+  return subscribeCollection('tasksLoaded', z.array(ScheduledTaskItemSchema), callback);
 }
 
-export function subscribeTasks(callback: (data: ScheduledTaskItem[]) => void): void {
-  window.onTasksLoaded = (tasksJson) => {
-    if (typeof callback !== 'function') return;
-
-    const data = readJsonPayload('onTasksLoaded', z.array(ScheduledTaskItemSchema), tasksJson);
-    callback(data ?? []);
-  };
+export function subscribeRestorePoints(callback: (data: RestorePointItem[]) => void): Unsubscribe {
+  return subscribeCollection('restorePointsLoaded', z.array(RestorePointItemSchema), callback);
 }
 
-export function subscribeRestorePoints(callback: (data: RestorePointItem[]) => void): void {
-  window.onRestorePointsLoaded = (pointsJson) => {
-    if (typeof callback !== 'function') return;
-
-    const data = readJsonPayload(
-      'onRestorePointsLoaded',
-      z.array(RestorePointItemSchema),
-      pointsJson
-    );
-    callback(data ?? []);
-  };
+export function subscribeSettings(callback: (data: AppSettings) => void): Unsubscribe {
+  return subscribe('settingsLoaded', (raw) => {
+    const payload = readPayload('settingsLoaded', AppSettingsSchema, raw);
+    if (payload) callback(payload);
+  });
 }
 
-export function subscribeSettings(callback: (data: AppSettings) => void): void {
-  window.onSettingsLoaded = (settingsJson) => {
-    if (typeof callback !== 'function') return;
-
-    // Unlike the collections, an unusable payload here keeps the app's defaults rather than
-    // handing down an empty object that would blank out every preference.
-    const data = readJsonPayload('onSettingsLoaded', AppSettingsSchema, settingsJson);
-    if (data) callback(data);
-  };
+export function subscribeUpdate(callback: (info: UpdateInfo) => void): Unsubscribe {
+  return subscribe('updateAvailable', (raw) => {
+    const payload = readPayload('updateAvailable', UpdateInfoSchema, raw);
+    if (payload) callback(payload);
+  });
 }
 
-export function subscribeUpdate(callback: (info: UpdateInfo) => void): void {
-  window.onUpdateAvailable = (info) => {
-    if (typeof callback !== 'function') return;
-
-    // The schema requires a non-empty version, which is what the old `info.version` guard did.
-    const parsed = readPayload('onUpdateAvailable', UpdateInfoSchema, info);
-    if (parsed) callback(parsed);
-  };
+export function subscribeActionFinished(
+  callback: (action: string, ok: boolean) => void
+): Unsubscribe {
+  return subscribe('actionFinished', (raw) => {
+    const payload = readPayload('actionFinished', ActionFinishedPayloadSchema, raw);
+    if (payload) callback(payload.action, payload.ok);
+  });
 }
 
-export function subscribeActionFinished(callback: (action: string, ok: boolean) => void): void {
-  window.onActionFinished = (action, ok) => {
-    if (typeof callback === 'function') callback(action, ok);
-  };
+/** Test adapter: exercises the same envelope and validation path as WebView2. */
+export function emitHostEventForTest(event: IpcEventName, payload: unknown): void {
+  dispatchHostEvent({ event, payload });
 }

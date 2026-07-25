@@ -35,7 +35,7 @@ namespace VeloSysPro
 
             var sink = new FileStatusSink(Path.Combine(logsDir, "scheduled_task_log.txt"));
             var cmd = new CommandRunner(sink);
-            var backup = new BackupManager(backupsDir, cmd, sink);
+            var backup = new RegistryBackupManager(backupsDir, cmd, sink);
             var optimizer = new Optimizer(cmd, backup, sink);
 
             sink.LogRaw($"=== Headless task '{task}' started ===", "info");

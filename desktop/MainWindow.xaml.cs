@@ -5,9 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Diagnostics;
 using System.Windows;
 using Microsoft.Web.WebView2.Core;
 
@@ -22,13 +20,13 @@ namespace VeloSysPro
         private readonly string _errorLogFile;
 
         private readonly CommandRunner _cmd;
-        private readonly BackupManager _backup;
+        private readonly RegistryBackupManager _backup;
+        private readonly SystemRestoreManager _systemRestore;
         private readonly Optimizer _optimizer;
         private readonly SchedulerManager _scheduler;
         private readonly SettingsManager _settings;
-
-        // Command table mapping IPC action names to hibernated delegates
-        private readonly Dictionary<string, Action<string>> _actionHandlers;
+        private readonly IpcEventEmitter _events;
+        private readonly ActionHost _actionHost;
 
         // Maps normalized (forward-slash) embedded resource names to their real manifest names.
         private Dictionary<string, string> _resourceMap = new();
@@ -48,51 +46,20 @@ namespace VeloSysPro
 
             // Wire up the service classes with this window as the status sink.
             _cmd = new CommandRunner(this);
-            _backup = new BackupManager(_backupsDir, _cmd, this);
-            _optimizer = new Optimizer(_cmd, _backup, this, PushBackups);
+            _backup = new RegistryBackupManager(_backupsDir, _cmd, this);
+            _systemRestore = new SystemRestoreManager(_cmd, this);
+            _optimizer = new Optimizer(_cmd, _backup, this);
             _scheduler = new SchedulerManager(_cmd, this);
             _settings = new SettingsManager();
+            _events = new IpcEventEmitter(PostEventJson);
             _optimizer.CreateSafetyBackupEnabled = _settings.Current.CreateBackupBeforeOptimize;
 
-            _actionHandlers = RegisterActionHandlers();
+            _actionHost = new ActionHost(
+                _optimizer, _backup, _systemRestore, _scheduler, _settings,
+                _events, this, _logsDir, _backupsDir
+            );
 
             Loaded += MainWindow_Loaded;
-        }
-
-        private Dictionary<string, Action<string>> RegisterActionHandlers()
-        {
-            return new Dictionary<string, Action<string>>
-            {
-                { SystemActions.RunQuickOptimization, _ => _optimizer.RunQuick() },
-                { SystemActions.RunFullOptimization, _ => _optimizer.RunFull() },
-                { SystemActions.RunGamingMode, _ => _optimizer.RunGaming() },
-                { SystemActions.RevertDefaults, _ => _optimizer.RevertDefaults() },
-                { SystemActions.ClearUpdateCache, _ => _optimizer.ClearUpdateCache() },
-                { SystemActions.CleanPrefetch, _ => _optimizer.CleanPrefetch() },
-                { SystemActions.DiskHealth, _ => _optimizer.ReportDiskHealth() },
-                { SystemActions.CreateManualBackup, _ => { _backup.CreateBackup(); PushBackups(); } },
-                { SystemActions.RestoreBackup, payload => _backup.RestoreBackup(payload) },
-                { SystemActions.CreateRestorePoint, _ => { _backup.CreateRestorePoint(); PushRestorePoints(); } },
-                { SystemActions.GetRestorePoints, _ => PushRestorePoints() },
-                { SystemActions.RestoreToPoint, payload => _backup.RestoreToPoint(payload) },
-                { SystemActions.GetSettings, _ => EvalJs("window.onSettingsLoaded && window.onSettingsLoaded(" + _settings.GetJson() + ");") },
-                { SystemActions.SaveSettings, payload => {
-                    var applied = _settings.Save(payload);
-                    _optimizer.CreateSafetyBackupEnabled = applied.CreateBackupBeforeOptimize;
-                } },
-                { SystemActions.OpenUrl, payload => {
-                    if (payload.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-                    {
-                        Process.Start(new ProcessStartInfo { FileName = payload, UseShellExecute = true });
-                    }
-                } },
-                { SystemActions.OpenLogs, _ => Process.Start("explorer.exe", _logsDir) },
-                { SystemActions.OpenBackups, _ => Process.Start("explorer.exe", _backupsDir) },
-                { SystemActions.GetBackups, _ => PushBackups() },
-                { SystemActions.GetTasks, _ => PushTasks() },
-                { SystemActions.CreateTask, payload => { _scheduler.CreateTask(payload); PushTasks(); } },
-                { SystemActions.DeleteTask, payload => { _scheduler.DeleteTask(payload); PushTasks(); } },
-            };
         }
 
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -108,8 +75,7 @@ namespace VeloSysPro
                 UpdateChecker.UpdateInfo? info = await UpdateChecker.CheckAsync();
                 if (info != null)
                 {
-                    string payload = JsonSerializer.Serialize(new { version = info.Version, url = info.Url });
-                    EvalJs("window.onUpdateAvailable && window.onUpdateAvailable(" + payload + ");");
+                    _events.Emit(IpcEvents.UpdateAvailable, new { version = info.Version, url = info.Url });
                 }
             }
             catch { }
@@ -214,7 +180,7 @@ namespace VeloSysPro
                 IpcHandler.IpcMessage? msg = IpcHandler.Parse(e.WebMessageAsJson);
                 if (msg != null)
                 {
-                    HandleAction(msg.Action, msg.Payload);
+                    _actionHost.Handle(msg);
                 }
             }
             catch (Exception ex)
@@ -223,103 +189,27 @@ namespace VeloSysPro
             }
         }
 
-        public void HandleAction(string action, string payload)
-        {
-            ThreadPool.QueueUserWorkItem(_ =>
-            {
-                bool ok = true;
-                try
-                {
-                    if (_actionHandlers.TryGetValue(action, out var handler))
-                    {
-                        handler(payload);
-                    }
-                    else
-                    {
-                        LogRaw("Unknown action requested: '" + action + "'", "warning");
-                        ok = false;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    LogRaw("Action '" + action + "' failed: " + ex.Message, "error");
-                    ok = false;
-                }
-                finally
-                {
-                    // Authoritative signal so the UI always releases its action lock,
-                    // even when an action errors before emitting 100% progress.
-                    EmitActionFinished(action, ok);
-                }
-            });
-        }
-
-        private void EmitActionFinished(string action, bool ok)
-        {
-            string actionLiteral = JsonSerializer.Serialize(action);
-            EvalJs("window.onActionFinished && window.onActionFinished(" + actionLiteral + ", " + (ok ? "true" : "false") + ");");
-        }
-
-        private void PushBackups()
-        {
-            try
-            {
-                string json = _backup.GetBackupsJson();
-                EvalJs("window.onBackupsLoaded && window.onBackupsLoaded(" + json + ");");
-            }
-            catch (Exception ex)
-            {
-                LogRaw("Failed to refresh backups: " + ex.Message, "error");
-            }
-        }
-
-        private void PushTasks()
-        {
-            try
-            {
-                string json = _scheduler.GetTasksJson();
-                EvalJs("window.onTasksLoaded && window.onTasksLoaded(" + json + ");");
-            }
-            catch (Exception ex)
-            {
-                LogRaw("Failed to refresh tasks: " + ex.Message, "error");
-            }
-        }
-
-        private void PushRestorePoints()
-        {
-            try
-            {
-                string json = _backup.GetRestorePointsJson();
-                EvalJs("window.onRestorePointsLoaded && window.onRestorePointsLoaded(" + json + ");");
-            }
-            catch (Exception ex)
-            {
-                LogRaw("Failed to refresh restore points: " + ex.Message, "error");
-            }
-        }
-
         // ---- IStatusSink implementation ----
 
         public void Log(string key, string type, object? args = null)
         {
             WriteFileLog(key, type == "error" ? _errorLogFile : _logFile);
-            string payload = JsonSerializer.Serialize(new { key, args });
-            EvalJs("window.onLogReceived && window.onLogReceived(" + payload + ", '" + type + "');");
+            _events.Emit(IpcEvents.LogReceived, new { message = new { key, args }, type });
         }
 
         public void LogRaw(string text, string type)
         {
             WriteFileLog(text, type == "error" ? _errorLogFile : _logFile);
-            string payload = JsonSerializer.Serialize(new { key = "log.raw", args = new { text } });
-            EvalJs("window.onLogReceived && window.onLogReceived(" + payload + ", '" + type + "');");
+            _events.Emit(
+                IpcEvents.LogReceived,
+                new { message = new { key = "log.raw", args = new { text } }, type }
+            );
         }
 
         public void Status(string key, int percent, object? args = null)
         {
-            string payload = JsonSerializer.Serialize(new { key, args });
-            EvalJs("window.onStatusUpdated && window.onStatusUpdated(" + payload + ");");
-            EvalJs("window.onProgressUpdated && window.onProgressUpdated(" + percent + ");");
+            _events.Emit(IpcEvents.StatusUpdated, new { key, args });
+            _events.Emit(IpcEvents.ProgressUpdated, percent);
         }
 
         private void WriteFileLog(string message, string file)
@@ -332,7 +222,7 @@ namespace VeloSysPro
             catch { }
         }
 
-        private void EvalJs(string js)
+        private void PostEventJson(string json)
         {
             try
             {
@@ -340,7 +230,7 @@ namespace VeloSysPro
                 {
                     if (webView != null && webView.CoreWebView2 != null)
                     {
-                        webView.CoreWebView2.ExecuteScriptAsync(js);
+                        webView.CoreWebView2.PostWebMessageAsJson(json);
                     }
                 });
             }

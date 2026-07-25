@@ -25,10 +25,13 @@ internal sealed class FakeCommandRunner : ICommandRunner
         return Result;
     }
 
-    public string RunCapture(string exe, string args)
+    public CaptureResult RunCapture(string exe, string args)
     {
         Runs.Add((exe, args));
-        return CapturedOutputs.TryGetValue(exe, out string? output) ? output : CapturedOutput;
+        string output = CapturedOutputs.TryGetValue(exe, out string? configured)
+            ? configured
+            : CapturedOutput;
+        return new CaptureResult(output, Result.ExitCode, Result.Success);
     }
 
     public void CleanTempFolder() => TempCleanCount++;

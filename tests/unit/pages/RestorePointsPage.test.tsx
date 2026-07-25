@@ -5,7 +5,11 @@ import { RestorePointItem } from '../../../src/domain/types';
 import { LanguageProvider } from '../../../src/infrastructure/i18nContext';
 
 const points: RestorePointItem[] = [
-  { Sequence: 12, Date: '23/07/2026 03:15', Description: 'VeloSysPro_2026-07-23' },
+  {
+    Sequence: 12,
+    CreatedAt: '2026-07-23T06:15:00.000Z',
+    Description: 'VeloSysPro_2026-07-23',
+  },
 ];
 
 const renderPage = (props: Partial<React.ComponentProps<typeof RestorePointsPage>> = {}) => {
@@ -73,7 +77,7 @@ describe('RestorePointsPage', () => {
   it('lists the newest restore points first and paginates long histories', () => {
     const many: RestorePointItem[] = Array.from({ length: 24 }, (_, i) => ({
       Sequence: 115 + i,
-      Date: `${String((i % 28) + 1).padStart(2, '0')}/07/2026 03:00`,
+      CreatedAt: `2026-07-${String((i % 28) + 1).padStart(2, '0')}T03:00:00.000Z`,
       Description: `Point ${115 + i}`,
     }));
     renderPage({ points: many });
@@ -89,8 +93,8 @@ describe('RestorePointsPage', () => {
 
   it('sorts by date chronologically rather than by the raw display string', () => {
     const crossYear: RestorePointItem[] = [
-      { Sequence: 2, Date: '01/01/2026 00:00', Description: 'newer' },
-      { Sequence: 1, Date: '31/12/2025 23:00', Description: 'older' },
+      { Sequence: 2, CreatedAt: '2026-01-01T00:00:00.000Z', Description: 'newer' },
+      { Sequence: 1, CreatedAt: '2025-12-31T23:00:00.000Z', Description: 'older' },
     ];
     const { container } = renderPage({ points: crossYear });
 

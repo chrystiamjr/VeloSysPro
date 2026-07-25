@@ -1,0 +1,228 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Text.Json;
+using System.Threading;
+
+namespace VeloSysPro
+{
+    /// <summary>
+    /// Owns the Action seam: validation, routing, mutation exclusion, follow-up Events,
+    /// diagnostics, and authoritative completion.
+    /// </summary>
+    public sealed class ActionHost
+    {
+        private sealed record SchedulePayload(string Type, string Frequency, string Time, string Day);
+
+        private readonly Optimizer _optimizer;
+        private readonly RegistryBackupManager _registryBackups;
+        private readonly SystemRestoreManager _systemRestore;
+        private readonly SchedulerManager _scheduler;
+        private readonly SettingsManager _settings;
+        private readonly IpcEventEmitter _events;
+        private readonly IStatusSink _sink;
+        private readonly string _logsDir;
+        private readonly string _backupsDir;
+        private readonly Dictionary<string, Func<JsonElement, bool>> _handlers;
+        private readonly HashSet<string> _mutations;
+        private int _mutationActive;
+
+        public ActionHost(
+            Optimizer optimizer,
+            RegistryBackupManager registryBackups,
+            SystemRestoreManager systemRestore,
+            SchedulerManager scheduler,
+            SettingsManager settings,
+            IpcEventEmitter events,
+            IStatusSink sink,
+            string logsDir,
+            string backupsDir
+        )
+        {
+            _optimizer = optimizer;
+            _registryBackups = registryBackups;
+            _systemRestore = systemRestore;
+            _scheduler = scheduler;
+            _settings = settings;
+            _events = events;
+            _sink = sink;
+            _logsDir = logsDir;
+            _backupsDir = backupsDir;
+
+            _mutations = new HashSet<string>
+            {
+                SystemActions.RunQuickOptimization,
+                SystemActions.RunFullOptimization,
+                SystemActions.RunGamingMode,
+                SystemActions.RevertDefaults,
+                SystemActions.ClearUpdateCache,
+                SystemActions.CleanPrefetch,
+                SystemActions.CreateManualBackup,
+                SystemActions.RestoreBackup,
+                SystemActions.CreateRestorePoint,
+                SystemActions.RestoreToPoint,
+                SystemActions.CreateTask,
+                SystemActions.DeleteTask,
+                SystemActions.SaveSettings,
+            };
+
+            _handlers = CreateHandlers();
+        }
+
+        public void Handle(IpcHandler.IpcMessage message)
+        {
+            ThreadPool.QueueUserWorkItem(_ => Execute(message));
+        }
+
+        private void Execute(IpcHandler.IpcMessage message)
+        {
+            bool mutation = _mutations.Contains(message.Action);
+            if (mutation && Interlocked.CompareExchange(ref _mutationActive, 1, 0) != 0)
+            {
+                _sink.LogRaw("Mutating Action rejected while another mutation is active.", "error");
+                _events.Emit(IpcEvents.ActionFinished, new { action = message.Action, ok = false });
+                return;
+            }
+
+            bool ok = false;
+            try
+            {
+                if (!_handlers.TryGetValue(message.Action, out var handler))
+                    throw new InvalidOperationException("Unknown Action: " + message.Action);
+                ok = handler(message.Payload);
+            }
+            catch (Exception ex)
+            {
+                _sink.LogRaw("Action '" + message.Action + "' failed: " + ex.Message, "error");
+            }
+            finally
+            {
+                if (mutation) Interlocked.Exchange(ref _mutationActive, 0);
+                _events.Emit(IpcEvents.ActionFinished, new { action = message.Action, ok });
+            }
+        }
+
+        private Dictionary<string, Func<JsonElement, bool>> CreateHandlers() =>
+            new()
+            {
+                [SystemActions.RunQuickOptimization] = _ => RunPlan(OptimizationPlan.Quick),
+                [SystemActions.RunFullOptimization] = _ => RunPlan(OptimizationPlan.Full),
+                [SystemActions.RunGamingMode] = _ => RunPlan(OptimizationPlan.Gaming),
+                [SystemActions.RevertDefaults] = _ => _optimizer.Execute(OptimizationPlan.Revert),
+                [SystemActions.ClearUpdateCache] = _ => _optimizer.ClearUpdateCache(),
+                [SystemActions.CleanPrefetch] = _ => _optimizer.CleanPrefetch(),
+                [SystemActions.DiskHealth] = _ => _optimizer.ReportDiskHealth(),
+                [SystemActions.CreateManualBackup] = _ => MutateAndRefresh(
+                    _registryBackups.CreateBackup,
+                    PushBackups
+                ),
+                [SystemActions.RestoreBackup] = payload =>
+                    Run(() => _registryBackups.RestoreBackup(ReadString(payload))),
+                [SystemActions.CreateRestorePoint] = _ => MutateAndRefresh(
+                    _systemRestore.CreateRestorePoint,
+                    PushRestorePoints
+                ),
+                [SystemActions.GetRestorePoints] = _ => Run(PushRestorePoints),
+                [SystemActions.RestoreToPoint] = payload =>
+                    Run(() => _systemRestore.RestoreToPoint(ReadInt(payload).ToString())),
+                [SystemActions.GetSettings] = _ => Run(PushSettings),
+                [SystemActions.SaveSettings] = payload => SaveSettings(payload),
+                [SystemActions.OpenUrl] = payload => OpenUrl(ReadString(payload)),
+                [SystemActions.OpenLogs] = _ => OpenFolder(_logsDir),
+                [SystemActions.OpenBackups] = _ => OpenFolder(_backupsDir),
+                [SystemActions.GetBackups] = _ => Run(PushBackups),
+                [SystemActions.GetTasks] = _ => Run(PushTasks),
+                [SystemActions.CreateTask] = payload => CreateTask(payload),
+                [SystemActions.DeleteTask] = payload =>
+                    MutateAndRefresh(() => _scheduler.DeleteTask(ReadString(payload)), PushTasks),
+            };
+
+        private bool RunPlan(OptimizationPlan plan)
+        {
+            bool ok = _optimizer.Execute(plan);
+            if (ok && _optimizer.CreateSafetyBackupEnabled) PushBackups();
+            return ok;
+        }
+
+        private bool CreateTask(JsonElement payload)
+        {
+            SchedulePayload parsed = ReadObject<SchedulePayload>(payload);
+            ScheduleSpec schedule = SchedulePolicy.Normalize(
+                parsed.Type,
+                parsed.Frequency,
+                parsed.Day,
+                parsed.Time
+            );
+            return MutateAndRefresh(() => _scheduler.CreateTask(schedule), PushTasks);
+        }
+
+        private bool SaveSettings(JsonElement payload)
+        {
+            SettingsManager.Settings settings = ReadObject<SettingsManager.Settings>(payload);
+            SettingsManager.Settings applied = _settings.Save(settings);
+            _optimizer.CreateSafetyBackupEnabled = applied.CreateBackupBeforeOptimize;
+            PushSettings();
+            return true;
+        }
+
+        private bool MutateAndRefresh(Action mutation, Action refresh)
+        {
+            mutation();
+            refresh();
+            return true;
+        }
+
+        private static bool Run(Action action)
+        {
+            action();
+            return true;
+        }
+
+        private void PushBackups() =>
+            _events.EmitJson(IpcEvents.BackupsLoaded, _registryBackups.GetBackupsJson());
+
+        private void PushTasks() =>
+            _events.EmitJson(IpcEvents.TasksLoaded, _scheduler.GetTasksJson());
+
+        private void PushRestorePoints() =>
+            _events.EmitJson(IpcEvents.RestorePointsLoaded, _systemRestore.GetRestorePointsJson());
+
+        private void PushSettings() => _events.Emit(IpcEvents.SettingsLoaded, _settings.Current);
+
+        private static string ReadString(JsonElement payload)
+        {
+            if (payload.ValueKind != JsonValueKind.String)
+                throw new ArgumentException("Action payload must be a string.");
+            return payload.GetString() ?? throw new ArgumentException("Action payload is empty.");
+        }
+
+        private static int ReadInt(JsonElement payload)
+        {
+            if (!payload.TryGetInt32(out int value) || value < 0)
+                throw new ArgumentException("Action payload must be a non-negative integer.");
+            return value;
+        }
+
+        private static T ReadObject<T>(JsonElement payload)
+        {
+            T? value = payload.Deserialize<T>(
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            );
+            return value ?? throw new ArgumentException("Action payload is invalid.");
+        }
+
+        private static bool OpenUrl(string url)
+        {
+            if (!url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Only HTTPS URLs are allowed.");
+            Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
+            return true;
+        }
+
+        private static bool OpenFolder(string path)
+        {
+            Process.Start("explorer.exe", path);
+            return true;
+        }
+    }
+}

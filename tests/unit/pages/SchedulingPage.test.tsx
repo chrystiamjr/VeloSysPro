@@ -9,6 +9,10 @@ const tasks: ScheduledTaskItem[] = [
     Name: 'VeloSysPro_Quick_Daily_0300',
     State: 'Ready',
     Path: '\\VeloSysPro_Quick_Daily_0300',
+    Type: 'quick',
+    Frequency: 'DAILY',
+    Day: '',
+    Time: '03:00',
   },
 ];
 
@@ -28,7 +32,7 @@ const renderPage = (props: Partial<React.ComponentProps<typeof SchedulingPage>> 
 };
 
 const lastPayload = (fn: unknown) =>
-  JSON.parse((fn as ReturnType<typeof vi.fn>).mock.calls[0][0] as string);
+  (fn as ReturnType<typeof vi.fn>).mock.calls[0][0];
 
 describe('SchedulingPage (functional scheduler)', () => {
   afterEach(() => {
@@ -55,11 +59,19 @@ describe('SchedulingPage (functional scheduler)', () => {
           Name: 'VeloSysPro_Gaming_Weekly_MON_0430',
           State: 'Running',
           Path: '\\VeloSysPro_Gaming_Weekly_MON_0430',
+          Type: 'gaming',
+          Frequency: 'WEEKLY',
+          Day: 'MON',
+          Time: '04:30',
         },
         {
           Name: 'VeloSysPro_Full_Monthly_15_0200',
           State: 'Ready',
           Path: '\\VeloSysPro_Full_Monthly_15_0200',
+          Type: 'full',
+          Frequency: 'MONTHLY',
+          Day: '15',
+          Time: '02:00',
         },
       ],
     });
@@ -71,7 +83,17 @@ describe('SchedulingPage (functional scheduler)', () => {
 
   it('keeps legacy tasks listed and removable', () => {
     const props = renderPage({
-      tasks: [{ Name: 'VeloSysPro_Quick', State: 'Ready', Path: '\\VeloSysPro_Quick' }],
+      tasks: [
+        {
+          Name: 'VeloSysPro_Quick',
+          State: 'Ready',
+          Path: '\\VeloSysPro_Quick',
+          Type: 'quick',
+          Frequency: '',
+          Day: '',
+          Time: '',
+        },
+      ],
     });
 
     // Scoped to the table: "Otimização Rápida" is also a <option> in the type dropdown.
@@ -91,11 +113,19 @@ describe('SchedulingPage (functional scheduler)', () => {
           Name: 'VeloSysPro_Quick_Daily_0300',
           State: 'Ready',
           Path: '\\VeloSysPro_Quick_Daily_0300',
+          Type: 'quick',
+          Frequency: 'DAILY',
+          Day: '',
+          Time: '03:00',
         },
         {
           Name: 'VeloSysPro_Quick_Daily_0500',
           State: 'Ready',
           Path: '\\VeloSysPro_Quick_Daily_0500',
+          Type: 'quick',
+          Frequency: 'DAILY',
+          Day: '',
+          Time: '05:00',
         },
       ],
     });

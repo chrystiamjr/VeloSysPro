@@ -11,13 +11,13 @@ public class OptimizerTests
         using var temp = new TemporaryDirectory();
         var runner = new FakeCommandRunner();
         var sink = new RecordingStatusSink();
-        var backup = new BackupManager(temp.Path, runner, sink);
+        var backup = new RegistryBackupManager(temp.Path, runner, sink);
         var optimizer = new Optimizer(runner, backup, sink)
         {
             CreateSafetyBackupEnabled = false,
         };
 
-        optimizer.RunQuick();
+        Assert.True(optimizer.Execute(OptimizationPlan.Quick));
 
         Assert.Equal(new[] { "ipconfig.exe", "cleanmgr.exe" }, runner.Runs.Select(run => run.Exe));
         Assert.Equal(1, runner.TempCleanCount);
@@ -33,14 +33,14 @@ public class OptimizerTests
         var sink = new RecordingStatusSink();
         var optimizer = new Optimizer(
             runner,
-            new BackupManager(temp.Path, runner, sink),
+            new RegistryBackupManager(temp.Path, runner, sink),
             sink
         )
         {
             CreateSafetyBackupEnabled = false,
         };
 
-        optimizer.RunQuick();
+        Assert.False(optimizer.Execute(OptimizationPlan.Quick));
 
         Assert.Contains(
             sink.Logs,
@@ -60,7 +60,7 @@ public class OptimizerTests
         var sink = new RecordingStatusSink();
         var optimizer = new Optimizer(
             runner,
-            new BackupManager(temp.Path, runner, sink),
+            new RegistryBackupManager(temp.Path, runner, sink),
             sink
         )
         {
@@ -78,7 +78,7 @@ public class OptimizerTests
         var sink = new RecordingStatusSink();
         var optimizer = new Optimizer(
             runner,
-            new BackupManager(temp.Path, runner, sink),
+            new RegistryBackupManager(temp.Path, runner, sink),
             sink
         );
 

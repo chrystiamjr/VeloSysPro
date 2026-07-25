@@ -2,6 +2,14 @@ using System;
 
 namespace VeloSysPro
 {
+    public enum OptimizationPlan
+    {
+        Quick,
+        Full,
+        Gaming,
+        Revert,
+    }
+
     /// <summary>
     /// System optimization orchestration, decoupled from the WPF window so it can be
     /// driven by both the UI and the headless CLI mode. Emits i18n keys via IStatusSink.
@@ -10,14 +18,14 @@ namespace VeloSysPro
     public class Optimizer
     {
         private readonly ICommandRunner _cmd;
-        private readonly BackupManager _backup;
+        private readonly RegistryBackupManager _backup;
         private readonly IStatusSink _sink;
         private readonly Action? _onBackupsChanged;
 
         /// <summary>When true, a registry safety backup is taken before an optimization.</summary>
         public bool CreateSafetyBackupEnabled { get; set; } = true;
 
-        public Optimizer(ICommandRunner cmd, BackupManager backup, IStatusSink sink, Action? onBackupsChanged = null)
+        public Optimizer(ICommandRunner cmd, RegistryBackupManager backup, IStatusSink sink, Action? onBackupsChanged = null)
         {
             _cmd = cmd;
             _backup = backup;
@@ -33,13 +41,24 @@ namespace VeloSysPro
         }
 
         /// <summary>Emits the final log: the op's "done" key on success, or a shared error key.</summary>
-        private void Finish(bool ok, string doneKey)
+        private bool Finish(bool ok, string doneKey)
         {
             if (ok) _sink.Log(doneKey, "success");
             else _sink.Log("log.op.completedWithErrors", "error");
+            return ok;
         }
 
-        public void RunQuick()
+        public bool Execute(OptimizationPlan plan) =>
+            plan switch
+            {
+                OptimizationPlan.Quick => RunQuick(),
+                OptimizationPlan.Full => RunFull(),
+                OptimizationPlan.Gaming => RunGaming(),
+                OptimizationPlan.Revert => RevertDefaults(),
+                _ => false,
+            };
+
+        private bool RunQuick()
         {
             _sink.Status("status.quick.start", 10);
             _sink.Log("log.quick.start", "info");
@@ -56,10 +75,10 @@ namespace VeloSysPro
             _cmd.CleanTempFolder();
 
             _sink.Status("status.quick.done", 100);
-            Finish(ok, "log.quick.done");
+            return Finish(ok, "log.quick.done");
         }
 
-        public void RunFull()
+        private bool RunFull()
         {
             _sink.Status("status.full.start", 10);
             _sink.Log("log.full.start", "info");
@@ -79,10 +98,10 @@ namespace VeloSysPro
             _cmd.CleanTempFolder();
 
             _sink.Status("status.full.done", 100);
-            Finish(ok, "log.full.done");
+            return Finish(ok, "log.full.done");
         }
 
-        public void RunGaming()
+        private bool RunGaming()
         {
             _sink.Status("status.gaming.start", 10);
             _sink.Log("log.gaming.start", "info");
@@ -99,10 +118,10 @@ namespace VeloSysPro
             ok &= _cmd.Run("ipconfig.exe", "/flushdns").Success;
 
             _sink.Status("status.gaming.done", 100);
-            Finish(ok, "log.gaming.done");
+            return Finish(ok, "log.gaming.done");
         }
 
-        public void RevertDefaults()
+        private bool RevertDefaults()
         {
             _sink.Status("status.revert.start", 10);
             _sink.Log("log.revert.start", "info");
@@ -118,10 +137,10 @@ namespace VeloSysPro
             ok &= _cmd.Run("ipconfig.exe", "/flushdns").Success;
 
             _sink.Status("status.revert.done", 100);
-            Finish(ok, "log.revert.done");
+            return Finish(ok, "log.revert.done");
         }
 
-        public void ClearUpdateCache()
+        public bool ClearUpdateCache()
         {
             _sink.Status("status.updateCache.start", 20);
             _sink.Log("log.updateCache.start", "info");
@@ -133,10 +152,10 @@ namespace VeloSysPro
             ok &= _cmd.Run("net.exe", "start wuauserv").Success;
 
             _sink.Status("status.updateCache.done", 100);
-            Finish(ok, "log.updateCache.done");
+            return Finish(ok, "log.updateCache.done");
         }
 
-        public void CleanPrefetch()
+        public bool CleanPrefetch()
         {
             _sink.Status("status.prefetch.start", 30);
             _sink.Log("log.prefetch.start", "info");
@@ -146,9 +165,10 @@ namespace VeloSysPro
 
             _sink.Status("status.prefetch.done", 100);
             _sink.Log("log.prefetch.done", "success");
+            return true;
         }
 
-        public void ReportDiskHealth()
+        public bool ReportDiskHealth()
         {
             _sink.Status("status.diskHealth.start", 40);
             _sink.Log("log.diskHealth.start", "info");
@@ -156,32 +176,19 @@ namespace VeloSysPro
             const string ps =
                 "Get-PhysicalDisk | Select-Object FriendlyName, MediaType, HealthStatus, " +
                 "@{N='Size(GB)';E={[math]::Round($_.Size/1GB,1)}} | Format-Table -AutoSize | Out-String";
-            _cmd.Run("powershell.exe", "-ExecutionPolicy Bypass -Command \"" + ps + "\"");
+            bool ok = _cmd
+                .Run("powershell.exe", "-ExecutionPolicy Bypass -Command \"" + ps + "\"")
+                .Success;
 
             _sink.Status("status.diskHealth.done", 100);
-            _sink.Log("log.diskHealth.done", "success");
+            return Finish(ok, "log.diskHealth.done");
         }
 
         /// <summary>Runs an optimization by its CLI task name (used by headless mode).</summary>
         public bool RunByName(string task)
         {
-            switch (task.ToLowerInvariant())
-            {
-                case "quick":
-                    RunQuick();
-                    return true;
-                case "full":
-                    RunFull();
-                    return true;
-                case "gaming":
-                    RunGaming();
-                    return true;
-                case "revert":
-                    RevertDefaults();
-                    return true;
-                default:
-                    return false;
-            }
+            if (!Enum.TryParse(task, ignoreCase: true, out OptimizationPlan plan)) return false;
+            return Execute(plan);
         }
     }
 }

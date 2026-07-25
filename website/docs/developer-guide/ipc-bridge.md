@@ -30,4 +30,4 @@ private async void OnWebMessageReceived(object sender, CoreWebView2WebMessageRec
 }
 ```
 
-When an action finishes, C# emits `window.onActionFinished(action, ok)` to safely release the UI action lock.
+The host emits structured `{ event, payload }` envelopes with `PostWebMessageAsJson`, and React receives them through the WebView2 `message` Event. When an Action finishes, the `actionFinished` Event safely releases the UI action lock.

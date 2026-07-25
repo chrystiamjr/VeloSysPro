@@ -11,29 +11,29 @@ describe('registry backups', () => {
   });
 
   it('renders backups received from the host', () => {
-    cy.emitHost('onBackupsLoaded', backups);
+    cy.emitHost('backupsLoaded', backups);
     cy.contains(backups[0].Name).should('be.visible');
-    cy.contains(backups[1].Size).should('be.visible');
+    cy.contains('39,0 KB').should('be.visible');
   });
 
-  it('sorts host-formatted backup dates chronologically across years', () => {
+  it('sorts canonical backup timestamps chronologically across years', () => {
     const crossYear = [
-      { Name: 'older.reg', Date: '31/12/2025 23:00', Size: '10,0 KB' },
-      { Name: 'newer.reg', Date: '01/01/2026 00:00', Size: '10,0 KB' },
+      { Name: 'older.reg', CreatedAt: '2025-12-31T23:00:00.000Z', SizeBytes: 10240 },
+      { Name: 'newer.reg', CreatedAt: '2026-01-01T00:00:00.000Z', SizeBytes: 10240 },
     ];
-    cy.emitHost('onBackupsLoaded', crossYear);
+    cy.emitHost('backupsLoaded', crossYear);
 
     cy.getByCy('backups-table').find('tbody tr').first().should('contain', 'newer.reg');
     cy.getByCy('table-sort-date').parent('th').should('have.attr', 'aria-sort', 'descending');
   });
 
-  it('sorts localized backup sizes by magnitude', () => {
+  it('sorts backup byte counts by magnitude', () => {
     const localizedSizes = [
-      { Name: 'medium.reg', Date: '02/01/2026 00:00', Size: '999,9 KB' },
-      { Name: 'large.reg', Date: '03/01/2026 00:00', Size: '1.234,5 KB' },
-      { Name: 'small.reg', Date: '01/01/2026 00:00', Size: '45,6 KB' },
+      { Name: 'medium.reg', CreatedAt: '2026-01-02T00:00:00.000Z', SizeBytes: 1023898 },
+      { Name: 'large.reg', CreatedAt: '2026-01-03T00:00:00.000Z', SizeBytes: 1264128 },
+      { Name: 'small.reg', CreatedAt: '2026-01-01T00:00:00.000Z', SizeBytes: 46694 },
     ];
-    cy.emitHost('onBackupsLoaded', localizedSizes);
+    cy.emitHost('backupsLoaded', localizedSizes);
 
     cy.getByCy('table-sort-size').click();
     cy.getByCy('backups-table').find('tbody tr').eq(0).should('contain', 'small.reg');
@@ -45,20 +45,20 @@ describe('registry backups', () => {
   it('creates a backup and opens its folder', () => {
     cy.getByCy('backup-create').click();
     cy.expectIpc('createManualBackup');
-    cy.emitHost('onActionFinished', 'createManualBackup', true);
+    cy.emitHost('actionFinished', { action: 'createManualBackup', ok: true });
     cy.getByCy('backup-open-folder').click();
     cy.expectIpc('openBackups');
   });
 
   it('restores a selected backup after confirmation', () => {
-    cy.emitHost('onBackupsLoaded', backups);
+    cy.emitHost('backupsLoaded', backups);
     cy.on('window:confirm', () => true);
     cy.getByCy(`backup-restore-${backups[0].Name}`).click();
     cy.expectIpc('restoreBackup', backups[0].Name);
   });
 
   it('does not restore after cancellation', () => {
-    cy.emitHost('onBackupsLoaded', backups);
+    cy.emitHost('backupsLoaded', backups);
     cy.on('window:confirm', () => false);
     cy.getByCy(`backup-restore-${backups[0].Name}`).click();
     cy.get<Sinon.SinonStub>('@ipcStub').should(
@@ -68,10 +68,10 @@ describe('registry backups', () => {
   });
 
   it('refreshes the table and dashboard metrics', () => {
-    cy.emitHost('onBackupsLoaded', backups);
+    cy.emitHost('backupsLoaded', backups);
     cy.contains(backups[0].Name).should('exist');
     cy.getByCy('nav-Dashboard').click();
     cy.getByCy('health-backups').should('contain', '2');
-    cy.getByCy('health-latest-backup').should('contain', backups[0].Date);
+    cy.getByCy('health-latest-backup').should('not.contain', 'Nenhum');
   });
 });

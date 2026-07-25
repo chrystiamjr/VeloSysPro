@@ -13,8 +13,16 @@ export const defaultSettings: AppSettings = {
 };
 
 export const backups: BackupItem[] = [
-  { Name: 'backup_rede_2026-07-24_10-30-00.reg', Date: '24/07/2026 10:30', Size: '42.5 KB' },
-  { Name: 'backup_rede_2026-07-23_09-15-00.reg', Date: '23/07/2026 09:15', Size: '39.0 KB' },
+  {
+    Name: 'backup_rede_2026-07-24_10-30-00.reg',
+    CreatedAt: '2026-07-24T13:30:00.000Z',
+    SizeBytes: 43520,
+  },
+  {
+    Name: 'backup_rede_2026-07-23_09-15-00.reg',
+    CreatedAt: '2026-07-23T12:15:00.000Z',
+    SizeBytes: 39936,
+  },
 ];
 
 export const tasks: ScheduledTaskItem[] = [
@@ -22,17 +30,33 @@ export const tasks: ScheduledTaskItem[] = [
     Name: 'VeloSysPro_Quick_Daily_0300',
     State: 'Ready',
     Path: '\\VeloSysPro_Quick_Daily_0300',
+    Type: 'quick',
+    Frequency: 'DAILY',
+    Day: '',
+    Time: '03:00',
   },
   {
     Name: 'VeloSysPro_Gaming_Weekly_MON_0430',
     State: 'Running',
     Path: '\\VeloSysPro_Gaming_Weekly_MON_0430',
+    Type: 'gaming',
+    Frequency: 'WEEKLY',
+    Day: 'MON',
+    Time: '04:30',
   },
 ];
 
 export const restorePoints: RestorePointItem[] = [
-  { Sequence: 12, Date: '24/07/2026 08:00', Description: 'VeloSysPro_2026-07-24' },
-  { Sequence: 7, Date: '20/07/2026 12:00', Description: 'Windows Update' },
+  {
+    Sequence: 12,
+    CreatedAt: '2026-07-24T11:00:00.000Z',
+    Description: 'VeloSysPro_2026-07-24',
+  },
+  {
+    Sequence: 7,
+    CreatedAt: '2026-07-20T15:00:00.000Z',
+    Description: 'Windows Update',
+  },
 ];
 
 export const updateInfo: UpdateInfo = {

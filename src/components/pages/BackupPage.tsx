@@ -3,7 +3,7 @@ import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
 import { DataTable, DataTableColumn } from '../organisms/DataTable';
 import { BackupItem } from '../../domain/types';
-import { parseDisplayDate, parseDisplayNumber } from '../../domain/formatters';
+import { formatBytes, formatDateTime, timestampValue } from '../../domain/formatters';
 import { useTranslation } from '../../infrastructure/i18nContext';
 
 export interface BackupPageProps {
@@ -27,7 +27,7 @@ export const BackupPage: React.FC<BackupPageProps> = ({
   onRefresh,
   disabled = false,
 }) => {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
 
   const handleRestore = (name: string) => {
     if (window.confirm(t('backup.restoreConfirm'))) {
@@ -46,14 +46,14 @@ export const BackupPage: React.FC<BackupPageProps> = ({
     {
       key: 'date',
       header: t('backup.colDate'),
-      sortValue: (backup) => parseDisplayDate(backup.Date),
-      render: (backup) => backup.Date,
+      sortValue: (backup) => timestampValue(backup.CreatedAt),
+      render: (backup) => formatDateTime(backup.CreatedAt, lang),
     },
     {
       key: 'size',
       header: t('backup.colSize'),
-      sortValue: (backup) => parseDisplayNumber(backup.Size),
-      render: (backup) => backup.Size,
+      sortValue: (backup) => backup.SizeBytes,
+      render: (backup) => formatBytes(backup.SizeBytes, lang),
     },
     {
       key: 'actions',

@@ -19,7 +19,7 @@ import { useTranslation } from '../../infrastructure/i18nContext';
 
 export interface SchedulingPageProps {
   tasks: ScheduledTaskItem[];
-  onCreateTask: (payload: string) => void;
+  onCreateTask: (payload: { type: string; frequency: string; time: string; day: string }) => void;
   onDeleteTask: (name: string) => void;
   onRefresh?: () => void;
   disabled?: boolean;
@@ -44,7 +44,7 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
   const day = frequency === 'WEEKLY' ? weekday : frequency === 'MONTHLY' ? monthDay : '';
 
   const handleCreate = () => {
-    onCreateTask(JSON.stringify({ type, frequency, time, day }));
+    onCreateTask({ type, frequency, time, day });
   };
 
   const handleDelete = (name: string) => {
@@ -58,14 +58,14 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
       key: 'name',
       header: t('scheduling.colName'),
       className: 'font-semibold text-textMain',
-      sortValue: (task) => taskDisplayName(task.Name, t),
-      render: (task) => taskDisplayName(task.Name, t),
+      sortValue: (task) => taskDisplayName(task, t),
+      render: (task) => taskDisplayName(task, t),
     },
     {
       key: 'schedule',
       header: t('scheduling.colSchedule'),
-      sortValue: (task) => describeSchedule(task.Name, t),
-      render: (task) => describeSchedule(task.Name, t),
+      sortValue: (task) => `${task.Frequency}:${task.Day}:${task.Time}`,
+      render: (task) => describeSchedule(task, t),
     },
     {
       key: 'state',

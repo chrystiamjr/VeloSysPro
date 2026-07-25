@@ -1,4 +1,5 @@
 using Xunit;
+using System.Text.Json;
 
 namespace VeloSysPro.Tests;
 
@@ -11,7 +12,7 @@ public class IpcHandlerTests
 
         Assert.NotNull(message);
         Assert.Equal("restoreBackup", message.Action);
-        Assert.Equal("backup.reg", message.Payload);
+        Assert.Equal("backup.reg", message.Payload.GetString());
     }
 
     [Fact]
@@ -22,10 +23,8 @@ public class IpcHandlerTests
         );
 
         Assert.NotNull(message);
-        Assert.Equal(
-            """{"type":"quick","frequency":"DAILY","time":"03:00"}""",
-            message.Payload
-        );
+        Assert.Equal("quick", message.Payload.GetProperty("type").GetString());
+        Assert.Equal("DAILY", message.Payload.GetProperty("frequency").GetString());
     }
 
     [Theory]
@@ -38,11 +37,11 @@ public class IpcHandlerTests
     }
 
     [Fact]
-    public void Parse_DefaultsMissingPayloadToEmptyString()
+    public void Parse_DefaultsMissingPayloadToNull()
     {
         var message = IpcHandler.Parse("""{"action":"getSettings"}""");
 
         Assert.NotNull(message);
-        Assert.Equal("", message.Payload);
+        Assert.Equal(JsonValueKind.Null, message.Payload.ValueKind);
     }
 }

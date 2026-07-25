@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { MainLayout } from './components/templates/MainLayout';
 import { DashboardPage } from './components/pages/DashboardPage';
 import { SchedulingPage } from './components/pages/SchedulingPage';
@@ -12,26 +12,15 @@ import {
   LogEntryItem,
   LogRecord,
   LocalizedMessage,
-  BackupItem,
-  ScheduledTaskItem,
-  RestorePointItem,
-  AppSettings,
   UpdateInfo,
   SystemActions,
 } from './domain/types';
 import { useTranslation, LanguageProvider } from './infrastructure/i18nContext';
-import {
-  sendAction,
-  subscribeLogs,
-  subscribeStatus,
-  subscribeProgress,
-  subscribeBackups,
-  subscribeTasks,
-  subscribeRestorePoints,
-  subscribeSettings,
-  subscribeUpdate,
-  subscribeActionFinished,
-} from './infrastructure/bridge';
+import { subscribeLogs, subscribeStatus, subscribeUpdate } from './infrastructure/bridge';
+import { formatDateTime } from './domain/formatters';
+import { useExecutionLifecycle } from './infrastructure/useExecutionLifecycle';
+import { useOsBackedLists } from './infrastructure/useOsBackedLists';
+import { usePreferences } from './infrastructure/usePreferences';
 
 const SCREEN_HEADERS: Record<AppScreen, { title: string; subtitle: string }> = {
   [AppScreen.Dashboard]: { title: 'header.dashboard.title', subtitle: 'header.dashboard.subtitle' },
@@ -47,172 +36,43 @@ const SCREEN_HEADERS: Record<AppScreen, { title: string; subtitle: string }> = {
   [AppScreen.Settings]: { title: 'header.settings.title', subtitle: 'header.settings.subtitle' },
 };
 
-/**
- * Data each screen re-requests when opened.
- *
- * Settings is deliberately empty: it holds unsaved local edits, and a refetch would clobber
- * them with whatever the host last persisted.
- */
-const SCREEN_REFRESH_ACTIONS: Record<AppScreen, readonly string[]> = {
-  [AppScreen.Dashboard]: [SystemActions.GET_BACKUPS, SystemActions.GET_TASKS],
-  [AppScreen.Scheduling]: [SystemActions.GET_TASKS],
-  [AppScreen.Backup]: [SystemActions.GET_BACKUPS],
-  [AppScreen.RestorePoints]: [SystemActions.GET_RESTORE_POINTS],
-  [AppScreen.Settings]: [],
-};
-
 function AppContent() {
   const { t, lang, setLang } = useTranslation();
   const [activeScreen, setActiveScreen] = useState<AppScreen>(AppScreen.Dashboard);
   const [status, setStatus] = useState<LocalizedMessage>({ key: 'status.idle' });
-  const [progressPercent, setProgressPercent] = useState<number>(100);
-  const [backups, setBackups] = useState<BackupItem[]>([]);
-  const [tasks, setTasks] = useState<ScheduledTaskItem[]>([]);
-  const [restorePoints, setRestorePoints] = useState<RestorePointItem[]>([]);
-  const [settings, setSettings] = useState<AppSettings>({
-    language: 'pt_BR',
-    createBackupBeforeOptimize: true,
-    sidebarCollapsed: false,
-  });
-  const settingsLoaded = useRef(false);
   const [update, setUpdate] = useState<UpdateInfo | null>(null);
   // Dismissing only hides the banner; Settings keeps the release reachable without a restart.
   const [updateDismissed, setUpdateDismissed] = useState(false);
   const [logs, setLogs] = useState<LogRecord[]>([{ key: 'log.appStarted', type: 'success' }]);
-  const [activeAction, setActiveAction] = useState<string | null>(null);
   const [consoleExpanded, setConsoleExpanded] = useState(false);
-  const [executionHasError, setExecutionHasError] = useState(false);
-  // Holds the name of the in-flight mutating action (null = idle). Serves as the UI lock.
-  const activeActionRef = useRef<string | null>(null);
-
-  const [health, setHealth] = useState<SystemHealth>({
-    admin: 'Sim',
-    backupsCount: 0,
-    latestBackup: 'Nenhum',
-    tasksCount: 0,
-    status: 'ready',
-  });
+  const { activeAction, progressPercent, executionHasError, runRead, runMutation } =
+    useExecutionLifecycle();
+  const { backups, tasks, restorePoints, refreshBackups, refreshTasks, refreshRestorePoints } =
+    useOsBackedLists(activeScreen);
+  const { settings, setLanguage, setSafetyBackup, toggleSidebar } = usePreferences(setLang);
 
   useEffect(() => {
-    subscribeLogs((msg, type) => {
-      setLogs((prev) => [...prev, { key: msg.key, args: msg.args, type }]);
-      if (type === 'error') {
-        setExecutionHasError(true);
-        setConsoleExpanded(true);
-      }
-    });
+    const unsubscribers = [
+      subscribeLogs((msg, type) => {
+        setLogs((prev) => [...prev, { key: msg.key, args: msg.args, type }]);
+        if (type === 'error') {
+          setConsoleExpanded(true);
+        }
+      }),
 
-    subscribeStatus((msg) => {
-      setStatus(msg);
-    });
+      subscribeStatus((msg) => {
+        setStatus(msg);
+      }),
 
-    subscribeProgress((percent) => {
-      setProgressPercent(percent);
-      setHealth((prev) => ({ ...prev, status: percent < 100 ? 'executing' : 'ready' }));
-      // Secondary release (the authoritative one is onActionFinished below).
-      if (percent >= 100) {
-        activeActionRef.current = null;
-        setActiveAction(null);
-      }
-    });
+      subscribeUpdate((info) => {
+        setUpdate(info);
+      }),
+    ];
 
-    subscribeBackups((data) => {
-      setBackups(data);
-      setHealth((prev) => ({
-        ...prev,
-        backupsCount: data.length,
-        latestBackup: data.length > 0 ? data[0].Date : 'Nenhum',
-      }));
-    });
-
-    subscribeTasks((data) => {
-      setTasks(data);
-      setHealth((prev) => ({ ...prev, tasksCount: data.length }));
-    });
-
-    subscribeRestorePoints((data) => {
-      setRestorePoints(data);
-    });
-
-    subscribeSettings((data) => {
-      setSettings(data);
-      if (data.language === 'pt_BR' || data.language === 'en_US') setLang(data.language);
-      settingsLoaded.current = true;
-    });
-
-    subscribeUpdate((info) => {
-      setUpdate(info);
-    });
-
-    // Authoritative lock release: fires when the action's handler completes (ok or error).
-    subscribeActionFinished((action) => {
-      if (action === activeActionRef.current) {
-        activeActionRef.current = null;
-        setActiveAction(null);
-      }
-    });
-
-    sendAction(SystemActions.GET_BACKUPS);
-    sendAction(SystemActions.GET_TASKS);
-    sendAction(SystemActions.GET_RESTORE_POINTS);
-    sendAction(SystemActions.GET_SETTINGS);
+    return () => {
+      for (const unsubscribe of unsubscribers) unsubscribe();
+    };
   }, [setLang]);
-
-  // Re-query whatever the screen shows on entry. Windows is the source of truth for tasks and
-  // restore points, so anything changed outside the app (taskschd.msc, disk cleanup) would
-  // otherwise stay on screen until the app restarted.
-  useEffect(() => {
-    for (const action of SCREEN_REFRESH_ACTIONS[activeScreen]) {
-      sendAction(action);
-    }
-  }, [activeScreen]);
-
-  // Persist language whenever it changes (including the sidebar quick-switch).
-  useEffect(() => {
-    if (!settingsLoaded.current) return;
-    setSettings((prev) => {
-      const next = { ...prev, language: lang };
-      sendAction(SystemActions.SAVE_SETTINGS, JSON.stringify(next));
-      return next;
-    });
-  }, [lang]);
-
-  const handleToggleBackup = (value: boolean) => {
-    setSettings((prev) => {
-      const next = { ...prev, createBackupBeforeOptimize: value };
-      sendAction(SystemActions.SAVE_SETTINGS, JSON.stringify(next));
-      return next;
-    });
-  };
-
-  const handleToggleSidebar = () => {
-    setSettings((prev) => {
-      const next = { ...prev, sidebarCollapsed: !prev.sidebarCollapsed };
-      sendAction(SystemActions.SAVE_SETTINGS, JSON.stringify(next));
-      return next;
-    });
-  };
-
-  const handleAction = (action: string, payload?: string) => {
-    sendAction(action, payload);
-  };
-
-  const handleDashboardAction = (action: string) => {
-    if (activeActionRef.current) return;
-    activeActionRef.current = action;
-    setActiveAction(action);
-    setExecutionHasError(false);
-    sendAction(action);
-  };
-
-  // Every elevated mutation now acquires the lock too, so the whole UI blocks
-  // overlapping mutations until the action reports finished.
-  const handleSystemMutation = (action: string, payload?: string) => {
-    if (activeActionRef.current) return;
-    activeActionRef.current = action;
-    setActiveAction(action);
-    sendAction(action, payload);
-  };
 
   const handleClearLogs = () => {
     setLogs([]);
@@ -225,14 +85,21 @@ function AppContent() {
   }));
   const statusMessage = t(status.key, status.args);
   const header = SCREEN_HEADERS[activeScreen];
+  const displayHealth: SystemHealth = {
+    admin: 'Sim',
+    backupsCount: backups.length,
+    tasksCount: tasks.length,
+    status: progressPercent < 100 ? 'executing' : 'ready',
+    latestBackup: backups.length > 0 ? formatDateTime(backups[0].CreatedAt, lang) : '',
+  };
 
   return (
     <MainLayout
       activeScreen={activeScreen}
       onNavigate={setActiveScreen}
-      onOpenLogs={() => handleAction(SystemActions.OPEN_LOGS)}
+      onOpenLogs={() => runRead(SystemActions.OPEN_LOGS)}
       sidebarCollapsed={settings.sidebarCollapsed}
-      onToggleSidebar={handleToggleSidebar}
+      onToggleSidebar={toggleSidebar}
       title={t(header.title)}
       subtitle={t(header.subtitle)}
       statusMessage={statusMessage}
@@ -250,7 +117,7 @@ function AppContent() {
           <div className="flex items-center gap-2">
             <button
               data-cy="update-download"
-              onClick={() => handleAction(SystemActions.OPEN_URL, update.url)}
+              onClick={() => runRead(SystemActions.OPEN_URL, update.url)}
               className="cursor-pointer rounded-lg border-none bg-primary px-4 py-2 text-xs font-bold text-white transition-all hover:bg-primary-hover"
             >
               {t('updateBanner.btn')}
@@ -268,9 +135,9 @@ function AppContent() {
 
       {activeScreen === AppScreen.Dashboard && (
         <DashboardPage
-          health={health}
+          health={displayHealth}
           logs={translatedLogs}
-          onAction={handleDashboardAction}
+          onAction={(action) => runMutation(action)}
           onClearLogs={handleClearLogs}
           onNavigateToBackup={() => setActiveScreen(AppScreen.Backup)}
           onNavigateToRestorePoints={() => setActiveScreen(AppScreen.RestorePoints)}
@@ -286,9 +153,9 @@ function AppContent() {
         <SchedulingPage
           tasks={tasks}
           disabled={activeAction !== null}
-          onCreateTask={(payload) => handleSystemMutation(SystemActions.CREATE_TASK, payload)}
-          onDeleteTask={(name) => handleSystemMutation(SystemActions.DELETE_TASK, name)}
-          onRefresh={() => handleAction(SystemActions.GET_TASKS)}
+          onCreateTask={(payload) => runMutation(SystemActions.CREATE_TASK, payload)}
+          onDeleteTask={(name) => runMutation(SystemActions.DELETE_TASK, name)}
+          onRefresh={refreshTasks}
         />
       )}
 
@@ -296,10 +163,10 @@ function AppContent() {
         <BackupPage
           backups={backups}
           disabled={activeAction !== null}
-          onCreateBackup={() => handleSystemMutation(SystemActions.CREATE_MANUAL_BACKUP)}
-          onRestoreBackup={(name) => handleSystemMutation(SystemActions.RESTORE_BACKUP, name)}
-          onOpenFolder={() => handleAction(SystemActions.OPEN_BACKUPS)}
-          onRefresh={() => handleAction(SystemActions.GET_BACKUPS)}
+          onCreateBackup={() => runMutation(SystemActions.CREATE_MANUAL_BACKUP)}
+          onRestoreBackup={(name) => runMutation(SystemActions.RESTORE_BACKUP, name)}
+          onOpenFolder={() => runRead(SystemActions.OPEN_BACKUPS)}
+          onRefresh={refreshBackups}
         />
       )}
 
@@ -307,9 +174,9 @@ function AppContent() {
         <RestorePointsPage
           points={restorePoints}
           disabled={activeAction !== null}
-          onCreatePoint={() => handleSystemMutation(SystemActions.CREATE_RESTORE_POINT)}
-          onRestore={(seq) => handleSystemMutation(SystemActions.RESTORE_TO_POINT, String(seq))}
-          onRefresh={() => handleAction(SystemActions.GET_RESTORE_POINTS)}
+          onCreatePoint={() => runMutation(SystemActions.CREATE_RESTORE_POINT)}
+          onRestore={(seq) => runMutation(SystemActions.RESTORE_TO_POINT, seq)}
+          onRefresh={refreshRestorePoints}
         />
       )}
 
@@ -317,10 +184,10 @@ function AppContent() {
         <SettingsPage
           language={lang}
           createBackupBeforeOptimize={settings.createBackupBeforeOptimize}
-          onLanguageChange={setLang}
-          onToggleBackup={handleToggleBackup}
+          onLanguageChange={setLanguage}
+          onToggleBackup={setSafetyBackup}
           updateInfo={update}
-          onDownloadUpdate={(url) => handleAction(SystemActions.OPEN_URL, url)}
+          onDownloadUpdate={(url) => runRead(SystemActions.OPEN_URL, url)}
         />
       )}
     </MainLayout>

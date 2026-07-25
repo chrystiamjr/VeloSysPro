@@ -3,7 +3,7 @@ import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
 import { DataTable, DataTableColumn } from '../organisms/DataTable';
 import { RestorePointItem } from '../../domain/types';
-import { parseDisplayDate } from '../../domain/formatters';
+import { formatDateTime, timestampValue } from '../../domain/formatters';
 import { useTranslation } from '../../infrastructure/i18nContext';
 
 export interface RestorePointsPageProps {
@@ -25,7 +25,7 @@ export const RestorePointsPage: React.FC<RestorePointsPageProps> = ({
   onRefresh,
   disabled = false,
 }) => {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
 
   const handleRestore = (sequence: number) => {
     if (window.confirm(t('rp.restoreConfirm1')) && window.confirm(t('rp.restoreConfirm2'))) {
@@ -44,8 +44,8 @@ export const RestorePointsPage: React.FC<RestorePointsPageProps> = ({
     {
       key: 'date',
       header: t('rp.colDate'),
-      sortValue: (point) => parseDisplayDate(point.Date),
-      render: (point) => point.Date,
+      sortValue: (point) => timestampValue(point.CreatedAt),
+      render: (point) => formatDateTime(point.CreatedAt, lang),
     },
     {
       key: 'description',

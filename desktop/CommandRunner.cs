@@ -65,7 +65,7 @@ namespace VeloSysPro
         }
 
         /// <summary>Runs a command and returns its stdout (used when the output must be parsed).</summary>
-        public string RunCapture(string exe, string args)
+        public CaptureResult RunCapture(string exe, string args)
         {
             try
             {
@@ -83,17 +83,17 @@ namespace VeloSysPro
 
                 using (Process? proc = Process.Start(psi))
                 {
-                    if (proc == null) return "";
+                    if (proc == null) return new CaptureResult("", -1, false);
                     string stdout = proc.StandardOutput.ReadToEnd();
                     proc.StandardError.ReadToEnd();
                     proc.WaitForExit();
-                    return stdout;
+                    return new CaptureResult(stdout, proc.ExitCode, proc.ExitCode == 0);
                 }
             }
             catch (Exception ex)
             {
                 _sink.Log("log.cmdError", "error", new { exe, message = ex.Message });
-                return "";
+                return new CaptureResult("", -1, false);
             }
         }
 
