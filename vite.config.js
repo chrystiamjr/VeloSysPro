@@ -26,5 +26,9 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './tests/unit/setup.js',
+    // Scope collection to this checkout's unit tests. Without it Vitest's default glob walks
+    // nested working copies (e.g. a git worktree created inside the repo) and collects a second
+    // copy of every spec, which then fails against the wrong sources.
+    include: ['tests/unit/**/*.{test,spec}.{ts,tsx}'],
   },
 });
