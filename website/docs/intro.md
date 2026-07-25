@@ -6,14 +6,17 @@ sidebar_position: 1
 
 Welcome to **VeloSys Pro**, a high-performance Windows optimization, maintenance, gaming tweak, registry backup, and system recovery desktop application developed by **Envolvo Systems LTDA.**
 
+![VeloSys Pro dashboard](/img/screenshots/dashboard.png)
+
 ## Key Features {#key-features}
 
 - 🚀 **Quick & Full Optimization**: Automated DNS flush, temp file cleanup, `sfc /scannow`, and DISM image repair.
-- 🎮 **Gaming Mode**: TCP stack tuning (RSS, Autotuning, ECN) for lower network latency and stable gaming performance.
+- 🎮 **Gaming Mode**: TCP stack tuning (RSS, Autotuning) for lower network latency and stable gaming performance.
 - 🧹 **System Maintenance**: Clear Windows Update cache, clean Prefetch, and inspect physical disk (SMART) health reports.
 - 💾 **Registry Backup & Restore**: Safe export and import of TCP/IP registry configurations with confirmation prompts.
 - 🛡️ **System Restore Points**: List, create, and restore Windows restore points.
 - 📅 **Automated Scheduling**: Configure recurring optimizations via Windows Task Scheduler or run headlessly via CLI (`--task=<mode>`).
+- ⚙️ **Settings**: Persistent language and safety-backup preferences, plus an in-app update check.
 - 🌐 **Bilingual Interface**: Instant switching between English (US) 🇺🇸 and Portuguese (BR) 🇧🇷.
 
 ## System Requirements {#system-requirements}

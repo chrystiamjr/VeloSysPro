@@ -18,5 +18,5 @@ Disponibilizamos dois formatos:
 2. Aceite o prompt do **Controle de Conta de Usuário (UAC)**. Direitos de Administrador são necessários para executar comandos de sistema (`sfc`, `dism`, `netsh` e chamadas de Restauração do Sistema).
 
 :::note Aviso do SmartScreen
-Como os executáveis do VeloSys Pro são assinados por fluxos de release da comunidade, o Windows SmartScreen pode exibir a mensagem *"O Windows protegeu o seu PC"*. Clique em **Mais informações → Executar assim mesmo** para prosseguir com segurança.
+O VeloSys Pro ainda não é assinado digitalmente, então o Windows SmartScreen pode exibir a mensagem *"O Windows protegeu o seu PC"* para downloads de um publicador desconhecido. Clique em **Mais informações → Executar assim mesmo** para prosseguir.
 :::
