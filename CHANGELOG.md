@@ -1,3 +1,9 @@
+## [0.1.6](https://github.com/chrystiamjr/VeloSysPro/compare/v0.1.5...v0.1.6) (2026-07-25)
+
+### Bug Fixes
+
+* **ci:** support Dependabot commits and minor features ([#34](https://github.com/chrystiamjr/VeloSysPro/issues/34)) ([e7f8e11](https://github.com/chrystiamjr/VeloSysPro/commit/e7f8e118b5abd81842c4c98d8ea60c5e6134a13a))
+
 ## [0.1.5](https://github.com/chrystiamjr/VeloSysPro/compare/v0.1.4...v0.1.5) (2026-07-25)
 
 ### Bug Fixes
