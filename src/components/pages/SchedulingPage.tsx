@@ -1,7 +1,18 @@
 import React, { useState } from 'react';
+import { Badge } from '../atoms/Badge';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
+import { DataTable, DataTableColumn } from '../organisms/DataTable';
 import { ScheduledTaskItem } from '../../domain/types';
+import {
+  FREQUENCIES,
+  MONTH_DAYS,
+  OPT_TYPES,
+  WEEKDAYS,
+  describeSchedule,
+  describeTaskState,
+  taskDisplayName,
+} from '../../domain/scheduling';
 import { useTranslation } from '../../infrastructure/i18nContext';
 
 export interface SchedulingPageProps {
@@ -10,19 +21,6 @@ export interface SchedulingPageProps {
   onDeleteTask: (name: string) => void;
   disabled?: boolean;
 }
-
-const OPT_TYPES = [
-  { value: 'quick', labelKey: 'act.quick.title' },
-  { value: 'full', labelKey: 'act.full.title' },
-  { value: 'gaming', labelKey: 'act.gaming.title' },
-  { value: 'revert', labelKey: 'act.revert.title' },
-] as const;
-
-const FREQUENCIES = [
-  { value: 'DAILY', labelKey: 'scheduling.freqDaily' },
-  { value: 'WEEKLY', labelKey: 'scheduling.freqWeekly' },
-  { value: 'MONTHLY', labelKey: 'scheduling.freqMonthly' },
-] as const;
 
 const selectClass =
   'w-full rounded-lg border border-borderColor bg-bgMain px-3.5 py-2.5 text-xs text-textMain outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20';
@@ -37,9 +35,15 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
   const [type, setType] = useState<string>('quick');
   const [frequency, setFrequency] = useState<string>('DAILY');
   const [time, setTime] = useState<string>('03:00');
+  const [weekday, setWeekday] = useState<string>('MON');
+  const [monthDay, setMonthDay] = useState<string>('1');
+
+  // The host ignores `day` for DAILY, but sending the active selection keeps the payload
+  // aligned with what the form shows.
+  const day = frequency === 'WEEKLY' ? weekday : frequency === 'MONTHLY' ? monthDay : '';
 
   const handleCreate = () => {
-    onCreateTask(JSON.stringify({ type, frequency, time }));
+    onCreateTask(JSON.stringify({ type, frequency, time, day }));
   };
 
   const handleDelete = (name: string) => {
@@ -47,6 +51,47 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
       onDeleteTask(name);
     }
   };
+
+  const columns: DataTableColumn<ScheduledTaskItem>[] = [
+    {
+      key: 'name',
+      header: t('scheduling.colName'),
+      className: 'font-semibold text-textMain',
+      sortValue: (task) => taskDisplayName(task.Name, t),
+      render: (task) => taskDisplayName(task.Name, t),
+    },
+    {
+      key: 'schedule',
+      header: t('scheduling.colSchedule'),
+      sortValue: (task) => describeSchedule(task.Name, t),
+      render: (task) => describeSchedule(task.Name, t),
+    },
+    {
+      key: 'state',
+      header: t('scheduling.colState'),
+      sortValue: (task) => describeTaskState(task.State, t).label,
+      render: (task) => {
+        const { label, variant } = describeTaskState(task.State, t);
+        return <Badge text={label} variant={variant} />;
+      },
+    },
+    {
+      key: 'actions',
+      header: t('scheduling.colActions'),
+      align: 'right',
+      render: (task) => (
+        <Button
+          testId={`task-delete-${task.Name}`}
+          variant="danger"
+          className="ml-auto flex w-auto items-center gap-1.5 px-4 py-2"
+          disabled={disabled}
+          onClick={() => handleDelete(task.Name)}
+        >
+          <Icon name="trash" /> {t('scheduling.deleteBtn')}
+        </Button>
+      ),
+    },
+  ];
 
   return (
     <div className="flex select-none flex-col gap-6">
@@ -94,6 +139,46 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
             </select>
           </label>
 
+          {frequency === 'WEEKLY' && (
+            <label className="flex flex-col gap-1.5">
+              <span className="text-[11px] font-semibold text-textMuted">
+                {t('scheduling.weekdayLabel')}
+              </span>
+              <select
+                data-cy="task-weekday"
+                className={selectClass}
+                value={weekday}
+                onChange={(e) => setWeekday(e.target.value)}
+              >
+                {WEEKDAYS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {t(o.labelKey)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          {frequency === 'MONTHLY' && (
+            <label className="flex flex-col gap-1.5">
+              <span className="text-[11px] font-semibold text-textMuted">
+                {t('scheduling.dayOfMonthLabel')}
+              </span>
+              <select
+                data-cy="task-monthday"
+                className={selectClass}
+                value={monthDay}
+                onChange={(e) => setMonthDay(e.target.value)}
+              >
+                {MONTH_DAYS.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
           <label className="flex flex-col gap-1.5">
             <span className="text-[11px] font-semibold text-textMuted">
               {t('scheduling.timeLabel')}
@@ -120,43 +205,14 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
       </div>
 
       {/* Task list */}
-      <div className="overflow-x-auto rounded-xl border border-borderColor bg-bgCard">
-        {tasks.length === 0 ? (
-          <p className="p-8 text-center text-xs text-textMuted">{t('scheduling.empty')}</p>
-        ) : (
-          <table className="w-full min-w-[640px] text-left text-xs">
-            <thead>
-              <tr className="border-b border-borderColor text-textMuted">
-                <th className="px-5 py-3 font-semibold">{t('scheduling.colName')}</th>
-                <th className="px-5 py-3 font-semibold">{t('scheduling.colState')}</th>
-                <th className="px-5 py-3 text-right font-semibold">{t('scheduling.colActions')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tasks.map((task) => (
-                <tr
-                  key={task.Name}
-                  className="border-b border-borderColor/50 last:border-none hover:bg-white/5"
-                >
-                  <td className="px-5 py-3 font-mono text-textMain">{task.Name}</td>
-                  <td className="px-5 py-3 text-textMuted">{task.State}</td>
-                  <td className="px-5 py-3 text-right">
-                    <Button
-                      testId={`task-delete-${task.Name}`}
-                      variant="danger"
-                      className="ml-auto flex w-auto items-center gap-1.5 px-4 py-2"
-                      disabled={disabled}
-                      onClick={() => handleDelete(task.Name)}
-                    >
-                      <Icon name="trash" /> {t('scheduling.deleteBtn')}
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <DataTable
+        testId="tasks-table"
+        columns={columns}
+        rows={tasks}
+        rowKey={(task) => task.Name}
+        emptyMessage={t('scheduling.empty')}
+        initialSort={{ key: 'name', dir: 'asc' }}
+      />
     </div>
   );
 };

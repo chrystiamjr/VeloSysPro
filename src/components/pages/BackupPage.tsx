@@ -1,7 +1,9 @@
 import React from 'react';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
+import { DataTable, DataTableColumn } from '../organisms/DataTable';
 import { BackupItem } from '../../domain/types';
+import { parseDisplayDate, parseDisplayNumber } from '../../domain/formatters';
 import { useTranslation } from '../../infrastructure/i18nContext';
 
 export interface BackupPageProps {
@@ -30,6 +32,44 @@ export const BackupPage: React.FC<BackupPageProps> = ({
       onRestoreBackup(name);
     }
   };
+
+  const columns: DataTableColumn<BackupItem>[] = [
+    {
+      key: 'name',
+      header: t('backup.colName'),
+      className: 'font-mono text-textMain',
+      sortValue: (backup) => backup.Name,
+      render: (backup) => backup.Name,
+    },
+    {
+      key: 'date',
+      header: t('backup.colDate'),
+      sortValue: (backup) => parseDisplayDate(backup.Date),
+      render: (backup) => backup.Date,
+    },
+    {
+      key: 'size',
+      header: t('backup.colSize'),
+      sortValue: (backup) => parseDisplayNumber(backup.Size),
+      render: (backup) => backup.Size,
+    },
+    {
+      key: 'actions',
+      header: t('backup.colActions'),
+      align: 'right',
+      render: (backup) => (
+        <Button
+          testId={`backup-restore-${backup.Name}`}
+          variant="warning"
+          className="ml-auto flex w-auto items-center gap-1.5 px-4 py-2"
+          disabled={disabled}
+          onClick={() => handleRestore(backup.Name)}
+        >
+          <Icon name="rotate-ccw" /> {t('backup.restoreBtn')}
+        </Button>
+      ),
+    },
+  ];
 
   return (
     <div className="flex select-none flex-col gap-6">
@@ -61,45 +101,14 @@ export const BackupPage: React.FC<BackupPageProps> = ({
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-borderColor bg-bgCard">
-        {backups.length === 0 ? (
-          <p className="p-8 text-center text-xs text-textMuted">{t('backup.empty')}</p>
-        ) : (
-          <table className="w-full min-w-[640px] text-left text-xs">
-            <thead>
-              <tr className="border-b border-borderColor text-textMuted">
-                <th className="px-5 py-3 font-semibold">{t('backup.colName')}</th>
-                <th className="px-5 py-3 font-semibold">{t('backup.colDate')}</th>
-                <th className="px-5 py-3 font-semibold">{t('backup.colSize')}</th>
-                <th className="px-5 py-3 text-right font-semibold">{t('backup.colActions')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {backups.map((backup) => (
-                <tr
-                  key={backup.Name}
-                  className="border-b border-borderColor/50 last:border-none hover:bg-white/5"
-                >
-                  <td className="px-5 py-3 font-mono text-textMain">{backup.Name}</td>
-                  <td className="px-5 py-3 text-textMuted">{backup.Date}</td>
-                  <td className="px-5 py-3 text-textMuted">{backup.Size}</td>
-                  <td className="px-5 py-3 text-right">
-                    <Button
-                      testId={`backup-restore-${backup.Name}`}
-                      variant="warning"
-                      className="ml-auto flex w-auto items-center gap-1.5 px-4 py-2"
-                      disabled={disabled}
-                      onClick={() => handleRestore(backup.Name)}
-                    >
-                      <Icon name="rotate-ccw" /> {t('backup.restoreBtn')}
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <DataTable
+        testId="backups-table"
+        columns={columns}
+        rows={backups}
+        rowKey={(backup) => backup.Name}
+        emptyMessage={t('backup.empty')}
+        initialSort={{ key: 'date', dir: 'desc' }}
+      />
     </div>
   );
 };

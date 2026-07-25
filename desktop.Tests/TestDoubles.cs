@@ -8,6 +8,14 @@ internal sealed class FakeCommandRunner : ICommandRunner
     public List<(string Exe, string Args)> Runs { get; } = new();
     public List<string> ClearedDirectories { get; } = new();
     public string CapturedOutput { get; set; } = "";
+
+    /// <summary>
+    /// Per-executable RunCapture output, keyed by exe name. Lets a test drive a manager that
+    /// queries more than one tool (e.g. powershell.exe with a schtasks.exe fallback) without
+    /// both calls receiving the same canned string. Falls back to <see cref="CapturedOutput"/>.
+    /// </summary>
+    public Dictionary<string, string> CapturedOutputs { get; } = new(StringComparer.OrdinalIgnoreCase);
+
     public CommandResult Result { get; set; } = new(0, true);
     public int TempCleanCount { get; private set; }
 
@@ -20,7 +28,7 @@ internal sealed class FakeCommandRunner : ICommandRunner
     public string RunCapture(string exe, string args)
     {
         Runs.Add((exe, args));
-        return CapturedOutput;
+        return CapturedOutputs.TryGetValue(exe, out string? output) ? output : CapturedOutput;
     }
 
     public void CleanTempFolder() => TempCleanCount++;

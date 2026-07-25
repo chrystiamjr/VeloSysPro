@@ -22,7 +22,9 @@ import {
   User,
   Check,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
+  ChevronUp,
   ChevronsLeft,
   ChevronsRight,
   LucideProps,
@@ -51,7 +53,9 @@ export type IconName =
   | 'user'
   | 'check'
   | 'chevron-down'
+  | 'chevron-left'
   | 'chevron-right'
+  | 'chevron-up'
   | 'chevrons-left'
   | 'chevrons-right';
 
@@ -78,7 +82,9 @@ const iconMap: Record<IconName, React.FC<LucideProps>> = {
   user: User,
   check: Check,
   'chevron-down': ChevronDown,
+  'chevron-left': ChevronLeft,
   'chevron-right': ChevronRight,
+  'chevron-up': ChevronUp,
   'chevrons-left': ChevronsLeft,
   'chevrons-right': ChevronsRight,
 };

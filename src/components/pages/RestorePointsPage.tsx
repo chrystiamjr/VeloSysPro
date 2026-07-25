@@ -1,7 +1,9 @@
 import React from 'react';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
+import { DataTable, DataTableColumn } from '../organisms/DataTable';
 import { RestorePointItem } from '../../domain/types';
+import { parseDisplayDate } from '../../domain/formatters';
 import { useTranslation } from '../../infrastructure/i18nContext';
 
 export interface RestorePointsPageProps {
@@ -29,6 +31,44 @@ export const RestorePointsPage: React.FC<RestorePointsPageProps> = ({
     }
   };
 
+  const columns: DataTableColumn<RestorePointItem>[] = [
+    {
+      key: 'seq',
+      header: t('rp.colSeq'),
+      className: 'font-mono text-textMain',
+      sortValue: (point) => point.Sequence,
+      render: (point) => point.Sequence,
+    },
+    {
+      key: 'date',
+      header: t('rp.colDate'),
+      sortValue: (point) => parseDisplayDate(point.Date),
+      render: (point) => point.Date,
+    },
+    {
+      key: 'description',
+      header: t('rp.colDescription'),
+      sortValue: (point) => point.Description,
+      render: (point) => point.Description,
+    },
+    {
+      key: 'actions',
+      header: t('rp.colActions'),
+      align: 'right',
+      render: (point) => (
+        <Button
+          testId={`restore-point-restore-${point.Sequence}`}
+          variant="warning"
+          className="ml-auto flex w-auto items-center gap-1.5 px-4 py-2"
+          disabled={disabled}
+          onClick={() => handleRestore(point.Sequence)}
+        >
+          <Icon name="rotate-ccw" /> {t('rp.restoreBtn')}
+        </Button>
+      ),
+    },
+  ];
+
   return (
     <div className="flex select-none flex-col gap-6">
       <div className="rounded-xl border border-borderColor bg-bgCard p-6">
@@ -49,45 +89,14 @@ export const RestorePointsPage: React.FC<RestorePointsPageProps> = ({
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-borderColor bg-bgCard">
-        {points.length === 0 ? (
-          <p className="p-8 text-center text-xs text-textMuted">{t('rp.empty')}</p>
-        ) : (
-          <table className="w-full min-w-[640px] text-left text-xs">
-            <thead>
-              <tr className="border-b border-borderColor text-textMuted">
-                <th className="px-5 py-3 font-semibold">{t('rp.colSeq')}</th>
-                <th className="px-5 py-3 font-semibold">{t('rp.colDate')}</th>
-                <th className="px-5 py-3 font-semibold">{t('rp.colDescription')}</th>
-                <th className="px-5 py-3 text-right font-semibold">{t('rp.colActions')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {points.map((point) => (
-                <tr
-                  key={point.Sequence}
-                  className="border-b border-borderColor/50 last:border-none hover:bg-white/5"
-                >
-                  <td className="px-5 py-3 font-mono text-textMain">{point.Sequence}</td>
-                  <td className="px-5 py-3 text-textMuted">{point.Date}</td>
-                  <td className="px-5 py-3 text-textMuted">{point.Description}</td>
-                  <td className="px-5 py-3 text-right">
-                    <Button
-                      testId={`restore-point-restore-${point.Sequence}`}
-                      variant="warning"
-                      className="ml-auto flex w-auto items-center gap-1.5 px-4 py-2"
-                      disabled={disabled}
-                      onClick={() => handleRestore(point.Sequence)}
-                    >
-                      <Icon name="rotate-ccw" /> {t('rp.restoreBtn')}
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <DataTable
+        testId="restore-points-table"
+        columns={columns}
+        rows={points}
+        rowKey={(point) => point.Sequence}
+        emptyMessage={t('rp.empty')}
+        initialSort={{ key: 'seq', dir: 'desc' }}
+      />
     </div>
   );
 };

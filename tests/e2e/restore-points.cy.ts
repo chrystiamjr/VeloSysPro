@@ -21,6 +21,34 @@ describe('system restore points', () => {
     cy.expectIpc('createRestorePoint');
   });
 
+  it('lists the newest point first and reorders when a header is clicked', () => {
+    cy.emitHost('onRestorePointsLoaded', restorePoints);
+
+    // Default sort is sequence descending, so the newest point leads.
+    cy.get('tbody tr').first().should('contain', restorePoints[0].Description);
+
+    cy.getByCy('table-sort-seq').click();
+    cy.get('tbody tr').first().should('contain', restorePoints[1].Description);
+    cy.get('th').first().should('have.attr', 'aria-sort', 'ascending');
+  });
+
+  it('paginates long restore point histories', () => {
+    const many = Array.from({ length: 24 }, (_, i) => ({
+      Sequence: 115 + i,
+      Date: '23/07/2026 03:00',
+      Description: `Point ${115 + i}`,
+    }));
+    cy.emitHost('onRestorePointsLoaded', many);
+
+    cy.get('tbody tr').should('have.length', 10);
+    cy.getByCy('table-range').should('contain', 'de 24');
+    cy.getByCy('table-page').should('contain', '1/3');
+
+    cy.getByCy('table-next').click();
+    cy.getByCy('table-page').should('contain', '2/3');
+    cy.contains('Point 128').should('be.visible');
+  });
+
   it('restores after both confirmations', () => {
     cy.emitHost('onRestorePointsLoaded', restorePoints);
     cy.on('window:confirm', () => true);

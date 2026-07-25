@@ -16,13 +16,19 @@ const renderPage = (props: Partial<React.ComponentProps<typeof BackupPage>> = {}
     onOpenFolder: vi.fn(),
     ...props,
   };
-  render(
+  const { container } = render(
     <LanguageProvider>
       <BackupPage {...merged} />
     </LanguageProvider>
   );
-  return merged;
+  return { ...merged, container };
 };
+
+const columnTexts = (index: number) =>
+  screen
+    .getAllByRole('row')
+    .slice(1)
+    .map((row) => row.querySelectorAll('td')[index].textContent);
 
 describe('BackupPage (functional Backup & Restore screen)', () => {
   afterEach(() => {
@@ -72,5 +78,30 @@ describe('BackupPage (functional Backup & Restore screen)', () => {
     const props = renderPage();
     fireEvent.click(screen.getByText(/Restaurar/i));
     expect(props.onRestoreBackup).not.toHaveBeenCalled();
+  });
+
+  it('lists the newest backup first', () => {
+    renderPage({
+      backups: [
+        { Name: 'older.reg', Date: '31/12/2025 23:00', Size: '10.0 KB' },
+        { Name: 'newer.reg', Date: '01/01/2026 00:00', Size: '10.0 KB' },
+      ],
+    });
+
+    // Sorting the raw display strings would put 31/12 last.
+    expect(columnTexts(0)).toEqual(['newer.reg', 'older.reg']);
+  });
+
+  it('sorts sizes by magnitude even when the host groups thousands', () => {
+    const { container } = renderPage({
+      backups: [
+        { Name: 'small.reg', Date: '01/07/2026 10:00', Size: '999,9 KB' },
+        { Name: 'big.reg', Date: '02/07/2026 10:00', Size: '1.234,5 KB' },
+        { Name: 'tiny.reg', Date: '03/07/2026 10:00', Size: '45,6 KB' },
+      ],
+    });
+
+    fireEvent.click(container.querySelector('[data-cy="table-sort-size"]')!);
+    expect(columnTexts(0)).toEqual(['tiny.reg', 'small.reg', 'big.reg']);
   });
 });

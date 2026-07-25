@@ -26,7 +26,7 @@
     },
     "restorePoint": {
       "desc": "Cria um ponto de restauração verificado do Windows antes de alterações.",
-      "title": "Criar Restore Point"
+      "title": "Criar Ponto de Restauração"
     },
     "revert": {
       "confirm": "Esta ação redefinirá as configurações de IP e Winsock. Sua conexão pode oscilar temporariamente. Deseja continuar?",
@@ -183,7 +183,7 @@
     "dashboard": "Painel Inicial",
     "expand": "Expandir menu",
     "logsFolder": "Pasta de Logs",
-    "restorePoints": "Restore Points",
+    "restorePoints": "Pontos de Restauração",
     "scheduling": "Agendamento",
     "settings": "Configurações"
   },
@@ -203,8 +203,10 @@
   "scheduling": {
     "colActions": "Ações",
     "colName": "Tarefa",
+    "colSchedule": "Agendamento",
     "colState": "Estado",
     "createBtn": "Agendar",
+    "dayOfMonthLabel": "Dia do mês",
     "deleteBtn": "Remover",
     "deleteConfirm": "Remover esta tarefa agendada? A otimização automática deixará de ser executada.",
     "empty": "Nenhuma tarefa agendada. Crie a primeira acima.",
@@ -214,8 +216,27 @@
     "freqLabel": "Frequência",
     "freqMonthly": "Mensal",
     "freqWeekly": "Semanal",
+    "scheduleDaily": "Todos os dias às {{time}}",
+    "scheduleMonthly": "Todo dia {{day}} às {{time}}",
+    "scheduleUnknown": "—",
+    "scheduleWeekly": "Toda {{day}} às {{time}}",
+    "stateDisabled": "Desativada",
+    "stateReady": "Pronto",
+    "stateRunning": "Em execução",
+    "stateUnknown": "Desconhecido",
+    "taskLabel": "{{frequency}} - {{optimization}}",
     "timeLabel": "Horário",
-    "typeLabel": "Otimização"
+    "typeLabel": "Otimização",
+    "weekday": {
+      "fri": "sexta-feira",
+      "mon": "segunda-feira",
+      "sat": "sábado",
+      "sun": "domingo",
+      "thu": "quinta-feira",
+      "tue": "terça-feira",
+      "wed": "quarta-feira"
+    },
+    "weekdayLabel": "Dia da semana"
   },
   "settings": {
     "backupDesc": "Criar um backup do registro automaticamente antes de cada otimização.",
@@ -225,7 +246,12 @@
     "langEn": "English",
     "langPt": "Português",
     "languageDesc": "Escolha o idioma da interface. A preferência é salva automaticamente.",
-    "languageTitle": "Idioma"
+    "languageTitle": "Idioma",
+    "updateAvailable": "Nova versão {{version}} disponível",
+    "updateCurrent": "Versão instalada",
+    "updateDesc": "Confira a versão instalada e baixe atualizações do VeloSys Pro.",
+    "updateLatest": "Você está na versão mais recente.",
+    "updateTitle": "Atualizações"
   },
   "status": {
     "diskHealth": {
@@ -274,6 +300,13 @@
       "done": "Cache do Windows Update limpo!",
       "start": "Limpando cache do Windows Update..."
     }
+  },
+  "table": {
+    "next": "Próxima",
+    "prev": "Anterior",
+    "range": "Mostrando {{from}}–{{to}} de {{total}}",
+    "sortAsc": "Ordenar crescente",
+    "sortDesc": "Ordenar decrescente"
   },
   "terminal": {
     "title": "Log em Tempo Real",
