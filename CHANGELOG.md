@@ -1,3 +1,9 @@
+## [0.1.4](https://github.com/chrystiamjr/VeloSysPro/compare/v0.1.3...v0.1.4) (2026-07-25)
+
+### Features
+
+* **ui:** add sortable paginated DataTable to management screens ([#23](https://github.com/chrystiamjr/VeloSysPro/issues/23)) ([2d168ea](https://github.com/chrystiamjr/VeloSysPro/commit/2d168ea32a84123b9dc500ac49d7b24d70fef870))
+
 ## [0.1.3](https://github.com/chrystiamjr/VeloSysPro/compare/v0.1.2...v0.1.3) (2026-07-24)
 
 ### Features
