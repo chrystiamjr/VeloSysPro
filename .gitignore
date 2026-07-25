@@ -44,3 +44,8 @@ Desktop.ini
 
 # Nested agent working copies (git worktrees created inside the repo)
 .codex-worktrees/
+
+# Cypress run artifacts
+cypress/screenshots/
+cypress/videos/
+cypress/downloads/

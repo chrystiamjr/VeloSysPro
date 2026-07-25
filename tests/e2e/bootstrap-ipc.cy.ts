@@ -8,6 +8,42 @@ describe('bootstrap and IPC contracts', () => {
     }
   });
 
+  // Counts are compared before/after rather than asserted absolutely: StrictMode double-invokes
+  // effects in dev, so the bootstrap total is an implementation detail. The delta is not.
+  const countOf = (stub: Sinon.SinonStub, action: string) =>
+    stub.getCalls().filter((call) => call.args[0]?.action === action).length;
+
+  // Windows owns tasks and restore points, so anything changed outside the app would stay on
+  // screen until restart if opening a screen did not re-query.
+  for (const [screen, action] of [
+    ['Scheduling', 'getTasks'],
+    ['Backup', 'getBackups'],
+    ['RestorePoints', 'getRestorePoints'],
+  ]) {
+    it(`re-queries ${action} when entering the ${screen} screen`, () => {
+      cy.visitApp();
+      cy.get<Sinon.SinonStub>('@ipcStub').then((stub) => {
+        const before = countOf(stub, action);
+        cy.getByCy(`nav-${screen}`).click();
+        cy.get<Sinon.SinonStub>('@ipcStub').should((after) => {
+          expect(countOf(after, action)).to.be.greaterThan(before);
+        });
+      });
+    });
+  }
+
+  it('does not re-query settings on navigation, which would clobber unsaved edits', () => {
+    cy.visitApp();
+    cy.get<Sinon.SinonStub>('@ipcStub').then((stub) => {
+      const before = countOf(stub, 'getSettings');
+      cy.getByCy('nav-Settings').click();
+      cy.contains('Idioma').should('be.visible');
+      cy.get<Sinon.SinonStub>('@ipcStub').should((after) => {
+        expect(countOf(after, 'getSettings')).to.equal(before);
+      });
+    });
+  });
+
   it('supports the legacy window.external transport', () => {
     cy.visitApp({ transport: 'external' });
     cy.expectIpc('getSettings');

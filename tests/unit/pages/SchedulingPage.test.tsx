@@ -137,16 +137,21 @@ describe('SchedulingPage (functional scheduler)', () => {
     expect(lastPayload(props.onCreateTask)).toMatchObject({ frequency: 'WEEKLY', day: 'FRI' });
   });
 
-  it('offers a day-of-month picker only for monthly schedules', () => {
+  it('offers a day-of-month grid only for monthly schedules', () => {
     const props = renderPage();
+    expect(screen.queryByRole('radiogroup', { name: /Dia do mês/i })).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText(/Frequência/i), { target: { value: 'MONTHLY' } });
-    const monthDay = screen.getByLabelText(/Dia do mês/i);
-    expect(monthDay).toBeInTheDocument();
+    const grid = screen.getByRole('radiogroup', { name: /Dia do mês/i });
     expect(screen.queryByLabelText(/Dia da semana/i)).not.toBeInTheDocument();
-    expect(monthDay.querySelectorAll('option')).toHaveLength(31);
+    expect(within(grid).getAllByRole('radio')).toHaveLength(31);
 
-    fireEvent.change(monthDay, { target: { value: '15' } });
+    fireEvent.click(within(grid).getByRole('radio', { name: '15' }));
+    expect(within(grid).getByRole('radio', { name: '15' })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
+
     fireEvent.click(screen.getByRole('button', { name: /Agendar/i }));
     expect(lastPayload(props.onCreateTask)).toMatchObject({ frequency: 'MONTHLY', day: '15' });
   });

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { Language, i18n } from '../domain/i18n';
 
 interface LanguageContextType {
@@ -16,20 +16,23 @@ const LanguageContext = createContext<LanguageContextType>({
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [lang, setLangState] = useState<Language>('pt_BR');
 
-  const setLang = (newLang: Language) => {
+  // Stable identity matters: consumers list `setLang` in effect dependencies, so recreating it
+  // on every render made a mount-only effect re-run and re-request all host data.
+  const setLang = useCallback((newLang: Language) => {
     i18n.locale(newLang);
     setLangState(newLang);
-  };
+  }, []);
 
-  const t = (key: string, params?: Record<string, unknown> | unknown[]): string => {
-    return i18n.t(key, params) || key;
-  };
-
-  const value = {
-    lang,
-    setLang,
-    t,
-  };
+  const value = useMemo(
+    () => ({
+      lang,
+      setLang,
+      // Recreated per locale so consumers re-render with the new translations.
+      t: (key: string, params?: Record<string, unknown> | unknown[]): string =>
+        i18n.t(key, params) || key,
+    }),
+    [lang, setLang]
+  );
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 };

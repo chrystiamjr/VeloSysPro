@@ -305,6 +305,7 @@
     "next": "Próxima",
     "prev": "Anterior",
     "range": "Mostrando {{from}}–{{to}} de {{total}}",
+    "refresh": "Atualizar",
     "sortAsc": "Ordenar crescente",
     "sortDesc": "Ordenar decrescente"
   },

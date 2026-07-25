@@ -47,6 +47,20 @@ const SCREEN_HEADERS: Record<AppScreen, { title: string; subtitle: string }> = {
   [AppScreen.Settings]: { title: 'header.settings.title', subtitle: 'header.settings.subtitle' },
 };
 
+/**
+ * Data each screen re-requests when opened.
+ *
+ * Settings is deliberately empty: it holds unsaved local edits, and a refetch would clobber
+ * them with whatever the host last persisted.
+ */
+const SCREEN_REFRESH_ACTIONS: Record<AppScreen, readonly string[]> = {
+  [AppScreen.Dashboard]: [SystemActions.GET_BACKUPS, SystemActions.GET_TASKS],
+  [AppScreen.Scheduling]: [SystemActions.GET_TASKS],
+  [AppScreen.Backup]: [SystemActions.GET_BACKUPS],
+  [AppScreen.RestorePoints]: [SystemActions.GET_RESTORE_POINTS],
+  [AppScreen.Settings]: [],
+};
+
 function AppContent() {
   const { t, lang, setLang } = useTranslation();
   const [activeScreen, setActiveScreen] = useState<AppScreen>(AppScreen.Dashboard);
@@ -143,6 +157,15 @@ function AppContent() {
     sendAction(SystemActions.GET_RESTORE_POINTS);
     sendAction(SystemActions.GET_SETTINGS);
   }, [setLang]);
+
+  // Re-query whatever the screen shows on entry. Windows is the source of truth for tasks and
+  // restore points, so anything changed outside the app (taskschd.msc, disk cleanup) would
+  // otherwise stay on screen until the app restarted.
+  useEffect(() => {
+    for (const action of SCREEN_REFRESH_ACTIONS[activeScreen]) {
+      sendAction(action);
+    }
+  }, [activeScreen]);
 
   // Persist language whenever it changes (including the sidebar quick-switch).
   useEffect(() => {
@@ -265,6 +288,7 @@ function AppContent() {
           disabled={activeAction !== null}
           onCreateTask={(payload) => handleSystemMutation(SystemActions.CREATE_TASK, payload)}
           onDeleteTask={(name) => handleSystemMutation(SystemActions.DELETE_TASK, name)}
+          onRefresh={() => handleAction(SystemActions.GET_TASKS)}
         />
       )}
 
@@ -275,6 +299,7 @@ function AppContent() {
           onCreateBackup={() => handleSystemMutation(SystemActions.CREATE_MANUAL_BACKUP)}
           onRestoreBackup={(name) => handleSystemMutation(SystemActions.RESTORE_BACKUP, name)}
           onOpenFolder={() => handleAction(SystemActions.OPEN_BACKUPS)}
+          onRefresh={() => handleAction(SystemActions.GET_BACKUPS)}
         />
       )}
 
@@ -284,6 +309,7 @@ function AppContent() {
           disabled={activeAction !== null}
           onCreatePoint={() => handleSystemMutation(SystemActions.CREATE_RESTORE_POINT)}
           onRestore={(seq) => handleSystemMutation(SystemActions.RESTORE_TO_POINT, String(seq))}
+          onRefresh={() => handleAction(SystemActions.GET_RESTORE_POINTS)}
         />
       )}
 

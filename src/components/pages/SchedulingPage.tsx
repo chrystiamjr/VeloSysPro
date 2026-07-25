@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { Badge } from '../atoms/Badge';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
+import { Select, fieldClass } from '../atoms/Select';
+import { DayOfMonthPicker } from '../molecules/DayOfMonthPicker';
+import { FormField } from '../molecules/FormField';
 import { DataTable, DataTableColumn } from '../organisms/DataTable';
 import { ScheduledTaskItem } from '../../domain/types';
 import {
   FREQUENCIES,
-  MONTH_DAYS,
   OPT_TYPES,
   WEEKDAYS,
   describeSchedule,
@@ -19,16 +21,15 @@ export interface SchedulingPageProps {
   tasks: ScheduledTaskItem[];
   onCreateTask: (payload: string) => void;
   onDeleteTask: (name: string) => void;
+  onRefresh?: () => void;
   disabled?: boolean;
 }
-
-const selectClass =
-  'w-full rounded-lg border border-borderColor bg-bgMain px-3.5 py-2.5 text-xs text-textMain outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20';
 
 export const SchedulingPage: React.FC<SchedulingPageProps> = ({
   tasks,
   onCreateTask,
   onDeleteTask,
+  onRefresh,
   disabled = false,
 }) => {
   const { t } = useTranslation();
@@ -103,94 +104,61 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-[11px] font-semibold text-textMuted">
-              {t('scheduling.typeLabel')}
-            </span>
-            <select
-              data-cy="task-type"
-              className={selectClass}
+          <FormField label={t('scheduling.typeLabel')} htmlFor="task-type">
+            <Select
+              id="task-type"
+              testId="task-type"
               value={type}
-              onChange={(e) => setType(e.target.value)}
-            >
-              {OPT_TYPES.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {t(o.labelKey)}
-                </option>
-              ))}
-            </select>
-          </label>
+              onChange={setType}
+              options={OPT_TYPES.map((o) => ({ value: o.value, label: t(o.labelKey) }))}
+            />
+          </FormField>
 
-          <label className="flex flex-col gap-1.5">
-            <span className="text-[11px] font-semibold text-textMuted">
-              {t('scheduling.freqLabel')}
-            </span>
-            <select
-              data-cy="task-frequency"
-              className={selectClass}
+          <FormField label={t('scheduling.freqLabel')} htmlFor="task-frequency">
+            <Select
+              id="task-frequency"
+              testId="task-frequency"
               value={frequency}
-              onChange={(e) => setFrequency(e.target.value)}
-            >
-              {FREQUENCIES.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {t(o.labelKey)}
-                </option>
-              ))}
-            </select>
-          </label>
+              onChange={setFrequency}
+              options={FREQUENCIES.map((o) => ({ value: o.value, label: t(o.labelKey) }))}
+            />
+          </FormField>
 
-          {frequency === 'WEEKLY' && (
-            <label className="flex flex-col gap-1.5">
-              <span className="text-[11px] font-semibold text-textMuted">
-                {t('scheduling.weekdayLabel')}
-              </span>
-              <select
-                data-cy="task-weekday"
-                className={selectClass}
-                value={weekday}
-                onChange={(e) => setWeekday(e.target.value)}
-              >
-                {WEEKDAYS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {t(o.labelKey)}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-
-          {frequency === 'MONTHLY' && (
-            <label className="flex flex-col gap-1.5">
-              <span className="text-[11px] font-semibold text-textMuted">
-                {t('scheduling.dayOfMonthLabel')}
-              </span>
-              <select
-                data-cy="task-monthday"
-                className={selectClass}
-                value={monthDay}
-                onChange={(e) => setMonthDay(e.target.value)}
-              >
-                {MONTH_DAYS.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-
-          <label className="flex flex-col gap-1.5">
-            <span className="text-[11px] font-semibold text-textMuted">
-              {t('scheduling.timeLabel')}
-            </span>
+          <FormField label={t('scheduling.timeLabel')} htmlFor="task-time">
             <input
+              id="task-time"
               data-cy="task-time"
               type="time"
-              className={selectClass}
+              className={fieldClass}
               value={time}
               onChange={(e) => setTime(e.target.value)}
             />
-          </label>
+          </FormField>
+
+          {frequency === 'WEEKLY' && (
+            <FormField label={t('scheduling.weekdayLabel')} htmlFor="task-weekday">
+              <Select
+                id="task-weekday"
+                testId="task-weekday"
+                value={weekday}
+                onChange={setWeekday}
+                options={WEEKDAYS.map((o) => ({ value: o.value, label: t(o.labelKey) }))}
+              />
+            </FormField>
+          )}
+
+          {frequency === 'MONTHLY' && (
+            <FormField
+              label={t('scheduling.dayOfMonthLabel')}
+              className="sm:col-span-2 lg:col-span-3"
+            >
+              <DayOfMonthPicker
+                value={monthDay}
+                onChange={setMonthDay}
+                ariaLabel={t('scheduling.dayOfMonthLabel')}
+              />
+            </FormField>
+          )}
         </div>
 
         <Button
@@ -212,6 +180,8 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
         rowKey={(task) => task.Name}
         emptyMessage={t('scheduling.empty')}
         initialSort={{ key: 'name', dir: 'asc' }}
+        onRefresh={onRefresh}
+        disabled={disabled}
       />
     </div>
   );

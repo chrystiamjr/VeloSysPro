@@ -11,6 +11,7 @@ export interface BackupPageProps {
   onCreateBackup: () => void;
   onRestoreBackup: (name: string) => void;
   onOpenFolder: () => void;
+  onRefresh?: () => void;
   disabled?: boolean;
 }
 
@@ -23,6 +24,7 @@ export const BackupPage: React.FC<BackupPageProps> = ({
   onCreateBackup,
   onRestoreBackup,
   onOpenFolder,
+  onRefresh,
   disabled = false,
 }) => {
   const { t } = useTranslation();
@@ -108,6 +110,8 @@ export const BackupPage: React.FC<BackupPageProps> = ({
         rowKey={(backup) => backup.Name}
         emptyMessage={t('backup.empty')}
         initialSort={{ key: 'date', dir: 'desc' }}
+        onRefresh={onRefresh}
+        disabled={disabled}
       />
     </div>
   );
