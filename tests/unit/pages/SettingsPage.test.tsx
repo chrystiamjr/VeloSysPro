@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { SettingsPage } from '../../../src/components/pages/SettingsPage';
 import { LanguageProvider } from '../../../src/infrastructure/i18nContext';
+import packageJson from '../../../package.json';
 
 const renderPage = (props: Partial<React.ComponentProps<typeof SettingsPage>> = {}) => {
   const merged = {
@@ -42,7 +43,9 @@ describe('SettingsPage', () => {
     // Exact matching keeps the assertion off the wrapper elements, whose combined
     // textContent contains both the label and the value.
     expect(screen.getByText('Versão instalada')).toBeInTheDocument();
-    expect(screen.getByText('Versão 0.1.0 (Build C# / React)')).toBeInTheDocument();
+    expect(
+      screen.getByText(`Versão ${packageJson.version} (Build C# / React)`)
+    ).toBeInTheDocument();
   });
 
   it('reports being up to date when the host announced no update', () => {
