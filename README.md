@@ -1,11 +1,22 @@
-# ⚡ VeloSys Pro
+<p align="center">
+  <img src="website/static/img/logo.png" alt="VeloSys Pro logo" width="120" />
+</p>
 
-> High-performance Windows optimization, network tuning, and registry-backup desktop app by **Envolvo Systems LTDA.** — a React 18 + TypeScript UI hosted in a .NET 8 WPF / WebView2 shell, shipped as a single self-contained executable.
+<h1 align="center">⚡ VeloSys Pro</h1>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6.svg)]()
-[![Build](https://img.shields.io/badge/Build-C%23%20%2B%20React%2018%20%2B%20TypeScript-0078D6.svg)]()
-[![Documentation](https://img.shields.io/badge/Docs-Docusaurus%203-00a86b.svg)](https://chrystiamjr.github.io/VeloSysPro/)
+<p align="center">
+  High-performance Windows optimization, network tuning, and registry-backup desktop app by
+  <b>Envolvo Systems LTDA.</b><br />
+  A React 18 + TypeScript UI hosted in a .NET 8 WPF / WebView2 shell, shipped as a single
+  self-contained executable.
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT" /></a>
+  <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6.svg" alt="Platform: Windows 10 | 11" />
+  <img src="https://img.shields.io/badge/Build-C%23%20%2B%20React%2018%20%2B%20TypeScript-0078D6.svg" alt="Built with C#, React 18, TypeScript" />
+  <a href="https://chrystiamjr.github.io/VeloSysPro/"><img src="https://img.shields.io/badge/Docs-Docusaurus%203-00a86b.svg" alt="Documentation" /></a>
+</p>
 
 ---
 
@@ -21,6 +32,37 @@
 - 🔔 **Update check**: notifies when a newer GitHub release is available.
 - 🌐 **Bilingual (Rosetta)**: instant PT-BR 🇧🇷 / EN-US 🇺🇸 switching — including host log/status messages.
 - 🎨 **Modern dark UI**: React 18 + TypeScript + TailwindCSS tokens, Atomic Design, a collapsible sidebar, and a progressive-disclosure dashboard with a concurrency-safe action lock.
+
+---
+
+## 📸 Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="website/static/img/screenshots/dashboard.png" alt="Dashboard" /></td>
+    <td width="50%"><img src="website/static/img/screenshots/scheduling.png" alt="Scheduling" /></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Dashboard</b> — progressive-disclosure actions + live console</td>
+    <td align="center"><b>Scheduling</b> — recurring optimizations via Task Scheduler</td>
+  </tr>
+  <tr>
+    <td><img src="website/static/img/screenshots/backup.png" alt="Backup & Restore" /></td>
+    <td><img src="website/static/img/screenshots/restore-points.png" alt="System Restore Points" /></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Backup &amp; Restore</b></td>
+    <td align="center"><b>System Restore Points</b></td>
+  </tr>
+  <tr>
+    <td><img src="website/static/img/screenshots/settings.png" alt="Settings" /></td>
+    <td><img src="website/static/img/screenshots/sidebar-collapsed.png" alt="Collapsed sidebar" /></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Settings</b> — persistent language &amp; safety-backup toggle</td>
+    <td align="center"><b>Collapsed sidebar</b> — responsive layout</td>
+  </tr>
+</table>
 
 ---
 
