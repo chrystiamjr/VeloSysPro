@@ -30,4 +30,4 @@ private async void OnWebMessageReceived(object sender, CoreWebView2WebMessageRec
 }
 ```
 
-Quando uma ação é concluída, o C# emite o evento `window.onActionFinished(action, ok)` para liberar com segurança a trava de interface.
+O host emite envelopes estruturados `{ event, payload }` com `PostWebMessageAsJson`, e o React os recebe pelo Event `message` do WebView2. Quando uma Action é concluída, o Event `actionFinished` libera com segurança a trava da interface.

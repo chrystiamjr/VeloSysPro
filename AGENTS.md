@@ -37,7 +37,7 @@ All components in `src/components/` MUST strictly follow this hierarchy using Ty
 
 ### 1. Unit & Component Testing (Vitest + TypeScript)
 - All atoms and molecules must have rendering and state tests using `Vitest` + `@testing-library/react`.
-- Mock IPC bridge calls (`window.chrome.webview.postMessage` / `window.external.ExecuteAction`) to isolate frontend tests.
+- Mock `window.chrome.webview.postMessage` and the WebView2 `message` Event listener to isolate frontend tests.
 
 ### 2. End-to-End Testing (Cypress + TypeScript)
 - Test complete E2E flows: tab navigation, trigger actions, live log displays, and backup table sorting.

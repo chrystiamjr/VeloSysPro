@@ -5,7 +5,7 @@ Canonical domain terminology and architectural concepts for the VeloSys Pro proj
 ## Terms
 
 **IPC Bridge**:
-The WebView2 IPC messaging interface between the React 18 TypeScript frontend (`window.chrome.webview.postMessage`) and the C# .NET 8 WPF desktop host handler (`desktop/MainWindow.xaml.cs`).
+The WebView2 IPC messaging interface between the React 18 TypeScript frontend and the C# .NET 8 WPF desktop host. React sends Actions with `window.chrome.webview.postMessage`; the host emits structured Events through the WebView2 `message` channel.
 _Avoid_: Direct system call, raw socket
 
 **Junction Links**:
@@ -21,7 +21,7 @@ Structuring React components into `atoms/`, `molecules/`, `organisms/`, `templat
 _Avoid_: Monolithic components, runtime propTypes
 
 **Deterministic Task Name**:
-A Windows scheduled task identifier that encodes its whole schedule — `VeloSysPro_{Type}_{Frequency}[_{Day}]_{HHmm}`, e.g. `VeloSysPro_Gaming_Weekly_MON_0430`. Guarantees uniqueness so several schedules per optimization coexist, makes re-creation idempotent, and keeps the Windows Task Scheduler the single source of truth. Decoded client-side by `parseTaskName` in `src/domain/scheduling.ts`.
+A Windows scheduled task identifier that encodes its whole schedule — `VeloSysPro_{Type}_{Frequency}[_{Day}]_{HHmm}`, e.g. `VeloSysPro_Gaming_Weekly_MON_0430`. Guarantees uniqueness so several schedules per optimization coexist, makes re-creation idempotent, and keeps the Windows Task Scheduler the single source of truth. The host decodes it into structured schedule fields before crossing the IPC Bridge seam.
 _Avoid_: Sidecar index, task registry file, `tasks.json` mapping
 
 **Shared DataTable Organism**:
@@ -33,9 +33,9 @@ A Zod schema in `src/domain/schemas.ts` describing one shape the C# host sends. 
 _Avoid_: Casting `JSON.parse` output, `as ScheduledTaskItem[]`
 
 **Screen Refresh Contract**:
-The declared set of `GET_*` actions a screen re-requests when opened (`SCREEN_REFRESH_ACTIONS` in `App.tsx`), paired with an explicit refresh control on the table. Required because Windows can change scheduled tasks, restore points and backups without the app knowing.
-_Avoid_: Mount-only fetching, polling loops, refetching inside `onActionFinished`
+The Windows-backed list policy in `useOsBackedLists`: subscribe once, request only the lists relevant to the active screen, accept host emissions after mutations, and expose explicit refresh Actions. Required because Windows can change scheduled tasks, restore points and backups without the app knowing.
+_Avoid_: Duplicate bootstrap fetching, polling loops, refetching inside the `actionFinished` Event
 
-**Display Value Parser**:
-A `src/domain/formatters.ts` helper (`parseDisplayDate`, `parseDisplayNumber`) that converts host-formatted display text back into a comparable primitive for sorting. Needed because the C# host emits culture-dependent strings (`dd/MM/yyyy HH:mm`, `ToString("N1")`).
-_Avoid_: `parseFloat` on a formatted size, lexicographic date sort
+**Locale-Neutral Management Record**:
+An IPC record whose sortable meaning is represented by invariant primitives such as ISO 8601 timestamps and byte counts. Display formatting follows the selected application language only at the rendering edge.
+_Avoid_: Host-formatted display strings, reparsing display text

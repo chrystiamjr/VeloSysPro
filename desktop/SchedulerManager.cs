@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -22,18 +21,17 @@ namespace VeloSysPro
     public class SchedulerManager
     {
         /// <summary>Serializable shape matching ScheduledTaskItem in the React frontend.</summary>
-        private record TaskInfo(string Name, string State, string Path);
+        private record TaskInfo(
+            string Name,
+            string State,
+            string Path,
+            string Type,
+            string Frequency,
+            string Day,
+            string Time
+        );
 
         private const string Prefix = "VeloSysPro_";
-
-        private static readonly string[] ValidTypes = { "quick", "full", "gaming", "revert" };
-        private static readonly string[] ValidWeekdays =
-        {
-            "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN",
-        };
-
-        private static readonly Regex TimePattern =
-            new(@"^([01]\d|2[0-3]):[0-5]\d$", RegexOptions.Compiled);
 
         private static readonly Regex TaskNamePattern =
             new(@"^VeloSysPro_[A-Za-z0-9_]+$", RegexOptions.Compiled);
@@ -63,36 +61,20 @@ namespace VeloSysPro
 
                 // Every part below is whitelisted before reaching the command line, because both
                 // the arguments and the derived task name are interpolated into it.
-                string type = GetString(root, "type", "quick").ToLowerInvariant();
-                if (Array.IndexOf(ValidTypes, type) < 0)
-                    type = "quick";
-
-                string frequency = GetString(root, "frequency", "DAILY").ToUpperInvariant();
-                if (frequency != "DAILY" && frequency != "WEEKLY" && frequency != "MONTHLY")
-                    frequency = "DAILY";
-
-                string time = GetString(root, "time", "03:00");
-                if (!TimePattern.IsMatch(time))
-                    time = "03:00";
-
-                string day = NormalizeDay(GetString(root, "day", ""), frequency);
-                string dayArgument = day.Length == 0 ? "" : " /d " + day;
-                string daySuffix = day.Length == 0 ? "" : "_" + day;
-
-                string taskName =
-                    Prefix
-                    + Capitalize(type)
-                    + "_"
-                    + Capitalize(frequency)
-                    + daySuffix
-                    + "_"
-                    + time.Replace(":", "");
-
-                string tr = "\\\"" + _exePath + "\\\" --task=" + type;
+                ScheduleSpec schedule = SchedulePolicy.Normalize(
+                    GetString(root, "type", "quick"),
+                    GetString(root, "frequency", "DAILY"),
+                    GetString(root, "day", ""),
+                    GetString(root, "time", "03:00")
+                );
+                string dayArgument =
+                    schedule.Day.Length == 0 ? "" : " /d " + schedule.Day;
+                string taskName = SchedulePolicy.EncodeName(schedule);
+                string tr = "\\\"" + _exePath + "\\\" --task=" + schedule.Type;
 
                 _cmd.Run(
                     "schtasks.exe",
-                    $"/create /tn \"{taskName}\" /tr \"{tr}\" /sc {frequency}{dayArgument} /st {time} /rl HIGHEST /f"
+                    $"/create /tn \"{taskName}\" /tr \"{tr}\" /sc {schedule.Frequency}{dayArgument} /st {schedule.Time} /rl HIGHEST /f"
                 );
                 _sink.Log("log.task.created", "success", new { name = taskName });
             }
@@ -100,32 +82,6 @@ namespace VeloSysPro
             {
                 _sink.Log("log.task.failed", "error", new { message = ex.Message });
             }
-        }
-
-        /// <summary>Validates the day component for the given frequency; empty for DAILY.</summary>
-        private static string NormalizeDay(string day, string frequency)
-        {
-            if (frequency == "WEEKLY")
-            {
-                string weekday = day.ToUpperInvariant();
-                return Array.IndexOf(ValidWeekdays, weekday) >= 0 ? weekday : "MON";
-            }
-
-            if (frequency == "MONTHLY")
-            {
-                bool parsed = int.TryParse(
-                    day,
-                    NumberStyles.Integer,
-                    CultureInfo.InvariantCulture,
-                    out int dayOfMonth
-                );
-                if (!parsed || dayOfMonth < 1 || dayOfMonth > 31)
-                    dayOfMonth = 1;
-
-                return dayOfMonth.ToString(CultureInfo.InvariantCulture);
-            }
-
-            return "";
         }
 
         /// <summary>Returns VeloSys Pro scheduled tasks as JSON [{Name, State, Path}].</summary>
@@ -147,15 +103,16 @@ namespace VeloSysPro
                     + "State = [string]$_.State; "
                     + "Path = $_.TaskPath + $_.TaskName } } | ConvertTo-Json -Compress";
 
-                string raw = _cmd
-                    .RunCapture("powershell.exe", "-ExecutionPolicy Bypass -Command \"" + ps + "\"")
-                    .Trim();
+                CaptureResult query = _cmd.RunCapture(
+                    "powershell.exe",
+                    "-ExecutionPolicy Bypass -Command \"" + ps + "\""
+                );
+                string raw = query.Success ? query.Output.Trim() : "";
 
                 if (raw.StartsWith("[", StringComparison.Ordinal))
-                    return raw;
-                // ConvertTo-Json emits an object (not an array) when there is a single task.
+                    return EnrichTaskJson(raw);
                 if (raw.StartsWith("{", StringComparison.Ordinal))
-                    return "[" + raw + "]";
+                    return EnrichTaskJson("[" + raw + "]");
             }
             catch
             {
@@ -170,7 +127,9 @@ namespace VeloSysPro
         {
             try
             {
-                string csv = _cmd.RunCapture("schtasks.exe", "/query /fo CSV /nh");
+                CaptureResult query = _cmd.RunCapture("schtasks.exe", "/query /fo CSV /nh");
+                if (!query.Success) throw new InvalidOperationException("Task query failed.");
+                string csv = query.Output;
                 var list = new List<TaskInfo>();
 
                 foreach (string rawLine in csv.Split('\n'))
@@ -185,7 +144,7 @@ namespace VeloSysPro
                     string name = fullPath.TrimStart('\\');
                     if (!name.StartsWith(Prefix, StringComparison.Ordinal)) continue;
 
-                    list.Add(new TaskInfo(name, cols[2], fullPath));
+                    list.Add(CreateTaskInfo(name, cols[2], fullPath));
                 }
 
                 return JsonSerializer.Serialize(list);
@@ -201,19 +160,12 @@ namespace VeloSysPro
             // The name reaches a command line, so only accept the shape this app creates.
             if (string.IsNullOrEmpty(name) || !TaskNamePattern.IsMatch(name))
             {
-                _sink.Log("log.task.failed", "error", new { message = "invalid task name" });
-                return;
+                throw new ArgumentException("Invalid task name.");
             }
 
-            try
-            {
-                _cmd.Run("schtasks.exe", $"/delete /tn \"{name}\" /f");
-                _sink.Log("log.task.deleted", "success", new { name });
-            }
-            catch (Exception ex)
-            {
-                _sink.Log("log.task.failed", "error", new { message = ex.Message });
-            }
+            CommandResult result = _cmd.Run("schtasks.exe", $"/delete /tn \"{name}\" /f");
+            if (!result.Success) throw new InvalidOperationException("Task deletion failed.");
+            _sink.Log("log.task.deleted", "success", new { name });
         }
 
         private static string GetString(JsonElement root, string prop, string fallback)
@@ -223,10 +175,58 @@ namespace VeloSysPro
                 : fallback;
         }
 
-        private static string Capitalize(string s)
+        private static string EnrichTaskJson(string raw)
         {
-            if (string.IsNullOrEmpty(s)) return s;
-            return char.ToUpperInvariant(s[0]) + s.Substring(1).ToLowerInvariant();
+            using JsonDocument document = JsonDocument.Parse(raw);
+            var tasks = new List<TaskInfo>();
+            foreach (JsonElement item in document.RootElement.EnumerateArray())
+            {
+                string name = GetString(item, "Name", "");
+                if (!name.StartsWith(Prefix, StringComparison.Ordinal)) continue;
+                tasks.Add(
+                    CreateTaskInfo(
+                        name,
+                        GetString(item, "State", ""),
+                        GetString(item, "Path", "")
+                    )
+                );
+            }
+            return JsonSerializer.Serialize(tasks);
+        }
+
+        public void CreateTask(ScheduleSpec schedule)
+        {
+            string dayArgument = schedule.Day.Length == 0 ? "" : " /d " + schedule.Day;
+            string taskName = SchedulePolicy.EncodeName(schedule);
+            string tr = "\\\"" + _exePath + "\\\" --task=" + schedule.Type;
+            CommandResult result = _cmd.Run(
+                "schtasks.exe",
+                $"/create /tn \"{taskName}\" /tr \"{tr}\" /sc {schedule.Frequency}{dayArgument} /st {schedule.Time} /rl HIGHEST /f"
+            );
+            if (!result.Success) throw new InvalidOperationException("Task creation failed.");
+            _sink.Log("log.task.created", "success", new { name = taskName });
+        }
+
+        private static TaskInfo CreateTaskInfo(string name, string state, string path)
+        {
+            ScheduleSpec? schedule = SchedulePolicy.DecodeName(name);
+            return new TaskInfo(
+                name,
+                NormalizeTaskState(state),
+                path,
+                schedule?.Type ?? "",
+                schedule?.Frequency ?? "",
+                schedule?.Day ?? "",
+                schedule?.Time ?? ""
+            );
+        }
+
+        private static string NormalizeTaskState(string state)
+        {
+            string normalized = state.Trim();
+            return normalized is "Ready" or "Running" or "Queued" or "Disabled"
+                ? normalized
+                : "Unknown";
         }
 
         /// <summary>Minimal CSV line parser handling double-quoted fields.</summary>

@@ -16,7 +16,7 @@ describe('scheduled optimizations', () => {
   });
 
   it('renders tasks received from the host by cadence, not by technical name', () => {
-    cy.emitHost('onTasksLoaded', tasks);
+    cy.emitHost('tasksLoaded', tasks);
     cy.contains('Diária - Otimização Rápida').should('be.visible');
     cy.contains('Todos os dias às 03:00').should('be.visible');
     cy.contains('Semanal - Modo Gaming').should('be.visible');
@@ -37,7 +37,7 @@ describe('scheduled optimizations', () => {
         cy.getByCy('task-create').click();
         cy.expectIpc(
           'createTask',
-          JSON.stringify({ type, frequency, time: '04:45', day: defaultDay[frequency] })
+          { type, frequency, time: '04:45', day: defaultDay[frequency] }
         );
       });
     }
@@ -53,7 +53,7 @@ describe('scheduled optimizations', () => {
     cy.getByCy('task-create').click();
     cy.expectIpc(
       'createTask',
-      JSON.stringify({ type: 'quick', frequency: 'WEEKLY', time: '03:00', day: 'FRI' })
+      { type: 'quick', frequency: 'WEEKLY', time: '03:00', day: 'FRI' }
     );
   });
 
@@ -67,12 +67,12 @@ describe('scheduled optimizations', () => {
     cy.getByCy('task-create').click();
     cy.expectIpc(
       'createTask',
-      JSON.stringify({ type: 'quick', frequency: 'MONTHLY', time: '03:00', day: '15' })
+      { type: 'quick', frequency: 'MONTHLY', time: '03:00', day: '15' }
     );
   });
 
   it('re-queries the host when refresh is clicked', () => {
-    cy.emitHost('onTasksLoaded', tasks);
+    cy.emitHost('tasksLoaded', tasks);
     cy.getByCy('table-refresh').click();
     cy.expectIpc('getTasks');
   });
@@ -84,14 +84,14 @@ describe('scheduled optimizations', () => {
   });
 
   it('deletes a task after confirmation', () => {
-    cy.emitHost('onTasksLoaded', tasks);
+    cy.emitHost('tasksLoaded', tasks);
     cy.on('window:confirm', () => true);
     cy.getByCy(`task-delete-${tasks[0].Name}`).click();
     cy.expectIpc('deleteTask', tasks[0].Name);
   });
 
   it('keeps a task after cancellation', () => {
-    cy.emitHost('onTasksLoaded', tasks);
+    cy.emitHost('tasksLoaded', tasks);
     cy.on('window:confirm', () => false);
     cy.getByCy(`task-delete-${tasks[0].Name}`).click();
     cy.get<Sinon.SinonStub>('@ipcStub').should(

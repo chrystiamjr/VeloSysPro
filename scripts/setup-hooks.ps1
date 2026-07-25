@@ -24,7 +24,8 @@ echo "[Pre-Commit SUCCESS] Full-stack validation passed successfully."
 exit 0
 "@
 
-# commit-msg hook: enforce Conventional Commits (so semantic-release can version).
+# commit-msg hook: require type(scope), a description, and a header no longer than
+# 70 characters (so semantic-release can version predictable commits).
 $commitMsgContent = @"
 #!/bin/sh
 export PATH="`$PATH:/c/Program Files/nodejs"

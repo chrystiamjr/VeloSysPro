@@ -12,7 +12,7 @@ namespace VeloSysPro
         /// <summary>
         /// Parsed IPC message with action and optional payload.
         /// </summary>
-        public record IpcMessage(string Action, string Payload);
+        public record IpcMessage(string Action, JsonElement Payload);
 
         /// <summary>
         /// Parses raw JSON from WebView2 WebMessageReceived into action/payload.
@@ -26,7 +26,7 @@ namespace VeloSysPro
                 JsonElement root = doc.RootElement;
 
                 string action = "";
-                string payload = "";
+                JsonElement payload = JsonSerializer.SerializeToElement<object?>(null);
 
                 if (root.TryGetProperty("action", out JsonElement actionEl))
                 {
@@ -35,14 +35,7 @@ namespace VeloSysPro
 
                 if (root.TryGetProperty("payload", out JsonElement payloadEl))
                 {
-                    if (payloadEl.ValueKind == JsonValueKind.String)
-                    {
-                        payload = payloadEl.GetString() ?? "";
-                    }
-                    else
-                    {
-                        payload = payloadEl.GetRawText();
-                    }
+                    payload = payloadEl.Clone();
                 }
 
                 if (string.IsNullOrEmpty(action))

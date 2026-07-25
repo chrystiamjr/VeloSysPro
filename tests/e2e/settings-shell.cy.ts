@@ -20,7 +20,7 @@ describe('settings and application shell', () => {
     cy.getByCy('nav-Settings').click();
     cy.getByCy('language-en').click();
     cy.contains('Settings').should('be.visible');
-    cy.expectIpc('saveSettings', JSON.stringify({ ...defaultSettings, language: 'en_US' }));
+    cy.expectIpc('saveSettings', { ...defaultSettings, language: 'en_US' });
   });
 
   it('persists both safety-backup states', () => {
@@ -29,16 +29,16 @@ describe('settings and application shell', () => {
     cy.getByCy('safety-backup-toggle').uncheck();
     cy.expectIpc(
       'saveSettings',
-      JSON.stringify({ ...defaultSettings, createBackupBeforeOptimize: false })
+      { ...defaultSettings, createBackupBeforeOptimize: false }
     );
     cy.getByCy('safety-backup-toggle').check();
-    cy.expectIpc('saveSettings', JSON.stringify(defaultSettings));
+    cy.expectIpc('saveSettings', defaultSettings);
   });
 
   it('loads a collapsed sidebar and persists expansion', () => {
     cy.visitApp({ settings: { ...defaultSettings, sidebarCollapsed: true } });
     cy.getByCy('sidebar-toggle').should('have.attr', 'aria-label', 'Expandir menu').click();
-    cy.expectIpc('saveSettings', JSON.stringify(defaultSettings));
+    cy.expectIpc('saveSettings', defaultSettings);
   });
 
   it('collapses automatically on a narrow viewport', () => {
@@ -57,7 +57,7 @@ describe('settings and application shell', () => {
 
   it('downloads and dismisses an available update', () => {
     cy.visitApp();
-    cy.emitHost('onUpdateAvailable', updateInfo);
+    cy.emitHost('updateAvailable', updateInfo);
     cy.getByCy('update-banner').should('contain', updateInfo.version);
     cy.getByCy('update-download').click();
     cy.expectIpc('openUrl', updateInfo.url);
@@ -67,7 +67,7 @@ describe('settings and application shell', () => {
 
   it('keeps a dismissed update reachable from settings', () => {
     cy.visitApp();
-    cy.emitHost('onUpdateAvailable', updateInfo);
+    cy.emitHost('updateAvailable', updateInfo);
     cy.getByCy('update-dismiss').click();
     cy.getByCy('update-banner').should('not.exist');
 
@@ -86,7 +86,7 @@ describe('settings and application shell', () => {
 
   it('ignores update callbacks without a version', () => {
     cy.visitApp();
-    cy.emitHost('onUpdateAvailable', { version: '', url: updateInfo.url });
+    cy.emitHost('updateAvailable', { version: '', url: updateInfo.url });
     cy.getByCy('update-banner').should('not.exist');
   });
 });

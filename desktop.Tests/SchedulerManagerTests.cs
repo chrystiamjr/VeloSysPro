@@ -137,7 +137,7 @@ public class SchedulerManagerTests
     }
 
     [Fact]
-    public void GetTasksJson_ReturnsThePowerShellArrayVerbatim()
+    public void GetTasksJson_EnrichesThePowerShellArrayWithStructuredScheduleFields()
     {
         var runner = new FakeCommandRunner
         {
@@ -150,6 +150,10 @@ public class SchedulerManagerTests
 
         Assert.Contains("VeloSysPro_Quick_Daily_0300", json);
         Assert.Contains(@"""State"":""Ready""", json);
+        Assert.Contains(@"""Type"":""quick""", json);
+        Assert.Contains(@"""Frequency"":""DAILY""", json);
+        Assert.Contains(@"""Day"":""""", json);
+        Assert.Contains(@"""Time"":""03:00""", json);
         Assert.StartsWith("[", json);
     }
 
@@ -249,9 +253,8 @@ public class SchedulerManagerTests
         var sink = new RecordingStatusSink();
         var scheduler = new SchedulerManager(runner, sink, "VeloSysPro.exe");
 
-        scheduler.DeleteTask(name);
+        Assert.Throws<ArgumentException>(() => scheduler.DeleteTask(name));
 
         Assert.Empty(runner.Runs);
-        Assert.Contains(sink.Logs, log => log.Key == "log.task.failed" && log.Type == "error");
     }
 }

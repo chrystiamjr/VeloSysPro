@@ -14,8 +14,8 @@ import { z } from 'zod';
 /** Objects are non-strict on purpose: the host may add fields, and extras are stripped. */
 export const BackupItemSchema = z.object({
   Name: z.string(),
-  Date: z.string(),
-  Size: z.string(),
+  CreatedAt: z.iso.datetime(),
+  SizeBytes: z.number().int().nonnegative(),
 });
 
 export const ScheduledTaskItemSchema = z.object({
@@ -24,11 +24,15 @@ export const ScheduledTaskItemSchema = z.object({
   // describeTaskState already falls back for anything it does not recognize.
   State: z.string(),
   Path: z.string(),
+  Type: z.enum(['quick', 'full', 'gaming', 'revert']).or(z.literal('')),
+  Frequency: z.enum(['DAILY', 'WEEKLY', 'MONTHLY']).or(z.literal('')),
+  Day: z.string(),
+  Time: z.string(),
 });
 
 export const RestorePointItemSchema = z.object({
   Sequence: z.number(),
-  Date: z.string(),
+  CreatedAt: z.iso.datetime(),
   Description: z.string(),
 });
 
@@ -51,6 +55,33 @@ export const LocalizedMessageSchema = z.object({
   args: z.record(z.string(), z.unknown()).optional(),
 });
 
+export const IpcEventNameSchema = z.enum([
+  'logReceived',
+  'statusUpdated',
+  'progressUpdated',
+  'backupsLoaded',
+  'tasksLoaded',
+  'restorePointsLoaded',
+  'settingsLoaded',
+  'updateAvailable',
+  'actionFinished',
+]);
+
+export const IpcEventEnvelopeSchema = z.object({
+  event: IpcEventNameSchema,
+  payload: z.unknown(),
+});
+
+export const LogReceivedPayloadSchema = z.object({
+  message: LocalizedMessageSchema,
+  type: LogTypeSchema,
+});
+
+export const ActionFinishedPayloadSchema = z.object({
+  action: z.string(),
+  ok: z.boolean(),
+});
+
 export type BackupItem = z.infer<typeof BackupItemSchema>;
 export type ScheduledTaskItem = z.infer<typeof ScheduledTaskItemSchema>;
 export type RestorePointItem = z.infer<typeof RestorePointItemSchema>;
@@ -58,3 +89,5 @@ export type AppSettings = z.infer<typeof AppSettingsSchema>;
 export type UpdateInfo = z.infer<typeof UpdateInfoSchema>;
 export type LogType = z.infer<typeof LogTypeSchema>;
 export type LocalizedMessage = z.infer<typeof LocalizedMessageSchema>;
+export type IpcEventName = z.infer<typeof IpcEventNameSchema>;
+export type IpcEventEnvelope = z.infer<typeof IpcEventEnvelopeSchema>;
