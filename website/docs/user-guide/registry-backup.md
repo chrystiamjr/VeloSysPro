@@ -6,6 +6,8 @@ sidebar_position: 2
 
 Before applying network or system tweaks, VeloSys Pro provides built-in tools for registry safety.
 
+![Registry Backup and Restore screen](/img/screenshots/backup.png)
+
 ## Creating a Registry Backup {#creating-a-registry-backup}
 
 1. Navigate to the **Registry Backup** tab in VeloSys Pro.

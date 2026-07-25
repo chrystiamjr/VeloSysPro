@@ -6,7 +6,7 @@ sidebar_position: 1
 
 Welcome to **VeloSys Pro**, a high-performance Windows optimization, maintenance, gaming tweak, registry backup, and system recovery desktop application developed by **Envolvo Systems LTDA.**
 
-![VeloSys Pro dashboard](/img/screenshots/dashboard.png)
+![VeloSys Pro application walkthrough](/img/gifs/velosys-pro-overview.gif)
 
 ## Key Features {#key-features}
 

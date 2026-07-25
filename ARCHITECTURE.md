@@ -15,29 +15,42 @@ that keep an elevated, bilingual optimizer safe and testable. Domain vocabulary 
 
 ## 1. High-level shape
 
+```mermaid
+flowchart LR
+    UI["React 18 + TypeScript<br/>Atomic Design · Tailwind · Rosetta"]
+    Bridge["Typed IPC bridge<br/>Actions ⇄ Events"]
+    Host[".NET 8 WPF host<br/>WebView2 · validation · routing"]
+    Services["Domain services<br/>Optimization · Recovery · Scheduling<br/>Settings · Updates"]
+    Windows["Elevated Windows APIs and tools<br/>sfc · dism · netsh · schtasks · reg · WMI"]
+
+    UI -->|"postMessage({ action, payload })"| Bridge
+    Bridge --> Host
+    Host --> Services
+    Services --> Windows
+    Windows --> Services
+    Services --> Host
+    Host -->|"{ event, payload }"| Bridge
+    Bridge --> UI
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│  React 18 + TypeScript UI  (Atomic Design, Tailwind tokens, Rosetta)   │
-│                                                                        │
-│   pages ── hooks: useExecutionLifecycle · useOsBackedLists ·           │
-│                   usePreferences                                       │
-│                              │                                         │
-│              src/infrastructure/bridge.ts  (the one IPC seam)          │
-└───────────────┬───────────────────────────────────┬──────────────────┘
-     Actions ▲  │ postMessage({action, payload})     │ ▼ Events
-   (intentions) │                                     │ (facts, one
-                │        WebView2 web messaging        │  `message` listener)
-┌───────────────▼───────────────────────────────────┴──────────────────┐
-│  C# .NET 8 WPF Host                                                     │
-│                                                                        │
-│   IpcHandler ─▶ ActionHost ─▶ domain services ─▶ IpcEventEmitter       │
-│   (parse)      (validate,     (Optimizer,         ({event,payload}      │
-│                route, lock)    Backup/Restore,     envelopes)           │
-│                                Scheduler, …)                            │
-└──────────────────────────────┬─────────────────────────────────────────┘
-                    Process execution (elevated)
-                               │
-              Windows: sfc · dism · netsh · schtasks · reg · WMI
+
+```mermaid
+sequenceDiagram
+    participant UI as React UI
+    participant IPC as WebView2 IPC
+    participant Host as ActionHost
+    participant Domain as Domain service
+    participant OS as Windows
+
+    UI->>IPC: Action { action, payload }
+    IPC->>Host: Parse and validate
+    Host->>Host: Acquire mutation lock when required
+    Host->>Domain: Execute typed operation
+    Domain->>OS: Run elevated command/API
+    OS-->>Domain: Structured result and exit code
+    Domain-->>Host: Success or failure
+    Host-->>IPC: Domain Events / refreshed records
+    Host-->>IPC: actionFinished { action, ok }
+    IPC-->>UI: Validate and dispatch Events
 ```
 
 The executable always runs elevated (`requireAdministrator`, see `desktop/app.manifest`) because the
@@ -62,7 +75,7 @@ The React↔host boundary is deliberately asymmetric and named after intent (`CO
 Because the UI and host ship as one executable, both stacks migrate together — there is no legacy
 string-payload compatibility to maintain.
 
-### Canonical Event names (`desktop/IpcEvents.cs`)
+### Canonical Event names (`desktop/Ipc/IpcEvents.cs`)
 
 `logReceived` · `statusUpdated` · `progressUpdated` · `backupsLoaded` · `tasksLoaded` ·
 `restorePointsLoaded` · `settingsLoaded` · `updateAvailable` · `actionFinished`
@@ -73,7 +86,7 @@ string-payload compatibility to maintain.
 
 ### The Action seam — `ActionHost`
 
-`ActionHost` owns everything that happens between a parsed inbound message and an authoritative
+`desktop/Ipc/ActionHost.cs` owns everything that happens between a parsed inbound message and an authoritative
 completion:
 
 - **Routing** — a `Dictionary<string, Func<JsonElement, bool>>` maps each `SystemActions` name to a
@@ -113,21 +126,23 @@ WebView2 and that tests capture directly.
   it writes to a file.
 - `ManagedStream` + `MainWindow` — serve the embedded `ui/` bundle from memory via WebView2
   `WebResourceRequested` under `https://velosys.app/`, so the release needs no `ui/` folder on disk.
+- `AppPaths` — centralizes all mutable runtime data under `%LOCALAPPDATA%\VeloSysPro`: preferences,
+  logs, Registry backups, and the WebView2 user-data profile. The executable directory stays clean.
 
 ---
 
-## 4. Frontend (React `src/`)
+## 4. Frontend (React `frontend/src/`)
 
 ### The IPC seam — `bridge.ts` + Zod schemas
 
-`src/infrastructure/bridge.ts` is the single module that talks to the host. It:
+`frontend/src/infrastructure/bridge.ts` is the single module that talks to the host. It:
 
 - sends Actions via `sendAction(action, payload?)`;
 - registers **one** `message` listener, parses each `{ event, payload }` envelope, and dispatches to
   per-event subscribers;
 - **runtime-validates every inbound payload** against Zod schemas before handing it to state.
 
-`src/domain/schemas.ts` defines those schemas once and `domain/types.ts` re-exports the inferred
+`frontend/src/domain/schemas.ts` defines those schemas once and `domain/types.ts` re-exports the inferred
 types, so the runtime check and the compile-time type can never disagree. An invalid Event is logged
 and ignored — it never blanks the screen.
 
@@ -154,7 +169,7 @@ React state is split into three focused owners instead of one mega-component:
 
 ## 5. Packaging & delivery
 
-- **Single executable** — `build.ps1` builds the Vite bundle, embeds it as assembly resources, and
+- **Single executable** — `build.ps1` builds the Vite bundle into `frontend/ui/`, embeds it as assembly resources, and
   publishes a self-contained, single-file `VeloSysPro.exe` (native WebView2 loader self-extracts).
 - **Installer** — `installer/VeloSysPro.iss` (Inno Setup) installs the exe, adds shortcuts, and
   bootstraps the Evergreen **WebView2 Runtime** when missing.

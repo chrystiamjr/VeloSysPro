@@ -15,16 +15,16 @@ Developed by **Envolvo Systems LTDA.** using a modern hybrid architecture:
 - **YAGNI (You Aren't Gonna Need It)**: Implement strictly what is required for the current feature scope.
 - **DRY (Don't Repeat Yourself)**: Reuse atomic components and centralized utility modules.
 - **Clean Architecture Layers**:
-  - `src/domain`: Business models, action contracts, and TypeScript interfaces (`.ts`).
-  - `src/infrastructure`: IPC bridge communication with C# (`bridge.ts`).
-  - `src/components`: UI components organized by Atomic Design using TypeScript (`.tsx`).
+  - `frontend/src/domain`: Business models, action contracts, and TypeScript interfaces (`.ts`).
+  - `frontend/src/infrastructure`: IPC bridge communication with C# (`bridge.ts`).
+  - `frontend/src/components`: UI components organized by Atomic Design using TypeScript (`.tsx`).
 
 ### 2. Design System & Styling Rules (Tailwind Tokens Only)
-- **STRICT RULE**: ALL colors, spacings, borders, typography, and shadows MUST come strictly from the Tailwind Design System theme tokens defined in `tailwind.config.js` or standard Tailwind utility classes (`bg-primary`, `bg-success`, `bg-bgCard`, `text-textMuted`, `border-borderColor`).
+- **STRICT RULE**: ALL colors, spacings, borders, typography, and shadows MUST come strictly from the Tailwind Design System theme tokens defined in `frontend/tailwind.config.js` or standard Tailwind utility classes (`bg-primary`, `bg-success`, `bg-bgCard`, `text-textMuted`, `border-borderColor`).
 - **NEVER** use inline style hex codes (e.g. `style={{ color: '#00a86b' }}`) or loose un-tokenized style attributes.
 
 ### 3. Atomic Design Component Hierarchy (TypeScript)
-All components in `src/components/` MUST strictly follow this hierarchy using TypeScript interfaces (`interface Props`):
+All components in `frontend/src/components/` MUST strictly follow this hierarchy using TypeScript interfaces (`interface Props`):
 - **`atoms/`**: Indivisible UI elements (e.g., `Button.tsx`, `Badge.tsx`, `Input.tsx`, `Dot.tsx`, `Icon.tsx`).
 - **`molecules/`**: Combinations of atoms (e.g., `FormField.tsx`, `HealthCard.tsx`, `LogEntry.tsx`, `SearchInput.tsx`).
 - **`organisms/`**: Complex functional blocks (e.g., `ActionCard.tsx`, `TerminalConsole.tsx`, `DataTable.tsx`, `HeaderProgress.tsx`, `SidebarNav.tsx`).

@@ -10,8 +10,8 @@ In hybrid desktop applications composed of a C# .NET 8 WPF host and a React WebV
 
 ## Strict Requirements
 1. **Event & Payload Schemas**: Any change to i18n keys, IPC event contracts, payload schemas, or pre-commit validation MUST synchronously update both:
-   - **C# Backend**: Emitter and handler classes located in `desktop/*.cs`.
-   - **React TS Frontend**: Infrastructure handlers and UI components in `src/`.
+- **C# Backend**: Emitter and handler classes located under `desktop/Ipc/` and `desktop/Features/`.
+- **React TS Frontend**: Infrastructure handlers and UI components in `frontend/src/`.
 2. **Double Build Validation**: Never claim success without compiling and validating both layers.
 3. **Recursive i18n Parity**: `pt_BR.json` and `en_US.json` must match at **every nesting level**, not
    just the top level. A nested key present in only one locale renders as its raw key at runtime.
@@ -22,7 +22,7 @@ In hybrid desktop applications composed of a C# .NET 8 WPF host and a React WebV
      stayed as `"Restore Points"`. Allowlist genuine proper nouns; strip placeholders before the
      comparison so pure format strings are not flagged.
 4. **Alphabetical Insertion**: New keys go in recursive alphabetical order — enforced by
-   `tests/unit/domain/i18n.test.ts`.
+   `frontend/tests/unit/domain/i18n.test.ts`.
 5. **Locale-Neutral Payloads**: Values crossing the IPC boundary must not be culture-formatted when
    the frontend sorts or branches on them — see
    [locale-neutral-boundary-data.md](./locale-neutral-boundary-data.md).

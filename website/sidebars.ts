@@ -12,6 +12,7 @@ const sidebars:SidebarsConfig = {
         'user-guide/registry-backup',
         'user-guide/restore-points',
         'user-guide/scheduling',
+        'user-guide/settings',
       ],
       collapsed: false,
     },

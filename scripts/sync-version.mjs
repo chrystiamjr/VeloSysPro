@@ -16,6 +16,7 @@ if (!version || !/^\d+\.\d+\.\d+/.test(version)) {
 /** @type {[string, (s: string) => string][]} */
 const edits = [
   ['package.json', (s) => s.replace(/("version":\s*")[^"]+(")/, `$1${version}$2`)],
+  ['frontend/package.json', (s) => s.replace(/("version":\s*")[^"]+(")/, `$1${version}$2`)],
   [
     'package-lock.json',
     (s) => {
@@ -25,14 +26,24 @@ const edits = [
         throw new Error('package-lock.json: root package entry was not found');
       }
       lock.packages[''].version = version;
+      if (!lock.packages?.frontend) {
+        throw new Error('package-lock.json: frontend workspace entry was not found');
+      }
+      lock.packages.frontend.version = version;
       return `${JSON.stringify(lock, null, 2)}\n`;
     },
   ],
   ['desktop/VeloSysPro.csproj', (s) => s.replace(/(<Version>)[^<]+(<\/Version>)/, `$1${version}$2`)],
   ['desktop/app.manifest', (s) => s.replace(/(assemblyIdentity version=")[^"]+(")/, `$1${version}.0$2`)],
   ['installer/VeloSysPro.iss', (s) => s.replace(/(#define AppVersion ")[^"]+(")/, `$1${version}$2`)],
-  ['src/domain/locales/pt_BR.json', (s) => s.replace(/(Versão )\d+\.\d+\.\d+/, `$1${version}`)],
-  ['src/domain/locales/en_US.json', (s) => s.replace(/(Version )\d+\.\d+\.\d+/, `$1${version}`)],
+  [
+    'frontend/src/domain/locales/pt_BR.json',
+    (s) => s.replace(/(Versão )\d+\.\d+\.\d+/, `$1${version}`),
+  ],
+  [
+    'frontend/src/domain/locales/en_US.json',
+    (s) => s.replace(/(Version )\d+\.\d+\.\d+/, `$1${version}`),
+  ],
 ];
 
 let failed = false;

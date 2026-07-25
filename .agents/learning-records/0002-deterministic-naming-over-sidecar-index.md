@@ -33,7 +33,7 @@ VeloSysPro_Full_Monthly_15_0200
   itself via `/f` instead of producing a duplicate.
 - **No new dependency.** SQLite would ship `e_sqlite3.dll` alongside the binary, which conflicts
   with the **Single Executable Deliverable** guardrail in `AGENTS.md`.
-- **No extra round-trip.** The frontend decodes the name locally (`src/domain/scheduling.ts`,
+- **No extra round-trip.** The frontend decodes the name locally (`frontend/src/domain/scheduling.ts`,
   `parseTaskName`), so the host does not have to enrich the payload with trigger details, avoiding
   the `DaysOfWeek` / `DaysOfMonth` bitmask arithmetic that reading triggers back would require.
 

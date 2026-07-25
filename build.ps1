@@ -13,7 +13,7 @@ $csproj = Join-Path $projectDir "desktop\VeloSysPro.csproj"
 # 1. Add Node.js & .NET SDK to environment PATH
 $env:Path += ";C:\Program Files\nodejs;C:\Program Files\dotnet"
 
-# 2. Build React 18 + TypeScript + TailwindCSS + Rosetta (Vite) into ui/
+# 2. Build React 18 + TypeScript + TailwindCSS + Rosetta (Vite) into frontend/ui/
 $npm = Get-Command npm -ErrorAction SilentlyContinue
 if ($npm) {
     Write-Host "Compilando Frontend React 18 + TypeScript + TailwindCSS + Rosetta (Vite)..." -ForegroundColor Yellow
@@ -34,7 +34,7 @@ Write-Host "====================================================" -ForegroundCol
 $distDir = Join-Path $projectDir "dist"
 Remove-Item -Recurse -Force $distDir -ErrorAction SilentlyContinue
 
-# 4. Publish a genuinely single, self-contained VeloSysPro.exe (ui/ is embedded,
+# 4. Publish a genuinely single, self-contained VeloSysPro.exe (frontend/ui/ is embedded,
 #    WebView2Loader.dll is bundled via IncludeNativeLibrariesForSelfExtract).
 & dotnet publish "$csproj" -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o "$distDir"
 if ($LASTEXITCODE -ne 0) {

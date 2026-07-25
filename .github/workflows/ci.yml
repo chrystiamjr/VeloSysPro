@@ -66,6 +66,7 @@ jobs:
         env:
           CYPRESS_CACHE_FOLDER: ${{ runner.temp }}\Cypress
         with:
+          working-directory: frontend
           install: false
           start: npm run dev
           wait-on: 'http://localhost:5173'
@@ -75,7 +76,7 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: cypress-failure-screenshots
-          path: cypress/screenshots
+          path: frontend/cypress/screenshots
           if-no-files-found: ignore
           retention-days: 7
 

@@ -4,7 +4,7 @@ sidebar_position: 2
 
 # Comunicação Via Ponte IPC
 
-A comunicação entre o frontend React e o host C# ocorre sobre o Edge WebView2 usando dois formatos de mensagem distintos e unidirecionais: **Actions** (UI → host) e **envelopes de Event** (host → UI). A costura no frontend fica em `src/infrastructure/bridge.ts`.
+A comunicação entre o frontend React e o host C# ocorre sobre o Edge WebView2 usando dois formatos de mensagem distintos e unidirecionais: **Actions** (UI → host) e **envelopes de Event** (host → UI). A costura no frontend fica em `frontend/src/infrastructure/bridge.ts`.
 
 ## Enviando Actions (UI → host) {#enviando-actions}
 
@@ -34,6 +34,6 @@ Nomes canônicos de Event incluem `logReceived`, `statusUpdated`, `progressUpdat
 Toda mutação adquire uma trava de execução no momento em que sua Action é enviada. A trava é liberada de forma **autoritativa** pelo Event `actionFinished` correspondente, que o host emite dentro de um bloco `finally` — então a UI destrava de forma confiável mesmo quando o comando falha. Leituras nunca adquirem a trava. Veja `useExecutionLifecycle.ts` para o hook que controla isso.
 
 ```csharp
-// desktop/ActionHost.cs — emitido em um finally, ok reflete o sucesso real
+// desktop/Ipc/ActionHost.cs — emitido em um finally, ok reflete o sucesso real
 _events.Emit(IpcEvents.ActionFinished, new { action, ok });
 ```
