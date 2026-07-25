@@ -1,3 +1,9 @@
+## [0.1.5](https://github.com/chrystiamjr/VeloSysPro/compare/v0.1.4...v0.1.5) (2026-07-25)
+
+### Bug Fixes
+
+* **ui:** refresh stale lists, theme native controls, validate IPC payloads ([#27](https://github.com/chrystiamjr/VeloSysPro/issues/27)) ([03e5695](https://github.com/chrystiamjr/VeloSysPro/commit/03e56957c81d8f52c791277e22fbd478dbf96fd1))
+
 ## [0.1.4](https://github.com/chrystiamjr/VeloSysPro/compare/v0.1.3...v0.1.4) (2026-07-25)
 
 ### Features

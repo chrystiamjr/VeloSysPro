@@ -54,7 +54,7 @@
   "brand": {
     "adminBadge": "Administrator Active",
     "subtitle": "Envolvo Systems LTDA.",
-    "version": "Version 0.1.4 (C# / React Build)"
+    "version": "Version 0.1.5 (C# / React Build)"
   },
   "btn": {
     "applyMode": "Apply Mode",
