@@ -39,7 +39,7 @@
     "cypress": "^13.6.6",
     "eslint": "^9.21.0",
     "eslint-plugin-react": "^7.37.4",
-    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "jsdom": "^24.0.0",
     "postcss": "^8.5.23",
     "prettier": "^3.5.3",
