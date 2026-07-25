@@ -16,6 +16,32 @@ describe('registry backups', () => {
     cy.contains(backups[1].Size).should('be.visible');
   });
 
+  it('sorts host-formatted backup dates chronologically across years', () => {
+    const crossYear = [
+      { Name: 'older.reg', Date: '31/12/2025 23:00', Size: '10,0 KB' },
+      { Name: 'newer.reg', Date: '01/01/2026 00:00', Size: '10,0 KB' },
+    ];
+    cy.emitHost('onBackupsLoaded', crossYear);
+
+    cy.getByCy('backups-table').find('tbody tr').first().should('contain', 'newer.reg');
+    cy.getByCy('table-sort-date').parent('th').should('have.attr', 'aria-sort', 'descending');
+  });
+
+  it('sorts localized backup sizes by magnitude', () => {
+    const localizedSizes = [
+      { Name: 'medium.reg', Date: '02/01/2026 00:00', Size: '999,9 KB' },
+      { Name: 'large.reg', Date: '03/01/2026 00:00', Size: '1.234,5 KB' },
+      { Name: 'small.reg', Date: '01/01/2026 00:00', Size: '45,6 KB' },
+    ];
+    cy.emitHost('onBackupsLoaded', localizedSizes);
+
+    cy.getByCy('table-sort-size').click();
+    cy.getByCy('backups-table').find('tbody tr').eq(0).should('contain', 'small.reg');
+    cy.getByCy('backups-table').find('tbody tr').eq(1).should('contain', 'medium.reg');
+    cy.getByCy('backups-table').find('tbody tr').eq(2).should('contain', 'large.reg');
+    cy.getByCy('table-sort-size').parent('th').should('have.attr', 'aria-sort', 'ascending');
+  });
+
   it('creates a backup and opens its folder', () => {
     cy.getByCy('backup-create').click();
     cy.expectIpc('createManualBackup');
