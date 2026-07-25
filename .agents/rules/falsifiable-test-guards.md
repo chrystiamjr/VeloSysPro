@@ -1,6 +1,6 @@
 ---
 title: Falsifiable Test Guards
-keywords: testing, vacuous test, shell-out, assert command, injected regression, fake, i18n parity
+keywords: testing, vacuous test, shell-out, assert command, injected regression, fake, i18n parity, per-field probe, StrictMode
 ---
 
 # Falsifiable Test Guards
@@ -42,6 +42,19 @@ of vacuous test appeared in VeloSys Pro and both survived a full green suite.
 6. **Cover the edges that silently degrade.** Empty and whitespace-only tool output, malformed
    values, `initialSort` naming a column that does not exist or is not sortable, and callers'
    arrays not being mutated.
+7. **Probe a composite guard field by field, not as a whole.** Relaxing one field of a schema and
+   re-running is the only way to learn which fields are actually load-bearing. Applying
+   requirement 2 to a Zod schema as a unit passes trivially: a payload missing several fields is
+   still rejected when any single one is relaxed.
+8. **A "field missing" case does not test that field's type.** `z.any()` accepts `undefined`, so a
+   fixture that omits the field still parses once the field is relaxed. Every field needs a
+   **wrong-type** case; keep the missing case too, but only as a requiredness check. Four fields
+   in the first draft of the bridge tests (`Size`, `Description`, `Path`, `url`) looked covered and
+   were not.
+9. **Never assert an absolute count of dispatched actions.** `React.StrictMode`
+   (`src/main.tsx`) double-invokes effects in development, so every bootstrap dispatch happens
+   twice locally and once in production. Capture the count before the interaction and assert the
+   **delta**.
 
 ## Code & Architecture Examples
 
@@ -93,6 +106,30 @@ function flatten(obj: Record<string, unknown>, prefix = ''): Record<string, stri
 expect(Object.keys(flatten(pt_BR)).sort()).toEqual(Object.keys(flatten(en_US)).sort());
 ```
 
+```typescript
+// Requirement 8 — the wrong-type case is what makes the field load-bearing; the missing case
+// only proves it is required. A suite with the second but not the first looks covered.
+it.each([
+  ['Size as a number', { ...validBackup, Size: 43520 }], // fails if Size becomes z.any()
+  ['Size missing', { Name: 'backup.reg', Date: '24/07/2026 10:30' }], // passes either way
+])('rejects a backup with %s', (_label, backup) => {
+  subscribeBackups(callback);
+  window.onBackupsLoaded!([backup] as never);
+  expect(callback).toHaveBeenCalledWith([]);
+});
+```
+
+```typescript
+// Requirement 9 — deltas, because StrictMode doubles the bootstrap dispatches in dev.
+cy.get<Sinon.SinonStub>('@ipcStub').then((stub) => {
+  const before = countOf(stub, 'getTasks');
+  cy.getByCy('nav-Scheduling').click();
+  cy.get<Sinon.SinonStub>('@ipcStub').should((after) => {
+    expect(countOf(after, 'getTasks')).to.be.greaterThan(before);
+  });
+});
+```
+
 ## Verification Commands
 
 ```bash
@@ -110,3 +147,23 @@ dotnet test desktop.Tests/ 2>&1 | grep -E "Com falha|Failed"   # MUST report a f
 cp "$TEMP/sched.bak.cs" desktop/SchedulerManager.cs
 git diff --stat desktop/SchedulerManager.cs                     # MUST be empty
 ```
+
+For requirements 7 and 8, loop the probe over every field and treat "no failure" as a gap:
+
+```bash
+cp src/domain/schemas.ts "$TEMP/schemas.bak.ts"
+for pat in "Name: z.string()" "Size: z.string()" "State: z.string()" "url: z.string()"; do
+  key="${pat%%:*}"
+  node -e "const fs=require('fs'),p='src/domain/schemas.ts';const s=fs.readFileSync(p,'utf8');
+    const old='  '+process.argv[1]+',';
+    if(!s.includes(old)){console.error('PATTERN NOT FOUND');process.exit(1);}
+    fs.writeFileSync(p,s.replace(old,'  '+process.argv[2]+': z.any(),'));" "$pat" "$key" || continue
+  npx vitest run tests/unit/infrastructure/bridge.test.ts 2>&1 | grep -qE "[0-9]+ failed" \
+    && echo "$key covered" || echo "$key *** NO COVERAGE ***"
+  cp "$TEMP/schemas.bak.ts" src/domain/schemas.ts
+done
+```
+
+Assert the substitution actually applied before trusting the result. A scripted edit that silently
+no-ops reports every field as covered — this happened with `python`, which resolves to the
+Microsoft Store alias stub on this machine; use `node -e` instead.

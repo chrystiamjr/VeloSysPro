@@ -221,6 +221,47 @@ describe('DataTable', () => {
     expect(screen.getAllByRole('columnheader')[2]).toHaveAttribute('aria-sort', 'none');
   });
 
+  it('hides the refresh control when no handler is supplied', () => {
+    renderTable();
+    expect(screen.queryByRole('button', { name: /Atualizar/i })).not.toBeInTheDocument();
+  });
+
+  it('requests a reload when refresh is clicked', () => {
+    const onRefresh = vi.fn();
+    renderTable({ onRefresh });
+
+    fireEvent.click(screen.getByRole('button', { name: /Atualizar/i }));
+    expect(onRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  // An empty list is exactly when the user needs to re-query the host — a task deleted in
+  // taskschd.msc leaves nothing on screen to hang a control off.
+  it('keeps refresh reachable in the empty state', () => {
+    renderTable({ rows: [], onRefresh: vi.fn() });
+
+    expect(screen.getByText('Nada por aqui.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Atualizar/i })).toBeInTheDocument();
+  });
+
+  it('disables refresh while another action holds the lock', () => {
+    const onRefresh = vi.fn();
+    renderTable({ onRefresh, disabled: true });
+
+    const button = screen.getByRole('button', { name: /Atualizar/i });
+    expect(button).toBeDisabled();
+    fireEvent.click(button);
+    expect(onRefresh).not.toHaveBeenCalled();
+  });
+
+  it('keeps the refresh control outside the horizontal scroll area', () => {
+    const { container } = renderTable({ onRefresh: vi.fn(), testId: 'sample-table' });
+    const scroller = container.querySelector('[data-cy="sample-table"]')!;
+    const button = screen.getByRole('button', { name: /Atualizar/i });
+
+    // Otherwise scrolling a narrow table sideways would carry the button out of view.
+    expect(scroller.contains(button)).toBe(false);
+  });
+
   it('does not mutate the rows array it was given', () => {
     const rows = makeRows(3);
     const original = [...rows];

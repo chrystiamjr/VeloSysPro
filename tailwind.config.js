@@ -49,6 +49,13 @@ export default {
         card: '14px',
         container: '12px',
       },
+      // Status glows, tokenized so no component hardcodes a hex shadow.
+      boxShadow: {
+        'glow-success': '0 0 8px #00a86b',
+        'glow-warning': '0 0 8px #e38b22',
+        'glow-danger': '0 0 8px #d94343',
+        'glow-info': '0 0 8px #1796c8',
+      },
     },
   },
   plugins: [],

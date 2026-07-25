@@ -21,9 +21,16 @@ Key reference points and primary codebase entry points for VeloSys Pro.
 - [Scheduler Host Manager](file:///C:/Users/chrys/OneDrive/Desktop/Windows%20Optimizer/desktop/SchedulerManager.cs)
   `schtasks` creation/deletion plus the `Get-ScheduledTask` listing with its CSV fallback.
 
+- [Inbound Payload Schemas](file:///C:/Users/chrys/OneDrive/Desktop/Windows%20Optimizer/src/domain/schemas.ts)
+  Zod definitions for every shape the C# host sends; `types.ts` infers its interfaces from these.
+- [Select Atom](file:///C:/Users/chrys/OneDrive/Desktop/Windows%20Optimizer/src/components/atoms/Select.tsx)
+  Shared field styling plus the inset custom chevron. Exports `fieldClass` for native inputs that must match.
+
 ## External References
 
 - [Get-ScheduledTask (ScheduledTasks module)](https://learn.microsoft.com/powershell/module/scheduledtasks/get-scheduledtask)
   Authoritative shape of the returned object; `State` is a locale-independent enum.
 - [schtasks.exe reference](https://learn.microsoft.com/windows-server/administration/windows-commands/schtasks)
   `/sc`, `/d`, `/st`, `/rl` semantics — note `/d` takes MON..SUN for WEEKLY and 1..31 for MONTHLY.
+- [MDN: color-scheme](https://developer.mozilla.org/docs/Web/CSS/color-scheme)
+  Why native controls in WebView2 render light until the page declares its scheme.

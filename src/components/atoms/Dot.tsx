@@ -5,10 +5,10 @@ export interface DotProps {
 }
 
 const dotColors: Record<NonNullable<DotProps['variant']>, string> = {
-  success: 'bg-emerald-400 shadow-[0_0_8px_#34d399]',
-  warning: 'bg-amber-400 shadow-[0_0_8px_#fbbf24]',
-  danger: 'bg-rose-500 shadow-[0_0_8px_#f43f5e]',
-  info: 'bg-sky-400 shadow-[0_0_8px_#38bdf8]',
+  success: 'bg-success shadow-glow-success',
+  warning: 'bg-warning shadow-glow-warning',
+  danger: 'bg-danger shadow-glow-danger',
+  info: 'bg-info shadow-glow-info',
 };
 
 export const Dot: React.FC<DotProps> = ({ variant = 'success' }) => {

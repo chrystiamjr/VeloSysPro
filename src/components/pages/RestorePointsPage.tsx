@@ -10,6 +10,7 @@ export interface RestorePointsPageProps {
   points: RestorePointItem[];
   onCreatePoint: () => void;
   onRestore: (sequence: number) => void;
+  onRefresh?: () => void;
   disabled?: boolean;
 }
 
@@ -21,6 +22,7 @@ export const RestorePointsPage: React.FC<RestorePointsPageProps> = ({
   points,
   onCreatePoint,
   onRestore,
+  onRefresh,
   disabled = false,
 }) => {
   const { t } = useTranslation();
@@ -96,6 +98,8 @@ export const RestorePointsPage: React.FC<RestorePointsPageProps> = ({
         rowKey={(point) => point.Sequence}
         emptyMessage={t('rp.empty')}
         initialSort={{ key: 'seq', dir: 'desc' }}
+        onRefresh={onRefresh}
+        disabled={disabled}
       />
     </div>
   );

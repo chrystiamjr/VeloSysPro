@@ -2,6 +2,22 @@
  * VeloSys Pro - TypeScript Domain Interfaces & Contracts
  */
 
+/**
+ * Shapes the C# host sends are defined once as Zod schemas and re-exported here, so the
+ * runtime check and the compile-time type can never disagree. See `./schemas.ts`.
+ */
+export type {
+  AppSettings,
+  BackupItem,
+  LocalizedMessage,
+  LogType,
+  RestorePointItem,
+  ScheduledTaskItem,
+  UpdateInfo,
+} from './schemas';
+
+import type { LogType } from './schemas';
+
 export const SystemActions = {
   RUN_QUICK_OPTIMIZATION: 'runQuickOptimization',
   RUN_FULL_OPTIMIZATION: 'runFullOptimization',
@@ -36,17 +52,6 @@ export enum AppScreen {
   Settings = 'Settings',
 }
 
-export interface AppSettings {
-  language: 'pt_BR' | 'en_US';
-  createBackupBeforeOptimize: boolean;
-  sidebarCollapsed: boolean;
-}
-
-export interface UpdateInfo {
-  version: string;
-  url: string;
-}
-
 export interface SystemHealth {
   admin: string;
   backupsCount: number;
@@ -55,37 +60,11 @@ export interface SystemHealth {
   status: string;
 }
 
-export interface BackupItem {
-  Name: string;
-  Date: string;
-  Size: string;
-}
-
-export interface ScheduledTaskItem {
-  Name: string;
-  State: string;
-  Path: string;
-}
-
-export interface RestorePointItem {
-  Sequence: number;
-  Date: string;
-  Description: string;
-}
-
-export type LogType = 'info' | 'error' | 'success';
-
 /** Display-ready log line (already translated) consumed by TerminalConsole. */
 export interface LogEntryItem {
   text: string;
   type: LogType;
   timestamp?: string;
-}
-
-/** Translatable message sent by the C# host: an i18n key plus optional interpolation args. */
-export interface LocalizedMessage {
-  key: string;
-  args?: Record<string, unknown>;
 }
 
 /** Log entry stored in state as an i18n key, translated at render time so it follows language switches. */

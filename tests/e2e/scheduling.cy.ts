@@ -57,17 +57,30 @@ describe('scheduled optimizations', () => {
     );
   });
 
-  it('reveals a day-of-month picker only for monthly schedules', () => {
+  it('reveals a day-of-month grid only for monthly schedules', () => {
+    cy.getByCy('task-monthday').should('not.exist');
     cy.getByCy('task-frequency').select('MONTHLY');
-    cy.getByCy('task-monthday').find('option').should('have.length', 31);
+    cy.getByCy('task-monthday').find('[role="radio"]').should('have.length', 31);
     cy.getByCy('task-weekday').should('not.exist');
 
-    cy.getByCy('task-monthday').select('15');
+    cy.getByCy('task-monthday-15').click().should('have.attr', 'aria-checked', 'true');
     cy.getByCy('task-create').click();
     cy.expectIpc(
       'createTask',
       JSON.stringify({ type: 'quick', frequency: 'MONTHLY', time: '03:00', day: '15' })
     );
+  });
+
+  it('re-queries the host when refresh is clicked', () => {
+    cy.emitHost('onTasksLoaded', tasks);
+    cy.getByCy('table-refresh').click();
+    cy.expectIpc('getTasks');
+  });
+
+  it('keeps refresh reachable once the list is empty', () => {
+    cy.contains('Nenhuma tarefa agendada').should('be.visible');
+    cy.getByCy('table-refresh').should('be.visible').click();
+    cy.expectIpc('getTasks');
   });
 
   it('deletes a task after confirmation', () => {

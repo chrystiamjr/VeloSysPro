@@ -2,21 +2,19 @@ import React from 'react';
 import { Dot } from './Dot';
 
 export interface BadgeProps {
-  text?: string;
+  /** Required so a hardcoded, untranslatable default can never reach the screen. */
+  text: string;
   variant?: 'success' | 'warning' | 'danger' | 'info';
 }
 
 const badgeStyles: Record<NonNullable<BadgeProps['variant']>, string> = {
-  success: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
-  warning: 'bg-amber-500/10 border-amber-500/30 text-amber-400',
-  danger: 'bg-rose-500/10 border-rose-500/30 text-rose-400',
-  info: 'bg-sky-500/10 border-sky-500/30 text-sky-400',
+  success: 'bg-success/10 border-success/30 text-success',
+  warning: 'bg-warning/10 border-warning/30 text-warning',
+  danger: 'bg-danger/10 border-danger/30 text-danger',
+  info: 'bg-info/10 border-info/30 text-info',
 };
 
-export const Badge: React.FC<BadgeProps> = ({
-  text = 'Administrador Ativo',
-  variant = 'success',
-}) => {
+export const Badge: React.FC<BadgeProps> = ({ text, variant = 'success' }) => {
   return (
     <div
       className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold ${badgeStyles[variant]}`}

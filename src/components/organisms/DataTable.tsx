@@ -28,6 +28,10 @@ export interface DataTableProps<T> {
   /** Rows per page. Pass 0 to render every row without a pagination footer. */
   pageSize?: number;
   minWidthClass?: string;
+  /** Re-request the rows from the host. Omit to hide the refresh control entirely. */
+  onRefresh?: () => void;
+  /** Mirrors the app's in-flight action lock. */
+  disabled?: boolean;
   testId?: string;
 }
 
@@ -53,6 +57,8 @@ export function DataTable<T>({
   initialSort,
   pageSize = 10,
   minWidthClass = 'min-w-[640px]',
+  onRefresh,
+  disabled = false,
   testId,
 }: DataTableProps<T>): React.ReactElement {
   const { t } = useTranslation();
@@ -91,110 +97,131 @@ export function DataTable<T>({
   };
 
   return (
-    <div
-      data-cy={testId}
-      className="overflow-x-auto rounded-xl border border-borderColor bg-bgCard"
-    >
-      {rows.length === 0 ? (
-        <p className="p-8 text-center text-xs text-textMuted">{emptyMessage}</p>
-      ) : (
-        <>
-          <table className={`w-full ${minWidthClass} text-left text-xs`}>
-            <thead>
-              <tr className="border-b border-borderColor text-textMuted">
-                {columns.map((column) => {
-                  const active = column.key === sortKey && !!column.sortValue;
-                  const alignClass = column.align === 'right' ? 'text-right' : '';
-
-                  return (
-                    <th
-                      key={column.key}
-                      aria-sort={active ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
-                      className={`px-5 py-3 font-semibold ${alignClass}`}
-                    >
-                      {column.sortValue ? (
-                        <button
-                          type="button"
-                          data-cy={`table-sort-${column.key}`}
-                          aria-label={t(
-                            active && sortDir === 'asc' ? 'table.sortDesc' : 'table.sortAsc'
-                          )}
-                          onClick={() => handleSort(column)}
-                          className={`flex items-center gap-1.5 font-semibold transition-colors hover:text-textMain ${
-                            active ? 'text-textMain' : ''
-                          } ${column.align === 'right' ? 'ml-auto' : ''}`}
-                        >
-                          {column.header}
-                          <Icon
-                            name={active && sortDir === 'desc' ? 'chevron-down' : 'chevron-up'}
-                            className={`h-3 w-3 ${active ? '' : 'opacity-30'}`}
-                          />
-                        </button>
-                      ) : (
-                        column.header
-                      )}
-                    </th>
-                  );
-                })}
-              </tr>
-            </thead>
-            <tbody>
-              {visibleRows.map((row) => (
-                <tr
-                  key={rowKey(row)}
-                  className="border-b border-borderColor/50 last:border-none hover:bg-white/5"
-                >
-                  {columns.map((column) => (
-                    <td
-                      key={column.key}
-                      className={`px-5 py-3 ${column.align === 'right' ? 'text-right' : ''} ${
-                        column.className ?? 'text-textMuted'
-                      }`}
-                    >
-                      {column.render(row)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {paginated && (
-            <div className="flex flex-col gap-3 border-t border-borderColor px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <span data-cy="table-range" className="text-xs text-textMuted">
-                {t('table.range', {
-                  from: start + 1,
-                  to: start + visibleRows.length,
-                  total: sortedRows.length,
-                })}
-              </span>
-              <div className="flex items-center justify-between gap-3 sm:justify-end">
-                <Button
-                  testId="table-prev"
-                  variant="primary"
-                  className="w-auto gap-1.5 px-4 py-2"
-                  disabled={page === 0}
-                  onClick={() => setPage((p) => Math.max(0, p - 1))}
-                >
-                  <Icon name="chevron-left" /> {t('table.prev')}
-                </Button>
-                <span data-cy="table-page" className="text-xs font-semibold text-textMuted">
-                  {page + 1}/{totalPages}
-                </span>
-                <Button
-                  testId="table-next"
-                  variant="primary"
-                  className="w-auto gap-1.5 px-4 py-2"
-                  disabled={page >= totalPages - 1}
-                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                >
-                  {t('table.next')} <Icon name="chevron-right" />
-                </Button>
-              </div>
-            </div>
-          )}
-        </>
+    <div className="flex flex-col gap-3">
+      {/* Sits above the scroll wrapper so it stays put when a narrow window scrolls the
+          table, and outside the empty-state branch because an empty list is exactly when
+          the user wants to re-query the host. */}
+      {onRefresh && (
+        <div className="flex justify-end">
+          <Button
+            testId="table-refresh"
+            variant="primary"
+            className="w-auto gap-1.5 px-4 py-2"
+            disabled={disabled}
+            onClick={onRefresh}
+          >
+            <Icon name="refresh-cw" /> {t('table.refresh')}
+          </Button>
+        </div>
       )}
+
+      <div
+        data-cy={testId}
+        className="overflow-x-auto rounded-xl border border-borderColor bg-bgCard"
+      >
+        {rows.length === 0 ? (
+          <p className="p-8 text-center text-xs text-textMuted">{emptyMessage}</p>
+        ) : (
+          <>
+            <table className={`w-full ${minWidthClass} text-left text-xs`}>
+              <thead>
+                <tr className="border-b border-borderColor text-textMuted">
+                  {columns.map((column) => {
+                    const active = column.key === sortKey && !!column.sortValue;
+                    const alignClass = column.align === 'right' ? 'text-right' : '';
+
+                    return (
+                      <th
+                        key={column.key}
+                        aria-sort={
+                          active ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'
+                        }
+                        className={`px-5 py-3 font-semibold ${alignClass}`}
+                      >
+                        {column.sortValue ? (
+                          <button
+                            type="button"
+                            data-cy={`table-sort-${column.key}`}
+                            aria-label={t(
+                              active && sortDir === 'asc' ? 'table.sortDesc' : 'table.sortAsc'
+                            )}
+                            onClick={() => handleSort(column)}
+                            className={`flex items-center gap-1.5 font-semibold transition-colors hover:text-textMain ${
+                              active ? 'text-textMain' : ''
+                            } ${column.align === 'right' ? 'ml-auto' : ''}`}
+                          >
+                            {column.header}
+                            <Icon
+                              name={active && sortDir === 'desc' ? 'chevron-down' : 'chevron-up'}
+                              className={`h-3 w-3 ${active ? '' : 'opacity-30'}`}
+                            />
+                          </button>
+                        ) : (
+                          column.header
+                        )}
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {visibleRows.map((row) => (
+                  <tr
+                    key={rowKey(row)}
+                    className="border-b border-borderColor/50 last:border-none hover:bg-white/5"
+                  >
+                    {columns.map((column) => (
+                      <td
+                        key={column.key}
+                        className={`px-5 py-3 ${column.align === 'right' ? 'text-right' : ''} ${
+                          column.className ?? 'text-textMuted'
+                        }`}
+                      >
+                        {column.render(row)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {paginated && (
+              <div className="flex flex-col gap-3 border-t border-borderColor px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <span data-cy="table-range" className="text-xs text-textMuted">
+                  {t('table.range', {
+                    from: start + 1,
+                    to: start + visibleRows.length,
+                    total: sortedRows.length,
+                  })}
+                </span>
+                <div className="flex items-center justify-between gap-3 sm:justify-end">
+                  <Button
+                    testId="table-prev"
+                    variant="primary"
+                    className="w-auto gap-1.5 px-4 py-2"
+                    disabled={page === 0}
+                    onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  >
+                    <Icon name="chevron-left" /> {t('table.prev')}
+                  </Button>
+                  <span data-cy="table-page" className="text-xs font-semibold text-textMuted">
+                    {page + 1}/{totalPages}
+                  </span>
+                  <Button
+                    testId="table-next"
+                    variant="primary"
+                    className="w-auto gap-1.5 px-4 py-2"
+                    disabled={page >= totalPages - 1}
+                    onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                  >
+                    {t('table.next')} <Icon name="chevron-right" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

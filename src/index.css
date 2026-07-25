@@ -3,8 +3,25 @@
 @tailwind utilities;
 
 @layer base {
+  /*
+   * WebView2 is Chromium: without this it paints every native control in its light default,
+   * which is why the time field's clock indicator rendered black and <select> popups opened
+   * white on top of dark fields.
+   */
+  :root {
+    color-scheme: dark;
+  }
+
   body {
     @apply select-none overflow-hidden bg-bgMain font-sans text-textMain;
+  }
+
+  /* The indicator is a browser-drawn glyph; only opacity/cursor are ours to set. */
+  input[type='time']::-webkit-calendar-picker-indicator {
+    @apply cursor-pointer opacity-70 transition-opacity;
+  }
+  input[type='time']::-webkit-calendar-picker-indicator:hover {
+    @apply opacity-100;
   }
 }
 
