@@ -27,15 +27,11 @@ namespace VeloSysPro
 
         private static void RunHeadless(string task)
         {
-            string appDir = AppDomain.CurrentDomain.BaseDirectory;
-            string logsDir = Path.Combine(appDir, "logs");
-            string backupsDir = Path.Combine(appDir, "backups");
-            Directory.CreateDirectory(logsDir);
-            Directory.CreateDirectory(backupsDir);
+            AppPaths.EnsureRuntimeDirectories();
 
-            var sink = new FileStatusSink(Path.Combine(logsDir, "scheduled_task_log.txt"));
+            var sink = new FileStatusSink(Path.Combine(AppPaths.Logs, "scheduled_task_log.txt"));
             var cmd = new CommandRunner(sink);
-            var backup = new RegistryBackupManager(backupsDir, cmd, sink);
+            var backup = new RegistryBackupManager(AppPaths.Backups, cmd, sink);
             var optimizer = new Optimizer(cmd, backup, sink);
 
             sink.LogRaw($"=== Headless task '{task}' started ===", "info");

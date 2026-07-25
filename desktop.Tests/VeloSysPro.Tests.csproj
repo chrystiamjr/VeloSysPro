@@ -17,20 +17,21 @@
 
   <ItemGroup>
     <!-- Compile non-WPF domain/services directly; native process execution stays behind a fake. -->
-    <Compile Include="..\desktop\ICommandRunner.cs" />
-    <Compile Include="..\desktop\IStatusSink.cs" />
-    <Compile Include="..\desktop\IpcHandler.cs" />
-    <Compile Include="..\desktop\ActionHost.cs" />
-    <Compile Include="..\desktop\IpcEventEmitter.cs" />
-    <Compile Include="..\desktop\IpcEvents.cs" />
-    <Compile Include="..\desktop\NativeConsoleEncoding.cs" />
-    <Compile Include="..\desktop\RegistryBackupManager.cs" />
-    <Compile Include="..\desktop\SystemRestoreManager.cs" />
-    <Compile Include="..\desktop\Optimizer.cs" />
-    <Compile Include="..\desktop\SchedulerManager.cs" />
-    <Compile Include="..\desktop\SchedulePolicy.cs" />
-    <Compile Include="..\desktop\SettingsManager.cs" />
-    <Compile Include="..\desktop\SystemActions.cs" />
+    <Compile Include="..\desktop\Features\Optimization\Optimizer.cs" />
+    <Compile Include="..\desktop\Features\Recovery\RegistryBackupManager.cs" />
+    <Compile Include="..\desktop\Features\Recovery\SystemRestoreManager.cs" />
+    <Compile Include="..\desktop\Features\Scheduling\SchedulerManager.cs" />
+    <Compile Include="..\desktop\Features\Scheduling\SchedulePolicy.cs" />
+    <Compile Include="..\desktop\Features\Settings\SettingsManager.cs" />
+    <Compile Include="..\desktop\Infrastructure\Commands\ICommandRunner.cs" />
+    <Compile Include="..\desktop\Infrastructure\Commands\NativeConsoleEncoding.cs" />
+    <Compile Include="..\desktop\Infrastructure\Storage\AppPaths.cs" />
+    <Compile Include="..\desktop\Infrastructure\Status\IStatusSink.cs" />
+    <Compile Include="..\desktop\Ipc\ActionHost.cs" />
+    <Compile Include="..\desktop\Ipc\IpcEventEmitter.cs" />
+    <Compile Include="..\desktop\Ipc\IpcEvents.cs" />
+    <Compile Include="..\desktop\Ipc\IpcHandler.cs" />
+    <Compile Include="..\desktop\Ipc\SystemActions.cs" />
   </ItemGroup>
 
 </Project>

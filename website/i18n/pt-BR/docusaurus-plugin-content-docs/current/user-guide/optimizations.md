@@ -6,6 +6,8 @@ sidebar_position: 1
 
 O VeloSys Pro oferece perfis de otimização sob medida para manter o seu sistema operacional rápido e responsivo.
 
+![Painel de otimizações do VeloSys Pro](/img/screenshots/dashboard.png)
+
 ## Otimização Rápida
 Uma rotina ágil projetada para a manutenção diária:
 - Limpa o cache do Resolvedor DNS do Windows (`ipconfig /flushdns`).

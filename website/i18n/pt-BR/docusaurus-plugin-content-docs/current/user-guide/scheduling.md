@@ -6,6 +6,8 @@ sidebar_position: 4
 
 O VeloSys Pro pode ser executado de forma silenciosa em segundo plano via argumentos de linha de comando ou tarefas agendadas do Windows.
 
+![Tela de Agendamento Automatizado](/img/screenshots/scheduling.png)
+
 ## Uso via Linha de Comando (CLI)
 
 Execute tarefas diretamente pelo Prompt de Comando ou PowerShell:

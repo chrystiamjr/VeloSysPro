@@ -75,7 +75,7 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: cypress-failure-screenshots
-          path: cypress/screenshots
+          path: frontend/cypress/screenshots
           if-no-files-found: ignore
           retention-days: 7
 

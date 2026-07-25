@@ -1,6 +1,6 @@
 /**
  * VeloSys Pro Design System Tokens for Docusaurus
- * Matching tailwind.config.js & src/index.css
+ * Matching frontend/tailwind.config.js & frontend/src/index.css
  */
 
 :root {
@@ -48,7 +48,7 @@
   border-bottom: 1px solid var(--ifm-border-color);
 }
 
-/* Custom Scrollbar matching src/index.css */
+/* Custom Scrollbar matching frontend/src/index.css */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;

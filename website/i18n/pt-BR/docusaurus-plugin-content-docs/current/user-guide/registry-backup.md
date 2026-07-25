@@ -6,6 +6,8 @@ sidebar_position: 2
 
 Antes de aplicar ajustes de sistema ou rede, o VeloSys Pro oferece ferramentas integradas de segurança para o registro.
 
+![Tela de Backup e Restauração do Registro](/img/screenshots/backup.png)
+
 ## Criando um Backup do Registro
 
 1. Navegue até a aba **Backup & Restauração** no VeloSys Pro.

@@ -2,7 +2,7 @@
   <img src="website/static/img/logo.png" alt="VeloSys Pro logo" width="120" />
 </p>
 
-<h1 align="center">⚡ VeloSys Pro</h1>
+<h1 align="center">VeloSys Pro</h1>
 
 <p align="center">
   High-performance Windows optimization, network tuning, and registry-backup desktop app by
@@ -35,66 +35,23 @@
 
 ---
 
-## 📸 Screenshots
+## 🎬 Application Preview
 
-<table>
-  <tr>
-    <td width="50%"><img src="website/static/img/screenshots/dashboard.png" alt="Dashboard" /></td>
-    <td width="50%"><img src="website/static/img/screenshots/scheduling.png" alt="Scheduling" /></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Dashboard</b> — progressive-disclosure actions + live console</td>
-    <td align="center"><b>Scheduling</b> — recurring optimizations via Task Scheduler</td>
-  </tr>
-  <tr>
-    <td><img src="website/static/img/screenshots/backup.png" alt="Backup & Restore" /></td>
-    <td><img src="website/static/img/screenshots/restore-points.png" alt="System Restore Points" /></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Backup &amp; Restore</b></td>
-    <td align="center"><b>System Restore Points</b></td>
-  </tr>
-  <tr>
-    <td><img src="website/static/img/screenshots/settings.png" alt="Settings" /></td>
-    <td><img src="website/static/img/screenshots/sidebar-collapsed.png" alt="Collapsed sidebar" /></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Settings</b> — persistent language &amp; safety-backup toggle</td>
-    <td align="center"><b>Collapsed sidebar</b> — responsive layout</td>
-  </tr>
-</table>
+<p align="center">
+  <img src="website/static/img/gifs/velosys-pro-overview.gif" alt="VeloSys Pro application walkthrough" />
+</p>
 
 ---
 
 ## 🏗️ Architecture
 
-```
-VeloSysPro/
-├── AGENTS.md / README.md / CHANGELOG.md / LICENSE
-├── .editorconfig / .gitignore / global.json      # tooling + .NET 8 SDK pin
-├── package.json / vite.config.js / tsconfig.json  # React 18 + Vite + Tailwind
-├── .releaserc.json / commitlint.config.cjs        # semantic-release + Conventional Commits
-├── src/
-│   ├── domain/            # types + Rosetta i18n (nested pt_BR.json / en_US.json)
-│   ├── infrastructure/    # typed WebView2 IPC bridge (bridge.ts)
-│   └── components/        # Atomic Design: atoms, molecules, organisms, templates, pages
-├── tests/                 # Vitest (unit) + Cypress (e2e)
-├── desktop/               # C# .NET 8 WPF host (Edge Chromium WebView2)
-│   ├── App.xaml(.cs)          # startup + headless CLI mode (--task=)
-│   ├── MainWindow.xaml(.cs)   # WebView2 host, serves the embedded UI, IPC dispatch
-│   ├── Optimizer.cs           # optimization orchestration (exit-code aware)
-│   ├── CommandRunner.cs       # process execution + OEM-codepage output decoding
-│   ├── BackupManager.cs / SchedulerManager.cs / SettingsManager.cs / UpdateChecker.cs
-│   ├── IStatusSink.cs / FileStatusSink.cs / IpcHandler.cs / ManagedStream.cs
-│   ├── NativeConsoleEncoding.cs
-│   ├── app.manifest           # UAC Manifest (requireAdministrator)
-│   └── VeloSysPro.csproj      # single-file publish, ui/ embedded as resources
-├── desktop.Tests/         # xUnit (OEM decode)
-├── installer/VeloSysPro.iss  # Inno Setup installer (bootstraps WebView2 Runtime)
-├── scripts/               # setup-hooks.ps1, sync-version.mjs
-├── .github/workflows/ci.yml  # PR validation + semantic-release
-└── build.ps1              # 1-click build: Vite -> single exe -> installer
-```
+VeloSys Pro is split into a React frontend and an elevated .NET 8 WPF desktop host. The frontend
+sends validated Actions through the WebView2 IPC boundary; the host routes them to domain-focused
+optimization, recovery, scheduling, settings, and update services, then publishes typed Events back
+to the UI. During packaging, the Vite bundle is embedded into the self-contained Windows executable.
+
+Read the complete design, runtime flows, ownership boundaries, and safety invariants in
+[`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ---
 

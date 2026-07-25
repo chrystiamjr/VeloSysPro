@@ -4,7 +4,7 @@ sidebar_position: 2
 
 # IPC Bridge Communication
 
-Communication between the React frontend and the C# host runs over Edge WebView2 using two distinct, one-directional message shapes: **Actions** (UI → host) and **Event envelopes** (host → UI). The frontend seam lives in `src/infrastructure/bridge.ts`.
+Communication between the React frontend and the C# host runs over Edge WebView2 using two distinct, one-directional message shapes: **Actions** (UI → host) and **Event envelopes** (host → UI). The frontend seam lives in `frontend/src/infrastructure/bridge.ts`.
 
 ## Sending Actions (UI → host) {#sending-actions}
 
@@ -34,6 +34,6 @@ Canonical Event names include `logReceived`, `statusUpdated`, `progressUpdated`,
 Every mutation acquires an execution lock the moment its Action is sent. The lock is released **authoritatively** by the matching `actionFinished` Event, which the host emits from a `finally` block — so the UI unlocks reliably even when the command fails. Reads never take the lock. See `useExecutionLifecycle.ts` for the hook that owns this.
 
 ```csharp
-// desktop/ActionHost.cs — emitted in a finally, ok reflects real success
+// desktop/Ipc/ActionHost.cs — emitted in a finally, ok reflects real success
 _events.Emit(IpcEvents.ActionFinished, new { action, ok });
 ```

@@ -11,7 +11,7 @@ When performing workspace structure sanitization, cleanup, or dead-file removal 
 ## Strict Requirements
 1. **Audit All Layers**: Audit React TS frontend, C# WPF backend, Docusaurus documentation sub-site (`website/`), and build scripts.
 2. **Purge Leftovers**: Purge empty leftover template directories and verify pending git index deletions.
-3. **Guardrail Compliance**: Ensure build outputs (`ui/`, `dist/`, `VeloSysPro.exe`, `webview_data/`) strictly conform to `.gitignore` and `AGENTS.md` single-executable guardrails.
+3. **Guardrail Compliance**: Ensure build outputs (`frontend/ui/`, `dist/`, `VeloSysPro.exe`, `webview_data/`) strictly conform to `.gitignore` and `AGENTS.md` single-executable guardrails.
 4. **Full Validation**: Validate compilation across all sub-stacks before declaring completion.
 
 ## Verification Commands

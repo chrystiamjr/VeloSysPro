@@ -25,11 +25,11 @@ A Windows scheduled task identifier that encodes its whole schedule — `VeloSys
 _Avoid_: Sidecar index, task registry file, `tasks.json` mapping
 
 **Shared DataTable Organism**:
-`src/components/organisms/DataTable.tsx` — the single sortable, paginated table used by every management screen (Scheduling, Backup, Restore Points). Callers supply declarative `DataTableColumn<T>` definitions; sorting, pagination, empty state, the horizontal-scroll wrapper and the stable `min-w` live in one place.
+`frontend/src/components/organisms/DataTable.tsx` — the single sortable, paginated table used by every management screen (Scheduling, Backup, Restore Points). Callers supply declarative `DataTableColumn<T>` definitions; sorting, pagination, empty state, the horizontal-scroll wrapper and the stable `min-w` live in one place.
 _Avoid_: Per-page table markup, copy-pasted `<thead>`/`<tbody>` blocks
 
 **Inbound Payload Schema**:
-A Zod schema in `src/domain/schemas.ts` describing one shape the C# host sends. The schemas are the single source of truth — the interfaces in `types.ts` are inferred from them with `z.infer` — and `bridge.ts` validates every inbound payload against one before handing it to the app.
+A Zod schema in `frontend/src/domain/schemas.ts` describing one shape the C# host sends. The schemas are the single source of truth — the interfaces in `types.ts` are inferred from them with `z.infer` — and `bridge.ts` validates every inbound payload against one before handing it to the app.
 _Avoid_: Casting `JSON.parse` output, `as ScheduledTaskItem[]`
 
 **Screen Refresh Contract**:

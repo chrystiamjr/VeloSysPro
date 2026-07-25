@@ -52,7 +52,7 @@ of vacuous test appeared in VeloSys Pro and both survived a full green suite.
    in the first draft of the bridge tests (`Size`, `Description`, `Path`, `url`) looked covered and
    were not.
 9. **Never assert an absolute count of dispatched actions.** `React.StrictMode`
-   (`src/main.tsx`) double-invokes effects in development, so every bootstrap dispatch happens
+   (`frontend/src/main.tsx`) double-invokes effects in development, so every bootstrap dispatch happens
    twice locally and once in production. Capture the count before the interaction and assert the
    **delta**.
 
@@ -141,26 +141,26 @@ To satisfy requirement 2, back up the target, inject the regression, confirm the
 
 ```bash
 # Example: prove the PowerShell query assertion is not vacuous.
-cp desktop/SchedulerManager.cs "$TEMP/sched.bak.cs"
-sed -i 's/State = \[string\]\$_\.State; /State = $_.State; /' desktop/SchedulerManager.cs
+cp desktop/Features/Scheduling/SchedulerManager.cs "$TEMP/sched.bak.cs"
+sed -i 's/State = \[string\]\$_\.State; /State = $_.State; /' desktop/Features/Scheduling/SchedulerManager.cs
 dotnet test desktop.Tests/ 2>&1 | grep -E "Com falha|Failed"   # MUST report a failure
-cp "$TEMP/sched.bak.cs" desktop/SchedulerManager.cs
-git diff --stat desktop/SchedulerManager.cs                     # MUST be empty
+cp "$TEMP/sched.bak.cs" desktop/Features/Scheduling/SchedulerManager.cs
+git diff --stat desktop/Features/Scheduling/SchedulerManager.cs # MUST be empty
 ```
 
 For requirements 7 and 8, loop the probe over every field and treat "no failure" as a gap:
 
 ```bash
-cp src/domain/schemas.ts "$TEMP/schemas.bak.ts"
+cp frontend/src/domain/schemas.ts "$TEMP/schemas.bak.ts"
 for pat in "Name: z.string()" "Size: z.string()" "State: z.string()" "url: z.string()"; do
   key="${pat%%:*}"
-  node -e "const fs=require('fs'),p='src/domain/schemas.ts';const s=fs.readFileSync(p,'utf8');
+  node -e "const fs=require('fs'),p='frontend/src/domain/schemas.ts';const s=fs.readFileSync(p,'utf8');
     const old='  '+process.argv[1]+',';
     if(!s.includes(old)){console.error('PATTERN NOT FOUND');process.exit(1);}
     fs.writeFileSync(p,s.replace(old,'  '+process.argv[2]+': z.any(),'));" "$pat" "$key" || continue
-  npx vitest run tests/unit/infrastructure/bridge.test.ts 2>&1 | grep -qE "[0-9]+ failed" \
+  npm exec --workspace frontend vitest run tests/unit/infrastructure/bridge.test.ts 2>&1 | grep -qE "[0-9]+ failed" \
     && echo "$key covered" || echo "$key *** NO COVERAGE ***"
-  cp "$TEMP/schemas.bak.ts" src/domain/schemas.ts
+  cp "$TEMP/schemas.bak.ts" frontend/src/domain/schemas.ts
 done
 ```
 

@@ -24,7 +24,7 @@ next time the question is "where do we validate this?".
 RHF would have added a dependency, a resolver and a schema with no rule that could actually fail.
 `AGENTS.md` mandates YAGNI explicitly.
 
-**Where the real gap was.** `src/infrastructure/bridge.ts` did this on five channels:
+**Where the real gap was.** `frontend/src/infrastructure/bridge.ts` did this on five channels:
 
 ```ts
 const data: ScheduledTaskItem[] = typeof tasksJson === 'string' ? JSON.parse(tasksJson) : tasksJson;

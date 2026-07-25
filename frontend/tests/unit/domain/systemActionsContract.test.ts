@@ -5,7 +5,7 @@ import { SystemActions } from '../../../src/domain/types';
 
 describe('frontend/desktop IPC action contract', () => {
   it('keeps every TypeScript action synchronized with the C# catalog', () => {
-    const source = readFileSync(resolve('desktop/SystemActions.cs'), 'utf8');
+    const source = readFileSync(resolve('../desktop/Ipc/SystemActions.cs'), 'utf8');
     const desktopActions = [...source.matchAll(/const string \w+ = "([^"]+)"/g)]
       .map((match) => match[1])
       .sort();

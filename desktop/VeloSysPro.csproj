@@ -22,11 +22,11 @@
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4078.44" />
   </ItemGroup>
 
-  <!-- Embed the Vite build output (ui/) directly into the assembly so the exe needs
+  <!-- Embed the Vite build output (frontend/ui/) directly into the assembly so the exe needs
        no ui/ folder on disk. Served at runtime via WebView2 WebResourceRequested.
        LogicalName backslashes are normalized to '/' in MainWindow. -->
   <ItemGroup>
-    <EmbeddedResource Include="..\ui\**">
+    <EmbeddedResource Include="..\frontend\ui\**">
       <LogicalName>ui/%(RecursiveDir)%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
   </ItemGroup>

@@ -6,7 +6,7 @@ sidebar_position: 1
 
 Bem-vindo ao **VeloSys Pro**, um aplicativo desktop de alta performance para otimização do Windows, manutenção, ajustes de jogos, backup de registro e recuperação de sistema desenvolvido pela **Envolvo Systems LTDA.**
 
-![Painel do VeloSys Pro](/img/screenshots/dashboard.png)
+![Demonstração do aplicativo VeloSys Pro](/img/gifs/velosys-pro-overview.gif)
 
 ## Principais Recursos
 

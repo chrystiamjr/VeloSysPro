@@ -13,7 +13,6 @@ namespace VeloSysPro
 {
     public partial class MainWindow : Window, IStatusSink
     {
-        private readonly string _appDir;
         private readonly string _logsDir;
         private readonly string _backupsDir;
         private readonly string _logFile;
@@ -35,9 +34,9 @@ namespace VeloSysPro
         {
             InitializeComponent();
 
-            _appDir = AppDomain.CurrentDomain.BaseDirectory;
-            _logsDir = Path.Combine(_appDir, "logs");
-            _backupsDir = Path.Combine(_appDir, "backups");
+            AppPaths.EnsureRuntimeDirectories();
+            _logsDir = AppPaths.Logs;
+            _backupsDir = AppPaths.Backups;
             _logFile = Path.Combine(_logsDir, "log.txt");
             _errorLogFile = Path.Combine(_logsDir, "error_log.txt");
 
@@ -91,10 +90,7 @@ namespace VeloSysPro
                     .GetManifestResourceNames()
                     .ToDictionary(n => n.Replace('\\', '/'), n => n);
 
-                string userDataFolder = Path.Combine(_appDir, "webview_data");
-                Directory.CreateDirectory(userDataFolder);
-
-                var env = await CoreWebView2Environment.CreateAsync(null, userDataFolder);
+                var env = await CoreWebView2Environment.CreateAsync(null, AppPaths.WebViewData);
                 await webView.EnsureCoreWebView2Async(env);
 
                 // Serve the React bundle straight from embedded resources (no ui/ folder on disk).

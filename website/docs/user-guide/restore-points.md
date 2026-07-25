@@ -6,6 +6,8 @@ sidebar_position: 3
 
 System Restore Points allow you to revert Windows system files and settings to a previous point in time.
 
+![System Restore Points screen](/img/screenshots/restore-points.png)
+
 ## Managing Restore Points {#managing-restore-points}
 
 - **Create Restore Point**: Generates a new System Restore Point named `VeloSysPro_Backup_<timestamp>`.

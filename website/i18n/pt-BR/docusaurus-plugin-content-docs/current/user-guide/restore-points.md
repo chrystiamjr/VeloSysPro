@@ -6,6 +6,8 @@ sidebar_position: 3
 
 Os Pontos de Restauração do Sistema permitem reverter arquivos e configurações do Windows para um estado anterior.
 
+![Tela de Pontos de Restauração do Sistema](/img/screenshots/restore-points.png)
+
 ## Gerenciando Pontos de Restauração
 
 - **Criar Ponto de Restauração**: Gera um novo Ponto de Restauração nomeado `VeloSysPro_Backup_<timestamp>`.

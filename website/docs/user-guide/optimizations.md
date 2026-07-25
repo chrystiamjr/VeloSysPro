@@ -6,6 +6,8 @@ sidebar_position: 1
 
 VeloSys Pro offers tailored optimization profiles to keep your operating system fast and responsive.
 
+![VeloSys Pro optimization dashboard](/img/screenshots/dashboard.png)
+
 ## Quick Optimization {#quick-optimization}
 A fast routine designed for daily maintenance:
 - Flushes the Windows DNS Resolver cache (`ipconfig /flushdns`).

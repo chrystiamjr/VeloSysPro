@@ -26,7 +26,7 @@ handling and accessibility the native input already provides.
 
 ## Strict Requirements
 
-1. **Declare `color-scheme: dark` on `:root`** in `src/index.css`, inside `@layer base`. This is the
+1. **Declare `color-scheme: dark` on `:root`** in `frontend/src/index.css`, inside `@layer base`. This is the
    single switch that themes every native control.
 2. **Also declare it in `index.html`** as `<meta name="color-scheme" content="dark">`, so the first
    paint is correct and the user never sees a light flash before the stylesheet loads.
@@ -48,7 +48,7 @@ handling and accessibility the native input already provides.
 ## Code & Architecture Examples
 
 ```css
-/* src/index.css — requirement 1 */
+/* frontend/src/index.css — requirement 1 */
 @layer base {
   :root {
     color-scheme: dark;
@@ -65,7 +65,7 @@ handling and accessibility the native input already provides.
 ```
 
 ```tsx
-// Requirement 5 — src/components/atoms/Select.tsx
+// Requirement 5 — frontend/src/components/atoms/Select.tsx
 <div className="relative">
   <select className={`${fieldClass} cursor-pointer appearance-none pr-10`} …>
     {/* options */}

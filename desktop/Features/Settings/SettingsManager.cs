@@ -31,12 +31,8 @@ namespace VeloSysPro
                 return;
             }
 
-            string dir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "VeloSysPro"
-            );
-            Directory.CreateDirectory(dir);
-            _file = Path.Combine(dir, "settings.json");
+            Directory.CreateDirectory(AppPaths.Root);
+            _file = AppPaths.SettingsFile;
             Load();
         }
 

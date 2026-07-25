@@ -37,7 +37,7 @@ Two real defects in VeloSys Pro came from violating this:
    previous parser rather than emptying the list. Keep the old parser and its tests.
 4. **Emit invariant primitives for anything sortable or comparable.** If the host must send display
    text, the frontend needs a parser that handles every culture it can arrive in — grouped
-   thousands with either separator, and `dd/MM/yyyy`. Put it in `src/domain/formatters.ts` and unit
+   thousands with either separator, and `dd/MM/yyyy`. Put it in `frontend/src/domain/formatters.ts` and unit
    test the cross-culture and cross-year cases, not just the happy path.
 5. **Use `CultureInfo.InvariantCulture` explicitly** for any C# value parsed or compared downstream
    (`int.TryParse`, `ToString` of identifiers), so machine culture cannot change the payload.

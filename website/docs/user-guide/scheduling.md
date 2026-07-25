@@ -6,6 +6,8 @@ sidebar_position: 4
 
 VeloSys Pro can run headlessly in the background via command line flags or scheduled Windows tasks.
 
+![Automated Scheduling screen](/img/screenshots/scheduling.png)
+
 ## Command Line Usage {#command-line-usage}
 
 Execute tasks directly from Command Prompt or PowerShell:
