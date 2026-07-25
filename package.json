@@ -1,7 +1,7 @@
 {
   "name": "velosys-pro",
   "private": true,
-  "version": "0.1.5",
+  "version": "0.1.6",
   "type": "module",
   "workspaces": [
     "frontend"
@@ -28,7 +28,7 @@
     "@commitlint/cli": "^19.5.0",
     "@commitlint/config-conventional": "^19.5.0",
     "@semantic-release/changelog": "^7.0.0",
-    "@semantic-release/exec": "^6.0.3",
+    "@semantic-release/exec": "^7.1.0",
     "@semantic-release/git": "^11.0.1",
     "conventional-changelog-conventionalcommits": "^8.0.0",
     "semantic-release": "^24.1.0"
