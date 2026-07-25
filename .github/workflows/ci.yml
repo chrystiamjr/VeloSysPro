@@ -54,11 +54,21 @@ jobs:
       - name: Validate PR commits (Conventional Commits)
         if: github.event_name == 'pull_request'
         shell: pwsh
-        run: >
-          npx commitlint
-          --from "${{ github.event.pull_request.base.sha }}"
-          --to "${{ github.event.pull_request.head.sha }}"
-          --verbose
+        env:
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          if ($env:PR_AUTHOR -eq 'dependabot[bot]') {
+            Write-Host "Skipping commit body validation for GitHub-generated Dependabot commits."
+            exit 0
+          }
+
+          npx commitlint `
+            --from "${{ github.event.pull_request.base.sha }}" `
+            --to "${{ github.event.pull_request.head.sha }}" `
+            --verbose
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
       - name: Validate (type-check + Prettier + ESLint + Vitest unit)
         run: npm run validate
       - name: E2E (Cypress against Vite dev server)
