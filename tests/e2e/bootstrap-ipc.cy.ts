@@ -78,6 +78,26 @@ describe('bootstrap and IPC contracts', () => {
     cy.getByCy('health-tasks').should('contain', '0');
   });
 
+  // Parseable JSON of the wrong shape used to sail through the unchecked cast and only surface
+  // as a wrong or blank table. It must now be rejected outright.
+  it('rejects a well-formed payload whose shape does not match the contract', () => {
+    cy.visitApp();
+    cy.emitHost('onBackupsLoaded', [{ Name: 'x.reg', Timestamp: '2026-07-24', Bytes: 4096 }]);
+    cy.emitHost('onTasksLoaded', [{ Name: 'VeloSysPro_Quick_Daily_0300', Status: 'Ready' }]);
+
+    cy.getByCy('health-backups').should('contain', '0');
+    cy.getByCy('health-tasks').should('contain', '0');
+
+    cy.getByCy('nav-Scheduling').click();
+    cy.contains('Nenhuma tarefa agendada').should('be.visible');
+  });
+
+  it('keeps rendering when the host sends a log with no key', () => {
+    cy.visitApp();
+    cy.emitHost('onLogReceived', null);
+    cy.contains('Painel de Otimização').should('be.visible');
+  });
+
   it('loads serialized settings from the host', () => {
     cy.visitApp({ settings: JSON.stringify({ ...defaultSettings, language: 'en_US' }) });
     cy.contains('Optimization Dashboard').should('be.visible');
