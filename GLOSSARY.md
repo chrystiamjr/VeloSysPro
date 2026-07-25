@@ -28,6 +28,14 @@ _Avoid_: Sidecar index, task registry file, `tasks.json` mapping
 `src/components/organisms/DataTable.tsx` — the single sortable, paginated table used by every management screen (Scheduling, Backup, Restore Points). Callers supply declarative `DataTableColumn<T>` definitions; sorting, pagination, empty state, the horizontal-scroll wrapper and the stable `min-w` live in one place.
 _Avoid_: Per-page table markup, copy-pasted `<thead>`/`<tbody>` blocks
 
+**Inbound Payload Schema**:
+A Zod schema in `src/domain/schemas.ts` describing one shape the C# host sends. The schemas are the single source of truth — the interfaces in `types.ts` are inferred from them with `z.infer` — and `bridge.ts` validates every inbound payload against one before handing it to the app.
+_Avoid_: Casting `JSON.parse` output, `as ScheduledTaskItem[]`
+
+**Screen Refresh Contract**:
+The declared set of `GET_*` actions a screen re-requests when opened (`SCREEN_REFRESH_ACTIONS` in `App.tsx`), paired with an explicit refresh control on the table. Required because Windows can change scheduled tasks, restore points and backups without the app knowing.
+_Avoid_: Mount-only fetching, polling loops, refetching inside `onActionFinished`
+
 **Display Value Parser**:
 A `src/domain/formatters.ts` helper (`parseDisplayDate`, `parseDisplayNumber`) that converts host-formatted display text back into a comparable primitive for sorting. Needed because the C# host emits culture-dependent strings (`dd/MM/yyyy HH:mm`, `ToString("N1")`).
 _Avoid_: `parseFloat` on a formatted size, lexicographic date sort
