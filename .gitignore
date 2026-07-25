@@ -41,3 +41,6 @@ scratch/
 Thumbs.db
 Desktop.ini
 .DS_Store
+
+# Nested agent working copies (git worktrees created inside the repo)
+.codex-worktrees/
