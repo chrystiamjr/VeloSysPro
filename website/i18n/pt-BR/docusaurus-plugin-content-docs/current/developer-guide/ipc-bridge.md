@@ -4,30 +4,36 @@ sidebar_position: 2
 
 # Comunicação Via Ponte IPC
 
-A comunicação entre o frontend React e o host C# ocorre através de mensagens JSON bidirecionais sobre o Edge WebView2.
+A comunicação entre o frontend React e o host C# ocorre sobre o Edge WebView2 usando dois formatos de mensagem distintos e unidirecionais: **Actions** (UI → host) e **envelopes de Event** (host → UI). A costura no frontend fica em `src/infrastructure/bridge.ts`.
 
-## Infraestrutura da Ponte (`src/infrastructure/bridge.ts`)
+## Enviando Actions (UI → host) {#enviando-actions}
 
-O frontend envia ações tipadas para o C#:
+A UI envia uma mensagem `{ action, payload }`. O `ActionHost` em C# valida e roteia — as leituras rodam concorrentemente, enquanto as mutações são serializadas uma por vez.
 
 ```typescript
-export function sendAction(action: string, payload?: Record<string, any>): void {
-  if (window.chrome?.webview) {
-    window.chrome.webview.postMessage(JSON.stringify({ action, ...payload }));
-  }
+export function sendAction(action: string, payload?: unknown): void {
+  window.chrome?.webview?.postMessage({ action, payload });
 }
 ```
 
-## Roteamento de Eventos no C# (`desktop/MainWindow.xaml.cs`)
+## Recebendo Events (host → UI) {#recebendo-events}
 
-O host WPF escuta as mensagens do WebView2 e as encaminha para o `Optimizer` ou gerenciadores do sistema:
+O host emite envelopes `{ event, payload }` com `PostWebMessageAsJson`. A ponte anexa um **único** listener `message` e valida cada envelope com um schema **Zod** antes de despachá-lo aos assinantes — um payload inválido é rejeitado em vez de chegar ao estado do React.
+
+```typescript
+webview.addEventListener('message', (e) => {
+  const envelope = IpcEventEnvelopeSchema.parse(e.data); // { event, payload }
+  dispatchHostEvent(envelope);
+});
+```
+
+Nomes canônicos de Event incluem `logReceived`, `statusUpdated`, `progressUpdated`, `backupsLoaded`, `tasksLoaded`, `restorePointsLoaded`, `settingsLoaded`, `updateAvailable` e `actionFinished`.
+
+## O ciclo de vida da ação {#ciclo-de-vida-da-acao}
+
+Toda mutação adquire uma trava de execução no momento em que sua Action é enviada. A trava é liberada de forma **autoritativa** pelo Event `actionFinished` correspondente, que o host emite dentro de um bloco `finally` — então a UI destrava de forma confiável mesmo quando o comando falha. Leituras nunca adquirem a trava. Veja `useExecutionLifecycle.ts` para o hook que controla isso.
 
 ```csharp
-private async void OnWebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e)
-{
-    var message = e.TryGetWebMessageAsString();
-    // Encaminha a ação e envia o progresso/logs de volta ao React
-}
+// desktop/ActionHost.cs — emitido em um finally, ok reflete o sucesso real
+_events.Emit(IpcEvents.ActionFinished, new { action, ok });
 ```
-
-O host emite envelopes estruturados `{ event, payload }` com `PostWebMessageAsJson`, e o React os recebe pelo Event `message` do WebView2. Quando uma Action é concluída, o Event `actionFinished` libera com segurança a trava da interface.

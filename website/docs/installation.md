@@ -18,5 +18,5 @@ We provide two formats:
 2. Accept the **User Account Control (UAC)** prompt. Administrator privileges are necessary to execute system-level commands (`sfc`, `dism`, `netsh`, and System Restore calls).
 
 :::note SmartScreen Warning
-Because VeloSys Pro binaries are signed using community release workflows, Windows SmartScreen may display *"Windows protected your PC"*. Click **More info → Run anyway** to proceed safely.
+VeloSys Pro is not code-signed yet, so Windows SmartScreen may display *"Windows protected your PC"* for downloads from an unknown publisher. Click **More info → Run anyway** to proceed.
 :::

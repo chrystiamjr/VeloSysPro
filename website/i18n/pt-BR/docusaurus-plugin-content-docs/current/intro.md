@@ -6,14 +6,17 @@ sidebar_position: 1
 
 Bem-vindo ao **VeloSys Pro**, um aplicativo desktop de alta performance para otimização do Windows, manutenção, ajustes de jogos, backup de registro e recuperação de sistema desenvolvido pela **Envolvo Systems LTDA.**
 
+![Painel do VeloSys Pro](/img/screenshots/dashboard.png)
+
 ## Principais Recursos
 
 - 🚀 **Otimização Rápida e Completa**: Limpeza automatizada de DNS, arquivos temporários, `sfc /scannow` e reparo de imagem com DISM.
-- 🎮 **Modo Gaming**: Ajuste da pilha TCP (RSS, Autotuning, ECN) para menor latência de rede e desempenho estável em jogos.
+- 🎮 **Modo Gaming**: Ajuste da pilha TCP (RSS, Autotuning) para menor latência de rede e desempenho estável em jogos.
 - 🧹 **Manutenção do Sistema**: Limpeza do cache do Windows Update, pasta Prefetch e relatório de saúde do disco físico (SMART).
 - 💾 **Backup e Restauração de Registro**: Exportação e importação segura de configurações de rede TCP/IP em `.reg` com telas de confirmação.
 - 🛡️ **Pontos de Restauração**: Listagem, criação e restauração de pontos do sistema do Windows.
 - 📅 **Agendamento Automatizado**: Configuração de tarefas recorrentes via Agendador de Tarefas do Windows ou execução headless via CLI (`--task=<modo>`).
+- ⚙️ **Configurações**: Preferências persistentes de idioma e backup de segurança, além da verificação de atualizações no app.
 - 🌐 **Interface Bilíngue**: Alternância instantânea entre Inglês (US) 🇺🇸 e Português (BR) 🇧🇷.
 
 ## Requisitos do Sistema
