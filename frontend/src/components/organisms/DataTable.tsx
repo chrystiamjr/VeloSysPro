@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
 import { useTranslation } from '../../infrastructure/i18nContext';
@@ -78,11 +78,12 @@ export function DataTable<T>({
   const totalPages = paginated ? Math.ceil(sortedRows.length / pageSize) : 1;
 
   // Never strand the user on a page that no longer exists after rows are removed.
-  useEffect(() => {
-    setPage((current) => Math.min(current, totalPages - 1));
-  }, [totalPages]);
+  if (page >= totalPages) {
+    setPage(totalPages - 1);
+  }
 
-  const start = paginated ? page * pageSize : 0;
+  const currentPage = Math.min(page, totalPages - 1);
+  const start = paginated ? currentPage * pageSize : 0;
   const visibleRows = paginated ? sortedRows.slice(start, start + pageSize) : sortedRows;
 
   const handleSort = (column: DataTableColumn<T>) => {
@@ -199,20 +200,20 @@ export function DataTable<T>({
                     testId="table-prev"
                     variant="primary"
                     className="w-auto gap-1.5 px-4 py-2"
-                    disabled={page === 0}
-                    onClick={() => setPage((p) => Math.max(0, p - 1))}
+                    disabled={currentPage === 0}
+                    onClick={() => setPage(Math.max(0, currentPage - 1))}
                   >
                     <Icon name="chevron-left" /> {t('table.prev')}
                   </Button>
                   <span data-cy="table-page" className="text-xs font-semibold text-textMuted">
-                    {page + 1}/{totalPages}
+                    {currentPage + 1}/{totalPages}
                   </span>
                   <Button
                     testId="table-next"
                     variant="primary"
                     className="w-auto gap-1.5 px-4 py-2"
-                    disabled={page >= totalPages - 1}
-                    onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                    disabled={currentPage >= totalPages - 1}
+                    onClick={() => setPage(Math.min(totalPages - 1, currentPage + 1))}
                   >
                     {t('table.next')} <Icon name="chevron-right" />
                   </Button>
