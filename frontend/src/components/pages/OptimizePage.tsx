@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
-import { PresetPicker } from '../molecules/PresetPicker';
 import { SystemProtectionNotice } from '../molecules/SystemProtectionNotice';
+import { PresetPicker } from '../organisms/PresetPicker';
 import { ConfirmDialog, ConfirmItem } from '../organisms/ConfirmDialog';
 import { SnapshotDiff } from '../organisms/SnapshotDiff';
 import { TweakCatalogList } from '../organisms/TweakCatalogList';
@@ -55,7 +55,7 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
   const [desiredIds, setDesiredIds] = useState<string[]>(appliedIds);
   const [lastApplied, setLastApplied] = useState<string[]>(appliedIds);
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
-  const [presetSelection, setPresetSelection] = useState<string[]>([]);
+  const [presetSelection, setPresetSelection] = useState<string[] | null>(null);
   const [pending, setPending] = useState<{ apply: string[]; revert: string[] } | null>(null);
   const [singleRevert, setSingleRevert] = useState<string | null>(null);
 
@@ -68,6 +68,7 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
     setLastApplied(appliedIds);
     setDesiredIds(appliedIds);
     setActivePresetId(null);
+    setPresetSelection(null);
   }
 
   // Anything the host stopped reporting cannot be acted on, whatever the user drew earlier.
@@ -83,7 +84,9 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
   );
 
   const titleOf = (id: string) => t(`optimize.tweak.${id}.title`);
-  const modified = activePresetId !== null && !sameSet(liveDesired, presetSelection);
+  const modified = presetSelection !== null && !sameSet(liveDesired, presetSelection);
+  const recommendedActive =
+    presetSelection !== null && activePresetId === null && sameSet(liveDesired, presetSelection);
 
   const toggle = (id: string) =>
     setDesiredIds((current) =>
@@ -124,6 +127,7 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
   const clear = () => {
     setDesiredIds(drawSafeOnly([]));
     setActivePresetId(null);
+    setPresetSelection(null);
   };
 
   const submit = () => {
@@ -175,23 +179,16 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
 
           <PresetPicker
             presets={catalog.presets}
+            tweaks={catalog.tweaks}
             activePresetId={activePresetId}
             modified={modified}
+            recommendedActive={recommendedActive}
             onPick={pickPreset}
             onRecommended={pickRecommended}
             onClear={clear}
+            onRefresh={onRefresh}
             disabled={disabled}
           />
-
-          <Button
-            testId="tweak-refresh"
-            variant="primary"
-            className="w-auto items-center gap-2 self-start px-5"
-            disabled={disabled}
-            onClick={onRefresh}
-          >
-            <Icon name="refresh-cw" /> {t('table.refresh')}
-          </Button>
         </div>
       </div>
 

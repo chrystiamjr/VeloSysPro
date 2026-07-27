@@ -32,6 +32,78 @@ public class ServiceTweakTests
         Assert.Equal(TweakState.NotApplied, Tweak(runner).Detect());
     }
 
+    [Theory]
+    [InlineData("Disabled")] // quieter than Manual: the goal is already met, and then some
+    [InlineData("Manual")]
+    public void Detect_CountsAStartTypeAtLeastAsQuietAsTheGoal(string startType)
+    {
+        // Found on a real machine: SysMain was already Disabled, and treating that as "not
+        // applied" made the app change it to Manual — letting the service back in, reported as
+        // an optimization.
+        var runner = new FakeCommandRunner { CapturedOutput = startType + "\r\n" };
+
+        Assert.Equal(TweakState.Applied, Tweak(runner).Detect());
+    }
+
+    [Theory]
+    [InlineData("Boot")]
+    [InlineData("System")]
+    [InlineData("Automatic")]
+    [InlineData("AutomaticDelayedStart")]
+    public void Detect_ReportsNotAppliedForEveryStartTypeNoisierThanTheGoal(string startType)
+    {
+        var runner = new FakeCommandRunner { CapturedOutput = startType + "\r\n" };
+
+        Assert.Equal(TweakState.NotApplied, Tweak(runner).Detect());
+    }
+
+    [Fact]
+    public void Apply_LeavesAServiceThatIsAlreadyQuieterThanTheGoalAlone()
+    {
+        var runner = new FakeCommandRunner();
+        var tweak = Tweak(runner);
+        var capture = new TweakCapture(
+            tweak.Id,
+            TweakKinds.Service,
+            "2026-07-25T10:00:00.0000000Z",
+            new[] { new CapturedValue("StartType", "", "Disabled", true) }
+        );
+
+        Assert.True(tweak.Apply(capture));
+
+        Assert.Empty(runner.Runs);
+    }
+
+    [Fact]
+    public void Apply_ActsWhenTheServiceIsNoisierThanTheGoal()
+    {
+        var runner = new FakeCommandRunner();
+        var tweak = Tweak(runner);
+        var capture = new TweakCapture(
+            tweak.Id,
+            TweakKinds.Service,
+            "2026-07-25T10:00:00.0000000Z",
+            new[] { new CapturedValue("StartType", "", "Automatic", true) }
+        );
+
+        Assert.True(tweak.Apply(capture));
+
+        Assert.Equal("config SysMain start= demand", Assert.Single(runner.Runs).Args);
+    }
+
+    [Fact]
+    public void Apply_StillActsOnAServiceWhoseStartTypeCouldNotBeRead()
+    {
+        var runner = new FakeCommandRunner();
+        var tweak = Tweak(runner);
+
+        Assert.True(
+            tweak.Apply(new TweakCapture(tweak.Id, TweakKinds.Service, "", new CapturedValue[0]))
+        );
+
+        Assert.Equal("config SysMain start= demand", Assert.Single(runner.Runs).Args);
+    }
+
     [Fact]
     public void Detect_ReportsNotAppliedWhenTheServiceIsNotInstalled()
     {

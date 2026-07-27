@@ -34,6 +34,26 @@ namespace VeloSysPro
             ["System"] = "system",
         };
 
+        /// <summary>
+        /// How eagerly each start type lets the service run — lower is quieter.
+        /// </summary>
+        /// <remarks>
+        /// What a service Tweak actually wants is "stop this from starting on its own", and a start
+        /// type quieter than the one it names already satisfies that. Comparing by rank instead of
+        /// by equality is what stops the app "optimizing" a service the user had already disabled
+        /// into merely Manual — which is what happened on a real machine, and read as an
+        /// improvement while actually letting the service back in.
+        /// </remarks>
+        private static readonly Dictionary<string, int> Eagerness = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Boot"] = 5,
+            ["System"] = 4,
+            ["Automatic"] = 3,
+            ["AutomaticDelayedStart"] = 2,
+            ["Manual"] = 1,
+            ["Disabled"] = 0,
+        };
+
         private readonly string _serviceName;
         private readonly string _desiredStartType;
         private readonly ICommandRunner _cmd;
@@ -61,9 +81,13 @@ namespace VeloSysPro
         public string Kind => TweakKinds.Service;
 
         public TweakState Detect() =>
-            string.Equals(ReadStartType(), _desiredStartType, StringComparison.OrdinalIgnoreCase)
-                ? TweakState.Applied
-                : TweakState.NotApplied;
+            IsQuietEnough(ReadStartType()) ? TweakState.Applied : TweakState.NotApplied;
+
+        /// <summary>True when the live start type is the desired one, or an even quieter one.</summary>
+        private bool IsQuietEnough(string startType) =>
+            Eagerness.TryGetValue(startType, out int actual)
+            && Eagerness.TryGetValue(_desiredStartType, out int desired)
+            && actual <= desired;
 
         public IReadOnlyList<CapturedValue> ReadCurrentValues()
         {
@@ -77,7 +101,14 @@ namespace VeloSysPro
         public TweakCapture Capture() =>
             new(Id, Kind, TweakClock.NowUtc(), ReadCurrentValues());
 
-        public bool Apply(TweakCapture capture) => Configure(_desiredStartType);
+        public bool Apply(TweakCapture capture)
+        {
+            // Read from the capture the engine just took rather than querying again. A service that
+            // is already quieter than this Tweak asks for is left alone: writing the desired value
+            // would be a downgrade dressed up as an optimization.
+            string current = capture.Values.Count > 0 ? capture.Values[0].Data : Unknown;
+            return IsQuietEnough(current) || Configure(_desiredStartType);
+        }
 
         public bool Revert(TweakCapture capture)
         {

@@ -404,6 +404,60 @@ describe('OptimizePage (desired-state selection screen)', () => {
     });
   });
 
+  it('describes each starting point from the live catalog', () => {
+    const recommendedCatalog: TweakCatalog = {
+      ...catalog,
+      tweaks: catalog.tweaks.map((tweak) => ({
+        ...tweak,
+        recommended: tweak.id !== 'boot.disableDynamicTick',
+      })),
+    };
+    const { container } = renderPage({ catalog: recommendedCatalog });
+
+    // Counts and categories are read off the catalog, so they cannot drift as it grows.
+    const preset = container.querySelector('[data-cy="tweak-preset-quick"]') as HTMLElement;
+    expect(preset).toHaveTextContent('3 otimizações');
+    expect(preset).toHaveTextContent('Processador e prioridades');
+
+    const recommended = container.querySelector('[data-cy="tweak-recommended"]') as HTMLElement;
+    expect(recommended).toHaveTextContent('2 otimizações');
+    expect(recommended).not.toHaveTextContent('Inicialização e temporizadores');
+  });
+
+  it('marks which starting point the current selection came from', () => {
+    const { container } = renderPage();
+
+    click(container, 'tweak-preset-quick');
+    expect(container.querySelector('[data-cy="tweak-preset-quick"]')).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+
+    click(container, 'tweak-select-services.sysMain');
+    expect(container.querySelector('[data-cy="tweak-preset-quick"]')).toHaveAttribute(
+      'aria-pressed',
+      'false'
+    );
+  });
+
+  it('does not count an Advanced Tweak towards what a starting point would draw', () => {
+    const { container } = renderPage({
+      catalog: {
+        ...withAdvanced(),
+        presets: [
+          {
+            id: 'quick',
+            tweakIds: ['cpu.win32PrioritySeparation', 'advanced.memoryIntegrity'],
+          },
+        ],
+      },
+    });
+
+    expect(container.querySelector('[data-cy="tweak-preset-quick"]')).toHaveTextContent(
+      '1 otimizações'
+    );
+  });
+
   it('says when a preset has been edited', () => {
     const { container } = renderPage();
 

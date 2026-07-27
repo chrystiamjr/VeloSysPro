@@ -1,7 +1,15 @@
 import React from 'react';
 
 export type ButtonVariant =
-  'primary' | 'success' | 'purple' | 'warning' | 'pink' | 'info' | 'danger';
+  | 'primary'
+  | 'success'
+  | 'purple'
+  | 'warning'
+  | 'pink'
+  | 'info'
+  | 'danger'
+  /** Quiet: for controls that must stay reachable without competing with the main action. */
+  | 'ghost';
 
 export interface ButtonProps {
   children: React.ReactNode;
@@ -22,6 +30,7 @@ const variantClasses: Record<ButtonVariant, string> = {
   pink: 'bg-pink hover:bg-pink-hover',
   info: 'bg-info hover:bg-info-hover',
   danger: 'bg-danger hover:bg-danger-hover',
+  ghost: 'bg-transparent !text-textMuted shadow-none hover:bg-white/5 hover:!text-textMain',
 };
 
 export const Button: React.FC<ButtonProps> = ({

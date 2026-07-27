@@ -237,11 +237,18 @@
     "partialHint": "Parcialmente aplicada: parte dos ajustes deste item não confere. Marque e aplique de novo para completar.",
     "pending": "{{apply}} para aplicar · {{revert}} para reverter",
     "preset": {
-      "quick": "Predefinição Rápida"
+      "quick": {
+        "desc": "Tudo que o catálogo oferece hoje: prioridade de processador, temporizador de inicialização e serviços em segundo plano.",
+        "title": "Predefinição Rápida"
+      }
     },
+    "presetCount": "{{count}} otimizações",
     "presetLabel": "Comece por uma predefinição",
     "presetModified": "(modificada)",
-    "recommendedBtn": "Recomendadas",
+    "recommended": {
+      "desc": "O que vale para a maioria e tem efeito na hora — sem nada que exija reiniciar o Windows.",
+      "title": "Recomendadas"
+    },
     "revertBtn": "Reverter",
     "revertConfirmBody": "Você está prestes a desfazer {{revert}} otimização(ões) já aplicada(s) e aplicar {{apply}}. As opções abaixo voltarão ao valor que o Windows tinha antes, guardado quando foram aplicadas.",
     "revertConfirmBtn": "Desfazer e aplicar",

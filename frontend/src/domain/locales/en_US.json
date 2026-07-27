@@ -237,11 +237,18 @@
     "partialHint": "Partly applied: some of this item's settings do not match. Tick it and apply again to complete it.",
     "pending": "{{apply}} to apply · {{revert}} to revert",
     "preset": {
-      "quick": "Quick preset"
+      "quick": {
+        "desc": "Everything the catalog offers today: processor priority, boot timer, and background services.",
+        "title": "Quick preset"
+      }
     },
+    "presetCount": "{{count}} optimizations",
     "presetLabel": "Start from a preset",
     "presetModified": "(modified)",
-    "recommendedBtn": "Recommended",
+    "recommended": {
+      "desc": "What suits most machines and takes effect right away — nothing that needs a Windows restart.",
+      "title": "Recommended"
+    },
     "revertBtn": "Revert",
     "revertConfirmBody": "You are about to undo {{revert}} already applied optimization(s) and apply {{apply}}. The items below will go back to the value Windows had before, captured when they were applied.",
     "revertConfirmBtn": "Undo and apply",
