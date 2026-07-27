@@ -1,7 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Button } from '../atoms/Button';
 import { Icon, IconName } from '../atoms/Icon';
 import { useTranslation } from '../../infrastructure/i18nContext';
+
+export interface ConfirmItem {
+  /** Already-translated name of the thing being touched. */
+  label: string;
+  /** Already-translated reason it deserves a second look, e.g. an Advanced Tweak's risk. */
+  detail?: string;
+}
 
 export interface ConfirmDialogProps {
   open: boolean;
@@ -10,7 +17,7 @@ export interface ConfirmDialogProps {
   /** Already-translated explanation of what is about to happen. */
   message: string;
   /** Already-translated lines naming exactly what the action will touch. */
-  items?: string[];
+  items?: ConfirmItem[];
   /** Already-translated label for the action that goes ahead. */
   confirmLabel: string;
   confirmVariant?: 'warning' | 'danger' | 'success';
@@ -41,6 +48,8 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   testId = 'confirm-dialog',
 }) => {
   const { t } = useTranslation();
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const openerRef = useRef<Element | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -50,6 +59,25 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [open, onCancel]);
+
+  /**
+   * Moves focus in on open and puts it back where it came from on close.
+   *
+   * Backing out is the safe default, so the cancel control is what receives focus: a keyboard user
+   * who hits Enter reflexively must not thereby confirm undoing their work. Returning focus to the
+   * control that opened the dialog is what stops a keyboard or screen-reader user being dumped at
+   * the top of the page every time they dismiss one.
+   */
+  useEffect(() => {
+    if (!open) return;
+    openerRef.current = document.activeElement;
+    cancelRef.current?.focus();
+
+    return () => {
+      const opener = openerRef.current;
+      if (opener instanceof HTMLElement && document.contains(opener)) opener.focus();
+    };
+  }, [open]);
 
   if (!open) return null;
 
@@ -84,9 +112,16 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             className="flex flex-col gap-2 rounded-lg border border-borderColor bg-bgMain/40 p-4"
           >
             {items.map((item) => (
-              <li key={item} className="flex items-start gap-2 text-xs text-textMain">
+              <li key={item.label} className="flex items-start gap-2 text-xs text-textMain">
                 <Icon name="chevron-right" className="mt-0.5 h-3 w-3 shrink-0 text-textMuted" />
-                {item}
+                <span>
+                  {item.label}
+                  {item.detail && (
+                    <span className="mt-0.5 block text-[11px] leading-relaxed text-textMuted">
+                      {item.detail}
+                    </span>
+                  )}
+                </span>
               </li>
             ))}
           </ul>
@@ -97,6 +132,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             testId={`${testId}-cancel`}
             variant="primary"
             className="w-auto px-5"
+            buttonRef={cancelRef}
             onClick={onCancel}
           >
             {t('dialog.cancel')}

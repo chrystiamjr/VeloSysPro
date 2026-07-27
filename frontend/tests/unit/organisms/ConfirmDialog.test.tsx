@@ -8,7 +8,7 @@ const renderDialog = (props: Partial<React.ComponentProps<typeof ConfirmDialog>>
     open: true,
     title: 'Confirmar reversão',
     message: 'Isto vai desfazer o que foi aplicado.',
-    items: ['SysMain em início Manual'],
+    items: [{ label: 'SysMain em início Manual', detail: 'Volta ao valor guardado.' }],
     confirmLabel: 'Desfazer e aplicar',
     onConfirm: vi.fn(),
     onCancel: vi.fn(),
@@ -34,6 +34,7 @@ describe('ConfirmDialog', () => {
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText('SysMain em início Manual')).toBeInTheDocument();
+    expect(screen.getByText('Volta ao valor guardado.')).toBeInTheDocument();
     expect(screen.getByText('Isto vai desfazer o que foi aplicado.')).toBeInTheDocument();
   });
 
@@ -103,6 +104,51 @@ describe('ConfirmDialog', () => {
 
     expect(onCancel).not.toHaveBeenCalled();
     expect(container.querySelector('[data-cy="confirm-dialog"]')).toBeNull();
+  });
+
+  it('focuses backing out, not confirming', () => {
+    // A keyboard user hitting Enter reflexively must not thereby confirm undoing their work.
+    const { container } = renderDialog();
+
+    expect(document.activeElement).toBe(
+      container.querySelector('[data-cy="confirm-dialog-cancel"]')
+    );
+  });
+
+  it('returns focus to whatever opened it', () => {
+    const opener = document.createElement('button');
+    document.body.appendChild(opener);
+    opener.focus();
+
+    const { rerender } = render(
+      <LanguageProvider>
+        <ConfirmDialog
+          open
+          title="t"
+          message="m"
+          confirmLabel="ok"
+          onConfirm={vi.fn()}
+          onCancel={vi.fn()}
+        />
+      </LanguageProvider>
+    );
+    expect(document.activeElement).not.toBe(opener);
+
+    rerender(
+      <LanguageProvider>
+        <ConfirmDialog
+          open={false}
+          title="t"
+          message="m"
+          confirmLabel="ok"
+          onConfirm={vi.fn()}
+          onCancel={vi.fn()}
+        />
+      </LanguageProvider>
+    );
+
+    expect(document.activeElement).toBe(opener);
+    opener.remove();
   });
 
   it('omits the list when there is nothing to enumerate', () => {

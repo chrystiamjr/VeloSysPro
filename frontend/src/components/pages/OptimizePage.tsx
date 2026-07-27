@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
+import { PresetPicker } from '../molecules/PresetPicker';
 import { SystemProtectionNotice } from '../molecules/SystemProtectionNotice';
-import { ConfirmDialog } from '../organisms/ConfirmDialog';
+import { ConfirmDialog, ConfirmItem } from '../organisms/ConfirmDialog';
 import { SnapshotDiff } from '../organisms/SnapshotDiff';
 import { TweakCatalogList } from '../organisms/TweakCatalogList';
-import type { SnapshotCapturedPayload, TweakCatalog } from '../../domain/types';
+import type { Preset, SnapshotCapturedPayload, TweakCatalog } from '../../domain/types';
 import { useTranslation } from '../../infrastructure/i18nContext';
 
 export interface OptimizePageProps {
@@ -16,7 +17,12 @@ export interface OptimizePageProps {
   onRefresh: () => void;
   onEnableProtection: () => void;
   disabled?: boolean;
+  catalogLoaded?: boolean;
+  catalogStale?: boolean;
 }
+
+const sameSet = (left: string[], right: string[]) =>
+  left.length === right.length && left.every((id) => right.includes(id));
 
 /**
  * The intermediate selection screen.
@@ -34,6 +40,8 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
   onRefresh,
   onEnableProtection,
   disabled = false,
+  catalogLoaded = true,
+  catalogStale = false,
 }) => {
   const { t } = useTranslation();
 
@@ -45,53 +53,112 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
   );
 
   const [desiredIds, setDesiredIds] = useState<string[]>(appliedIds);
-  const [lastCatalog, setLastCatalog] = useState(catalog);
-  const [pendingRevert, setPendingRevert] = useState<string[] | null>(null);
+  const [lastApplied, setLastApplied] = useState<string[]>(appliedIds);
+  const [activePresetId, setActivePresetId] = useState<string | null>(null);
+  const [presetSelection, setPresetSelection] = useState<string[]>([]);
+  const [pending, setPending] = useState<{ apply: string[]; revert: string[] } | null>(null);
   const [singleRevert, setSingleRevert] = useState<string | null>(null);
 
-  // The host is the authority: whenever it re-reports the catalog, the drawn intent is replaced by
-  // what the machine actually has, so a partly failed batch cannot leave a stale intent on screen.
-  // Adjusted during render rather than in an effect — the same pattern DataTable uses to clamp its
-  // page — so there is no cascading second render (react.dev/learn/you-might-not-need-an-effect).
-  if (catalog !== lastCatalog) {
-    setLastCatalog(catalog);
+  // Compared by value, not by object identity, because the host re-emits the catalog for three
+  // different reasons. A plain refresh reports the same applied set and must leave the user's drawn
+  // intent alone; a batch that actually changed the machine reports a different one, and then the
+  // screen has to show reality rather than what was wanted. Adjusted during render instead of in an
+  // effect — the pattern DataTable uses to clamp its page.
+  if (!sameSet(appliedIds, lastApplied)) {
+    setLastApplied(appliedIds);
     setDesiredIds(appliedIds);
+    setActivePresetId(null);
   }
 
-  const toApply = desiredIds.filter((id) => !appliedIds.includes(id));
-  const toRevert = appliedIds.filter((id) => !desiredIds.includes(id));
+  // Anything the host stopped reporting cannot be acted on, whatever the user drew earlier.
+  const knownIds = catalog.tweaks.map((tweak) => tweak.id);
+  const liveDesired = desiredIds.filter((id) => knownIds.includes(id));
+
+  const toApply = liveDesired.filter((id) => !appliedIds.includes(id));
+  const toRevert = appliedIds.filter((id) => !liveDesired.includes(id));
   const hasPendingChange = toApply.length > 0 || toRevert.length > 0;
 
+  const advancedToApply = toApply.filter(
+    (id) => catalog.tweaks.find((tweak) => tweak.id === id)?.riskTier === 'Advanced'
+  );
+
   const titleOf = (id: string) => t(`optimize.tweak.${id}.title`);
+  const modified = activePresetId !== null && !sameSet(liveDesired, presetSelection);
 
   const toggle = (id: string) =>
     setDesiredIds((current) =>
       current.includes(id) ? current.filter((value) => value !== id) : [...current, id]
     );
 
-  // A Preset may only draw Safe Tweaks. The host enforces this when it builds the catalog, and it
-  // is enforced again here: a Preset is what a non-expert clicks, so malformed or stale host data
-  // must not be able to tick a security-reducing Tweak on their behalf.
-  const applyPreset = (tweakIds: string[]) =>
-    setDesiredIds(
-      tweakIds.filter((id) =>
-        catalog.tweaks.some((tweak) => tweak.id === id && tweak.riskTier === 'Safe')
-      )
+  // A Preset and the recommended set may only draw Safe Tweaks. The host enforces this when it
+  // builds the catalog; it is enforced again here because these are the controls a non-expert
+  // clicks without reading, so malformed or stale host data must not tick an Advanced Tweak for
+  // them. An Advanced Tweak already applied stays ticked — unticking it would stage a revert
+  // nobody asked for.
+  const drawSafeOnly = (ids: string[]) => {
+    const safe = ids.filter((id) =>
+      catalog.tweaks.some((tweak) => tweak.id === id && tweak.riskTier === 'Safe')
     );
+    const appliedAdvanced = appliedIds.filter(
+      (id) => catalog.tweaks.find((tweak) => tweak.id === id)?.riskTier === 'Advanced'
+    );
+    return [...safe, ...appliedAdvanced];
+  };
+
+  const pickPreset = (preset: Preset) => {
+    const drawn = drawSafeOnly(preset.tweakIds);
+    setDesiredIds(drawn);
+    setPresetSelection(drawn);
+    setActivePresetId(preset.id);
+  };
+
+  const pickRecommended = () => {
+    const drawn = drawSafeOnly(
+      catalog.tweaks.filter((tweak) => tweak.recommended).map((tweak) => tweak.id)
+    );
+    setDesiredIds(drawn);
+    setPresetSelection(drawn);
+    setActivePresetId(null);
+  };
+
+  const clear = () => {
+    setDesiredIds(drawSafeOnly([]));
+    setActivePresetId(null);
+  };
 
   const submit = () => {
-    // Only undoing needs the extra gate; applying is already what the button says it does.
-    if (toRevert.length > 0) {
-      setPendingRevert(toRevert);
+    // Revalidated one last time against the catalog as it stands right now: the list may have been
+    // re-read while the user was deciding.
+    const apply = toApply.filter((id) => knownIds.includes(id));
+    const revert = toRevert.filter((id) => knownIds.includes(id));
+    if (apply.length === 0 && revert.length === 0) return;
+
+    // Undoing work and turning off a security protection both deserve a stop; applying an ordinary
+    // optimization is already what the button says it does.
+    if (revert.length > 0 || apply.some((id) => advancedToApply.includes(id))) {
+      setPending({ apply, revert });
       return;
     }
-    onApply({ tweakIds: toApply, revertIds: [] });
+    onApply({ tweakIds: apply, revertIds: revert });
   };
 
   const confirmSubmit = () => {
-    setPendingRevert(null);
-    onApply({ tweakIds: toApply, revertIds: toRevert });
+    const batch = pending;
+    setPending(null);
+    if (batch) onApply({ tweakIds: batch.apply, revertIds: batch.revert });
   };
+
+  const pendingAdvanced = (pending?.apply ?? []).filter((id) => advancedToApply.includes(id));
+  const confirmItems: ConfirmItem[] = [
+    ...pendingAdvanced.map((id) => ({
+      label: titleOf(id),
+      detail: t(`optimize.tweak.${id}.risk`),
+    })),
+    ...(pending?.revert ?? []).map((id) => ({
+      label: titleOf(id),
+      detail: t('optimize.revertItemDetail'),
+    })),
+  ];
 
   return (
     <div className="flex select-none flex-col gap-6">
@@ -106,52 +173,36 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
             <p className="mt-1 text-xs text-textMuted">{t('optimize.sectionDesc')}</p>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <span className="text-xs font-semibold text-textMuted">
-              {t('optimize.presetLabel')}
-            </span>
-            <div className="flex flex-wrap gap-3">
-              {catalog.presets.map((preset) => (
-                <Button
-                  key={preset.id}
-                  testId={`tweak-preset-${preset.id}`}
-                  variant="purple"
-                  className="w-auto gap-2 px-5"
-                  disabled={disabled}
-                  onClick={() => applyPreset(preset.tweakIds)}
-                >
-                  <Icon name="sliders" /> {t(`optimize.preset.${preset.id}`)}
-                </Button>
-              ))}
-              <Button
-                testId="tweak-clear"
-                variant="primary"
-                className="w-auto gap-2 px-5"
-                disabled={disabled}
-                onClick={() => setDesiredIds([])}
-              >
-                <Icon name="x-circle" /> {t('optimize.clearBtn')}
-              </Button>
-              <Button
-                testId="tweak-refresh"
-                variant="primary"
-                className="w-auto gap-2 px-5"
-                disabled={disabled}
-                onClick={onRefresh}
-              >
-                <Icon name="refresh-cw" /> {t('table.refresh')}
-              </Button>
-            </div>
-          </div>
+          <PresetPicker
+            presets={catalog.presets}
+            activePresetId={activePresetId}
+            modified={modified}
+            onPick={pickPreset}
+            onRecommended={pickRecommended}
+            onClear={clear}
+            disabled={disabled}
+          />
+
+          <Button
+            testId="tweak-refresh"
+            variant="primary"
+            className="w-auto items-center gap-2 self-start px-5"
+            disabled={disabled}
+            onClick={onRefresh}
+          >
+            <Icon name="refresh-cw" /> {t('table.refresh')}
+          </Button>
         </div>
       </div>
 
       <TweakCatalogList
         tweaks={catalog.tweaks}
-        selectedIds={desiredIds}
+        selectedIds={liveDesired}
         onToggle={toggle}
         onRevert={setSingleRevert}
         disabled={disabled}
+        loaded={catalogLoaded}
+        stale={catalogStale}
       />
 
       <SnapshotDiff snapshot={snapshot} />
@@ -179,17 +230,27 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
       </div>
 
       <ConfirmDialog
-        open={pendingRevert !== null}
+        open={pending !== null}
         testId="revert-confirm"
-        title={t('optimize.revertConfirmTitle')}
-        message={t('optimize.revertConfirmBody', {
-          revert: toRevert.length,
-          apply: toApply.length,
-        })}
-        items={(pendingRevert ?? []).map(titleOf)}
-        confirmLabel={t('optimize.revertConfirmBtn')}
+        icon={pendingAdvanced.length > 0 ? 'alert-triangle' : 'rotate-ccw'}
+        confirmVariant={pendingAdvanced.length > 0 ? 'danger' : 'warning'}
+        title={t(
+          pendingAdvanced.length > 0
+            ? 'optimize.advancedConfirmTitle'
+            : 'optimize.revertConfirmTitle'
+        )}
+        message={t(
+          pendingAdvanced.length > 0
+            ? 'optimize.advancedConfirmBody'
+            : 'optimize.revertConfirmBody',
+          { revert: pending?.revert.length ?? 0, apply: pending?.apply.length ?? 0 }
+        )}
+        items={confirmItems}
+        confirmLabel={t(
+          pendingAdvanced.length > 0 ? 'optimize.advancedConfirmBtn' : 'optimize.revertConfirmBtn'
+        )}
         onConfirm={confirmSubmit}
-        onCancel={() => setPendingRevert(null)}
+        onCancel={() => setPending(null)}
       />
 
       <ConfirmDialog
@@ -197,7 +258,7 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
         testId="single-revert-confirm"
         title={t('optimize.revertConfirmTitle')}
         message={t('optimize.revertSingleBody')}
-        items={singleRevert ? [titleOf(singleRevert)] : []}
+        items={singleRevert ? [{ label: titleOf(singleRevert) }] : []}
         confirmLabel={t('optimize.revertConfirmBtn')}
         onConfirm={() => {
           const id = singleRevert;

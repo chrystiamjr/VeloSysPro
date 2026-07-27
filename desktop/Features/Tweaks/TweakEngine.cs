@@ -33,7 +33,14 @@ namespace VeloSysPro
     public sealed class TweakEngine
     {
         /// <summary>Serializable shape matching the Tweak interface in the React frontend.</summary>
-        private record TweakInfo(string Id, string Category, string RiskTier, string Kind, string State);
+        private record TweakInfo(
+            string Id,
+            string Category,
+            string RiskTier,
+            string Kind,
+            string State,
+            bool Recommended
+        );
 
         private record PresetInfo(string Id, IReadOnlyList<string> TweakIds);
 
@@ -87,7 +94,8 @@ namespace VeloSysPro
                         tweak.Category,
                         tweak.RiskTier.ToString(),
                         tweak.Kind,
-                        tweak.Detect().ToString()
+                        tweak.Detect().ToString(),
+                        _catalog.Recommended.Contains(tweak.Id)
                     )
                 );
             }

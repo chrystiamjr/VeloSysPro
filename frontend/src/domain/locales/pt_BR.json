@@ -218,27 +218,46 @@
     "settings": "Configurações"
   },
   "optimize": {
+    "advancedConfirmBody": "Você está prestes a aplicar {{apply}} otimização(ões), sendo que ao menos uma REDUZ A SEGURANÇA do Windows. Leia o risco de cada item abaixo antes de continuar.",
+    "advancedConfirmBtn": "Entendi o risco, aplicar",
+    "advancedConfirmTitle": "Estas otimizações reduzem sua segurança",
+    "advancedDesc": "Ganho maior, com custo real de segurança ou estabilidade. Nunca entram por predefinição.",
+    "advancedTitle": "Avançadas (podem reduzir a segurança)",
     "applyBtn": "Aplicar alterações",
     "category": {
       "boot": "Inicialização e temporizadores",
       "cpu": "Processador e prioridades",
+      "other": "Outras",
       "services": "Serviços do Windows"
     },
     "clearBtn": "Limpar seleção",
     "empty": "Nenhuma otimização disponível. Use Atualizar para consultar o sistema novamente.",
+    "loading": "Consultando o sistema...",
     "noPending": "Nenhuma alteração pendente. Marque ou desmarque itens para montar a mudança.",
+    "partialHint": "Parcialmente aplicada: parte dos ajustes deste item não confere. Marque e aplique de novo para completar.",
     "pending": "{{apply}} para aplicar · {{revert}} para reverter",
     "preset": {
       "quick": "Predefinição Rápida"
     },
     "presetLabel": "Comece por uma predefinição",
+    "presetModified": "(modificada)",
+    "recommendedBtn": "Recomendadas",
     "revertBtn": "Reverter",
     "revertConfirmBody": "Você está prestes a desfazer {{revert}} otimização(ões) já aplicada(s) e aplicar {{apply}}. As opções abaixo voltarão ao valor que o Windows tinha antes, guardado quando foram aplicadas.",
     "revertConfirmBtn": "Desfazer e aplicar",
     "revertConfirmTitle": "Confirmar reversão",
+    "revertItemDetail": "Volta ao valor guardado antes da aplicação.",
     "revertSingleBody": "Esta otimização voltará ao valor que o Windows tinha antes de ela ser aplicada.",
+    "risk": {
+      "advanced": "Avançada",
+      "advancedHint": "Reduz a segurança ou a estabilidade; exige confirmação explícita.",
+      "safe": "Segura",
+      "safeHint": "Reversível e sem impacto na segurança do Windows."
+    },
+    "sectionCount": "{{selected}} de {{total}} marcadas",
     "sectionDesc": "Marque o que você quer aplicado e desmarque o que quer desfeito. Um Ponto de Segurança é criado antes de qualquer alteração.",
     "sectionTitle": "Selecionar otimizações",
+    "staleRead": "O host enviou um catálogo inválido; estes são os últimos dados válidos. Use Atualizar para tentar de novo.",
     "state": {
       "applied": "Aplicada",
       "notApplied": "Não aplicada",

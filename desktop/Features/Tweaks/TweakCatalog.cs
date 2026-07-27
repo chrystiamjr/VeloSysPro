@@ -21,7 +21,8 @@ namespace VeloSysPro
 
         public TweakCatalog(
             IReadOnlyList<ITweak> tweaks,
-            IReadOnlyDictionary<string, IReadOnlyList<string>> presets
+            IReadOnlyDictionary<string, IReadOnlyList<string>> presets,
+            IReadOnlyList<string>? recommended = null
         )
         {
             _byId = new Dictionary<string, ITweak>(StringComparer.Ordinal);
@@ -47,13 +48,29 @@ namespace VeloSysPro
                 }
             }
 
+            foreach (string id in recommended ?? Array.Empty<string>())
+            {
+                if (!_byId.TryGetValue(id, out ITweak? tweak))
+                    throw new ArgumentException("Unknown recommended Tweak: " + id);
+                if (tweak.RiskTier == RiskTier.Advanced)
+                    throw new ArgumentException("Advanced Tweak may not be recommended: " + id);
+            }
+
             Tweaks = tweaks;
+            Recommended = recommended ?? Array.Empty<string>();
             Presets = presets.Select(preset => new Preset(preset.Key, preset.Value)).ToList();
         }
 
         public IReadOnlyList<ITweak> Tweaks { get; }
 
         public IReadOnlyList<Preset> Presets { get; }
+
+        /// <summary>
+        /// The Tweaks the catalog stands behind for someone who does not want to read every entry.
+        /// Curation, not a Preset: it is one control, it may only name `Safe` Tweaks, and it leaves
+        /// out anything that needs a restart to take effect.
+        /// </summary>
+        public IReadOnlyList<string> Recommended { get; }
 
         public ITweak? Find(string id) => _byId.TryGetValue(id, out ITweak? tweak) ? tweak : null;
 
@@ -103,7 +120,10 @@ namespace VeloSysPro
                         disableDynamicTick.Id,
                         sysMain.Id,
                     },
-                }
+                },
+                // The boot timer Tweak is left out: it only takes effect after a restart, and a
+                // recommendation should not carry a condition the user has to notice.
+                new[] { win32PrioritySeparation.Id, sysMain.Id }
             );
         }
     }

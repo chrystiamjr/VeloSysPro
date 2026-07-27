@@ -61,6 +61,8 @@ function AppContent() {
     tasks,
     restorePoints,
     tweakCatalog,
+    tweakCatalogLoaded,
+    tweakCatalogStale,
     history,
     refreshBackups,
     refreshTasks,
@@ -185,6 +187,8 @@ function AppContent() {
         <OptimizePage
           catalog={tweakCatalog}
           snapshot={displayedSnapshot}
+          catalogLoaded={tweakCatalogLoaded}
+          catalogStale={tweakCatalogStale}
           disabled={activeAction !== null}
           onApply={(change) => runMutation(SystemActions.APPLY_TWEAKS, change)}
           onRevert={(tweakId) => runMutation(SystemActions.REVERT_TWEAK, tweakId)}

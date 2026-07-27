@@ -2,6 +2,7 @@ import React from 'react';
 import { Badge } from '../atoms/Badge';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
+import { RiskBadge } from '../atoms/RiskBadge';
 import type { Tweak, TweakState } from '../../domain/types';
 import { useTranslation } from '../../infrastructure/i18nContext';
 
@@ -57,10 +58,27 @@ export const TweakRow: React.FC<TweakRowProps> = ({
           className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-primary disabled:cursor-not-allowed"
         />
         <span>
-          <span className="block text-sm font-bold text-textMain">{t(`${labelKey}.title`)}</span>
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-bold text-textMain">{t(`${labelKey}.title`)}</span>
+            {/* Only the Advanced tier is called out: badging every ordinary Tweak as "Safe" would
+                turn the badge into decoration and stop it being read where it matters. */}
+            {tweak.riskTier === 'Advanced' && <RiskBadge tier={tweak.riskTier} />}
+          </span>
           <span className="mt-1 block text-xs leading-relaxed text-textMuted">
             {t(`${labelKey}.desc`)}
           </span>
+          {tweak.riskTier === 'Advanced' && (
+            <span className="mt-1 block text-xs leading-relaxed text-warning">
+              {t(`${labelKey}.risk`)}
+            </span>
+          )}
+          {/* A badge reading "Partial" says nothing on its own: this Tweak owns several settings
+              and only some of them match, which the user resolves by applying it again. */}
+          {tweak.state === 'Partial' && (
+            <span data-cy={`tweak-partial-${tweak.id}`} className="mt-1 block text-xs text-warning">
+              {t('optimize.partialHint')}
+            </span>
+          )}
         </span>
       </label>
 

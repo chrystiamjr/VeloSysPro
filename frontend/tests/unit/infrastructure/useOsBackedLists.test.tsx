@@ -75,6 +75,7 @@ describe('useOsBackedLists', () => {
           riskTier: 'Safe' as const,
           kind: 'registry' as const,
           state: 'Applied' as const,
+          recommended: false,
         },
       ],
       presets: [{ id: 'quick', tweakIds: ['cpu.win32PrioritySeparation'] }],

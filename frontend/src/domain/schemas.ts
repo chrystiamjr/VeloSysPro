@@ -59,6 +59,8 @@ export const TweakSchema = z.object({
   riskTier: RiskTierSchema,
   kind: z.enum(['registry', 'bcd', 'service']),
   state: TweakStateSchema,
+  /** Curated by the host: what the catalog stands behind for someone who will not read every entry. */
+  recommended: z.boolean(),
 });
 
 export const PresetSchema = z.object({

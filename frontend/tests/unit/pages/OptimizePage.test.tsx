@@ -12,6 +12,7 @@ const catalog: TweakCatalog = {
       riskTier: 'Safe',
       kind: 'registry',
       state: 'NotApplied',
+      recommended: false,
     },
     {
       id: 'boot.disableDynamicTick',
@@ -19,6 +20,7 @@ const catalog: TweakCatalog = {
       riskTier: 'Safe',
       kind: 'bcd',
       state: 'Applied',
+      recommended: false,
     },
     {
       id: 'services.sysMain',
@@ -26,6 +28,7 @@ const catalog: TweakCatalog = {
       riskTier: 'Safe',
       kind: 'service',
       state: 'NotApplied',
+      recommended: false,
     },
   ],
   systemProtectionEnabled: true,
@@ -204,6 +207,7 @@ describe('OptimizePage (desired-state selection screen)', () => {
             riskTier: 'Advanced',
             kind: 'registry',
             state: 'NotApplied',
+            recommended: false,
           },
         ],
         presets: [
@@ -241,17 +245,11 @@ describe('OptimizePage (desired-state selection screen)', () => {
     });
   });
 
-  it('drops the drawn intent when the host re-reports the catalog', () => {
-    // A partly failed batch must not leave the user looking at what they wanted instead of
-    // what the machine actually has.
-    const { container, rerender } = renderPage();
-    click(container, 'tweak-select-cpu.win32PrioritySeparation');
-    expect(box(container, 'cpu.win32PrioritySeparation')).toBeChecked();
-
+  const reload = (rerender: ReturnType<typeof renderPage>['rerender'], next: TweakCatalog) =>
     rerender(
       <LanguageProvider>
         <OptimizePage
-          catalog={{ ...catalog }}
+          catalog={next}
           snapshot={null}
           onApply={vi.fn()}
           onRevert={vi.fn()}
@@ -261,7 +259,43 @@ describe('OptimizePage (desired-state selection screen)', () => {
       </LanguageProvider>
     );
 
+  it('keeps the drawn intent through a refresh that found nothing new', () => {
+    // Clicking Refresh re-emits the catalog. Losing the selection there is the bug E1-04 names.
+    const { container, rerender } = renderPage();
+    click(container, 'tweak-select-cpu.win32PrioritySeparation');
+
+    reload(rerender, { ...catalog, tweaks: [...catalog.tweaks] });
+
+    expect(box(container, 'cpu.win32PrioritySeparation')).toBeChecked();
+    expect(container.querySelector('[data-cy="tweak-apply"]')).not.toBeDisabled();
+  });
+
+  it('drops the drawn intent once the applied set actually changed', () => {
+    // A batch really landed, so the screen must show the machine, not what was wanted.
+    const { container, rerender } = renderPage();
+    click(container, 'tweak-select-cpu.win32PrioritySeparation');
+
+    reload(rerender, {
+      ...catalog,
+      tweaks: catalog.tweaks.map((tweak) =>
+        tweak.id === 'services.sysMain' ? { ...tweak, state: 'Applied' as const } : tweak
+      ),
+    });
+
     expect(box(container, 'cpu.win32PrioritySeparation')).not.toBeChecked();
+    expect(box(container, 'services.sysMain')).toBeChecked();
+  });
+
+  it('discards a drawn id the host stopped reporting', () => {
+    const { container, rerender } = renderPage();
+    click(container, 'tweak-select-cpu.win32PrioritySeparation');
+
+    reload(rerender, {
+      ...catalog,
+      tweaks: catalog.tweaks.filter((tweak) => tweak.id !== 'cpu.win32PrioritySeparation'),
+    });
+
+    expect(screen.getByText(/Nenhuma alteração pendente/i)).toBeInTheDocument();
   });
 
   it('reverts a single Tweak from its row after confirmation', () => {
@@ -281,6 +315,130 @@ describe('OptimizePage (desired-state selection screen)', () => {
     click(container, 'single-revert-confirm-cancel');
 
     expect(onRevert).not.toHaveBeenCalled();
+  });
+
+  const withAdvanced = (state: 'Applied' | 'NotApplied' = 'NotApplied'): TweakCatalog => ({
+    ...catalog,
+    tweaks: [
+      ...catalog.tweaks,
+      {
+        id: 'advanced.memoryIntegrity',
+        category: 'cpu',
+        riskTier: 'Advanced',
+        kind: 'registry',
+        state,
+        recommended: false,
+      },
+    ],
+  });
+
+  it('keeps Advanced Tweaks out of the category sections, behind a collapsed gate', () => {
+    const { container } = renderPage({ catalog: withAdvanced() });
+
+    expect(container.querySelector('[data-cy="tweak-advanced-section"]')).toBeInTheDocument();
+    // Collapsed: the row is not reachable until the section is opened.
+    expect(box(container, 'advanced.memoryIntegrity')).toBeNull();
+    click(container, 'tweak-advanced-toggle');
+    expect(box(container, 'advanced.memoryIntegrity')).toBeInTheDocument();
+  });
+
+  it('never ticks an Advanced Tweak that the system does not already have', () => {
+    const { container } = renderPage({ catalog: withAdvanced() });
+
+    click(container, 'tweak-advanced-toggle');
+    expect(box(container, 'advanced.memoryIntegrity')).not.toBeChecked();
+
+    click(container, 'tweak-recommended');
+    expect(box(container, 'advanced.memoryIntegrity')).not.toBeChecked();
+    click(container, 'tweak-preset-quick');
+    expect(box(container, 'advanced.memoryIntegrity')).not.toBeChecked();
+  });
+
+  it('leaves an already applied Advanced Tweak alone when a preset is drawn', () => {
+    // Unticking it would stage a revert the user never asked for.
+    const { container } = renderPage({ catalog: withAdvanced('Applied') });
+
+    click(container, 'tweak-preset-quick');
+    click(container, 'tweak-advanced-toggle');
+
+    expect(box(container, 'advanced.memoryIntegrity')).toBeChecked();
+  });
+
+  it('gates an Advanced Tweak behind its own confirmation, naming the risk', () => {
+    const { container, onApply } = renderPage({ catalog: withAdvanced() });
+
+    click(container, 'tweak-advanced-toggle');
+    click(container, 'tweak-select-advanced.memoryIntegrity');
+    click(container, 'tweak-apply');
+
+    expect(onApply).not.toHaveBeenCalled();
+    expect(screen.getByText(/reduzem sua segurança/i)).toBeInTheDocument();
+    expect(
+      container.querySelector('[data-cy="revert-confirm-items"]')
+    ).toHaveTextContent('advanced.memoryIntegrity');
+
+    click(container, 'revert-confirm-confirm');
+    expect(onApply).toHaveBeenCalledWith({
+      tweakIds: ['advanced.memoryIntegrity'],
+      revertIds: [],
+    });
+  });
+
+  it('draws only the Tweaks the catalog recommends', () => {
+    const recommendedCatalog: TweakCatalog = {
+      ...catalog,
+      tweaks: catalog.tweaks.map((tweak) => ({
+        ...tweak,
+        recommended: tweak.id === 'services.sysMain',
+      })),
+    };
+    const { container, onApply } = renderPage({ catalog: recommendedCatalog });
+
+    click(container, 'tweak-recommended');
+    click(container, 'tweak-apply');
+    click(container, 'revert-confirm-confirm');
+
+    expect(onApply).toHaveBeenCalledWith({
+      tweakIds: ['services.sysMain'],
+      revertIds: ['boot.disableDynamicTick'],
+    });
+  });
+
+  it('says when a preset has been edited', () => {
+    const { container } = renderPage();
+
+    click(container, 'tweak-preset-quick');
+    expect(container.querySelector('[data-cy="preset-modified"]')).toBeNull();
+
+    click(container, 'tweak-select-services.sysMain');
+    expect(container.querySelector('[data-cy="preset-modified"]')).toBeInTheDocument();
+  });
+
+  it('distinguishes loading from an empty catalog', () => {
+    const { container } = renderPage({
+      catalog: { tweaks: [], presets: [], systemProtectionEnabled: true },
+      catalogLoaded: false,
+    });
+
+    expect(container.querySelector('[data-cy="tweak-catalog-loading"]')).toBeInTheDocument();
+    expect(screen.queryByText(/Nenhuma otimização disponível/i)).not.toBeInTheDocument();
+  });
+
+  it('says it is showing older rows when the host sent something unreadable', () => {
+    const { container } = renderPage({ catalogStale: true });
+
+    expect(container.querySelector('[data-cy="tweak-catalog-stale"]')).toBeInTheDocument();
+    // The last valid rows stay on screen rather than the list blanking.
+    expect(container.querySelector('[data-cy="tweak-category-cpu"]')).toBeInTheDocument();
+  });
+
+  it('counts what is ticked in each section', () => {
+    const { container } = renderPage();
+
+    click(container, 'tweak-select-cpu.win32PrioritySeparation');
+
+    const section = container.querySelector('[data-cy="tweak-category-cpu"]') as HTMLElement;
+    expect(section).toHaveTextContent('1 de 1 marcadas');
   });
 
   it('offers an explicit refresh that re-queries the host', () => {

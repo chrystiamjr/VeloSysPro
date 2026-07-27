@@ -39,6 +39,7 @@ const validTweak = {
   riskTier: 'Safe',
   kind: 'registry',
   state: 'NotApplied',
+  recommended: false,
 };
 const validCatalog = {
   tweaks: [validTweak],

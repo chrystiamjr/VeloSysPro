@@ -11,6 +11,7 @@ import {
   sendAction,
   subscribeBackups,
   subscribeHistory,
+  subscribeRejections,
   subscribeRestorePoints,
   subscribeTasks,
   subscribeTweaks,
@@ -35,6 +36,10 @@ export interface OsBackedLists {
   tasks: ScheduledTaskItem[];
   restorePoints: RestorePointItem[];
   tweakCatalog: TweakCatalog;
+  /** False until the host has answered once, so "loading" is distinguishable from "empty". */
+  tweakCatalogLoaded: boolean;
+  /** True when the host's last catalog was refused, so the screen can say it is showing older data. */
+  tweakCatalogStale: boolean;
   history: OptimizationSnapshot[];
   refreshBackups: () => void;
   refreshTasks: () => void;
@@ -47,6 +52,8 @@ export function useOsBackedLists(activeScreen: AppScreen): OsBackedLists {
   const [tasks, setTasks] = useState<ScheduledTaskItem[]>([]);
   const [restorePoints, setRestorePoints] = useState<RestorePointItem[]>([]);
   const [tweakCatalog, setTweakCatalog] = useState<TweakCatalog>(emptyCatalog);
+  const [tweakCatalogLoaded, setTweakCatalogLoaded] = useState(false);
+  const [tweakCatalogStale, setTweakCatalogStale] = useState(false);
   const [history, setHistory] = useState<OptimizationSnapshot[]>([]);
 
   useEffect(() => {
@@ -54,8 +61,16 @@ export function useOsBackedLists(activeScreen: AppScreen): OsBackedLists {
       subscribeBackups(setBackups),
       subscribeTasks(setTasks),
       subscribeRestorePoints(setRestorePoints),
-      subscribeTweaks(setTweakCatalog),
+      subscribeTweaks((catalog) => {
+        setTweakCatalog(catalog);
+        setTweakCatalogLoaded(true);
+        // A good read clears the warning left by a previous bad one.
+        setTweakCatalogStale(false);
+      }),
       subscribeHistory(setHistory),
+      subscribeRejections((channel) => {
+        if (channel === 'tweaksLoaded') setTweakCatalogStale(true);
+      }),
     ];
     return () => {
       for (const unsubscribe of unsubscribers) unsubscribe();
@@ -76,6 +91,8 @@ export function useOsBackedLists(activeScreen: AppScreen): OsBackedLists {
     tasks,
     restorePoints,
     tweakCatalog,
+    tweakCatalogLoaded,
+    tweakCatalogStale,
     history,
     refreshBackups,
     refreshTasks,

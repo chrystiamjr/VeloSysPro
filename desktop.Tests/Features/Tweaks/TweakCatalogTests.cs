@@ -87,6 +87,55 @@ public class TweakCatalogTests
     }
 
     [Fact]
+    public void Constructor_RejectsRecommendingAnAdvancedTweak()
+    {
+        // Recommended is one click for someone who will not read the list, so it carries the same
+        // rule as a Preset: nothing that reduces security rides along.
+        var tweaks = new ITweak[]
+        {
+            new StubTweak("cpu.a"),
+            new StubTweak("advanced.memoryIntegrity", RiskTier.Advanced),
+        };
+
+        ArgumentException error = Assert.Throws<ArgumentException>(
+            () =>
+                new TweakCatalog(
+                    tweaks,
+                    new Dictionary<string, IReadOnlyList<string>>(),
+                    new[] { "advanced.memoryIntegrity" }
+                )
+        );
+        Assert.Contains("advanced.memoryIntegrity", error.Message);
+    }
+
+    [Fact]
+    public void Constructor_RejectsRecommendingAnUnknownTweak()
+    {
+        Assert.Throws<ArgumentException>(
+            () =>
+                new TweakCatalog(
+                    new ITweak[] { new StubTweak("cpu.a") },
+                    new Dictionary<string, IReadOnlyList<string>>(),
+                    new[] { "cpu.typo" }
+                )
+        );
+    }
+
+    [Fact]
+    public void CreateDefault_RecommendsOnlyTheTweaksThatNeedNoRestart()
+    {
+        // A recommendation should not carry a condition the user has to notice.
+        TweakCatalog catalog = TweakCatalog.CreateDefault(
+            new FakeCommandRunner(),
+            NewBackupManager()
+        );
+
+        Assert.DoesNotContain("boot.disableDynamicTick", catalog.Recommended);
+        Assert.NotEmpty(catalog.Recommended);
+        Assert.All(catalog.Recommended, id => Assert.Equal(RiskTier.Safe, catalog.Find(id)!.RiskTier));
+    }
+
+    [Fact]
     public void Presets_CarryTheirSelectionForTheFrontendToApply()
     {
         TweakCatalog catalog = Catalog(

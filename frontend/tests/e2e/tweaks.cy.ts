@@ -1,5 +1,6 @@
 import {
   appliedTweakCatalog,
+  mixedTweakCatalog,
   snapshotAfter,
   snapshotBefore,
   tweakCatalog,
@@ -19,7 +20,14 @@ describe('à-la-carte optimizations', () => {
     cy.expectIpc('loadHistory');
   });
 
-  it('shows an empty state until the host answers', () => {
+  it('says it is querying the system before the host has answered', () => {
+    cy.getByCy('tweak-catalog-loading').should('be.visible');
+    cy.contains('Nenhuma otimização disponível').should('not.exist');
+  });
+
+  it('shows an empty state once the host answers with nothing', () => {
+    cy.emitHost('tweaksLoaded', { ...tweakCatalog, tweaks: [], presets: [] });
+
     cy.contains('Nenhuma otimização disponível').should('be.visible');
   });
 
@@ -241,6 +249,76 @@ describe('à-la-carte optimizations', () => {
 
     cy.emitHost('actionFinished', { action: 'applyTweaks', ok: true });
     cy.getByCy('tweak-refresh').should('not.be.disabled');
+  });
+
+  it('keeps the drawn selection through a refresh that found nothing new', () => {
+    cy.emitHost('tweaksLoaded', tweakCatalog);
+
+    cy.getByCy('tweak-select-cpu.win32PrioritySeparation').click();
+    cy.getByCy('tweak-refresh').click();
+    // The host answers with the same catalog: the selection must survive it.
+    cy.emitHost('tweaksLoaded', { ...tweakCatalog });
+
+    cy.getByCy('tweak-select-cpu.win32PrioritySeparation').should('be.checked');
+    cy.getByCy('tweak-apply').should('not.be.disabled');
+  });
+
+  it('holds Advanced Tweaks behind a collapsed section and its own confirmation', () => {
+    cy.emitHost('tweaksLoaded', mixedTweakCatalog);
+
+    // Scrolled to first: it sits below the fold, and the layout's outer overflow-hidden makes
+    // Cypress treat anything past those bounds as hidden.
+    cy.getByCy('tweak-advanced-section').scrollIntoView().should('be.visible');
+    cy.getByCy('tweak-select-advanced.memoryIntegrity').should('not.exist');
+
+    cy.getByCy('tweak-advanced-toggle').click();
+    cy.getByCy('tweak-select-advanced.memoryIntegrity').should('not.be.checked').click();
+    cy.getByCy('tweak-apply').click();
+
+    cy.contains('reduzem sua segurança').should('be.visible');
+    cy.get<Sinon.SinonStub>('@ipcStub').should((stub) =>
+      expect(countOf(stub, 'applyTweaks')).to.equal(0)
+    );
+
+    cy.getByCy('revert-confirm-confirm').click();
+    cy.expectIpc('applyTweaks', { tweakIds: ['advanced.memoryIntegrity'], revertIds: [] });
+  });
+
+  it('never lets a preset or the recommended set tick an Advanced Tweak', () => {
+    cy.emitHost('tweaksLoaded', mixedTweakCatalog);
+    cy.getByCy('tweak-advanced-toggle').click();
+
+    cy.getByCy('tweak-preset-quick').click();
+    cy.getByCy('tweak-select-advanced.memoryIntegrity').should('not.be.checked');
+
+    cy.getByCy('tweak-recommended').click();
+    cy.getByCy('tweak-select-advanced.memoryIntegrity').should('not.be.checked');
+  });
+
+  it('renders a category it does not have copy for instead of dropping it', () => {
+    cy.emitHost('tweaksLoaded', mixedTweakCatalog);
+
+    cy.getByCy('tweak-category-other').should('contain', 'Outras');
+    cy.getByCy('tweak-select-network.tcpTuning').should('exist');
+  });
+
+  it('says when a preset has been edited by hand', () => {
+    cy.emitHost('tweaksLoaded', tweakCatalog);
+
+    cy.getByCy('tweak-preset-quick').click();
+    cy.getByCy('preset-modified').should('not.exist');
+
+    cy.getByCy('tweak-select-services.sysMain').click();
+    cy.getByCy('preset-modified').should('be.visible');
+  });
+
+  it('keeps the last valid catalog and says so when the host sends garbage', () => {
+    cy.emitHost('tweaksLoaded', tweakCatalog);
+    cy.emitHost('tweaksLoaded', { tweaks: [{ id: 'broken' }], presets: [] });
+
+    cy.getByCy('tweak-catalog-stale').should('be.visible');
+    cy.getByCy('tweak-category-cpu').should('be.visible');
+    cy.getByCy('tweak-select-services.sysMain').should('exist');
   });
 
   it('re-queries the catalog on navigation and on the explicit refresh', () => {

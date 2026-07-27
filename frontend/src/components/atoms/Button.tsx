@@ -10,6 +10,8 @@ export interface ButtonProps {
   disabled?: boolean;
   className?: string;
   testId?: string;
+  /** Lets a dialog move focus here on open, so backing out is the keyboard default. */
+  buttonRef?: React.Ref<HTMLButtonElement>;
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
@@ -29,9 +31,11 @@ export const Button: React.FC<ButtonProps> = ({
   disabled = false,
   className = '',
   testId,
+  buttonRef,
 }) => {
   return (
     <button
+      ref={buttonRef}
       data-cy={testId}
       disabled={disabled}
       onClick={onClick}

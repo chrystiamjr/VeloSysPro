@@ -70,6 +70,7 @@ export const tweakCatalog: TweakCatalog = {
       riskTier: 'Safe',
       kind: 'registry',
       state: 'NotApplied',
+      recommended: false,
     },
     {
       id: 'boot.disableDynamicTick',
@@ -77,6 +78,7 @@ export const tweakCatalog: TweakCatalog = {
       riskTier: 'Safe',
       kind: 'bcd',
       state: 'NotApplied',
+      recommended: false,
     },
     {
       id: 'services.sysMain',
@@ -84,6 +86,7 @@ export const tweakCatalog: TweakCatalog = {
       riskTier: 'Safe',
       kind: 'service',
       state: 'NotApplied',
+      recommended: false,
     },
   ],
   systemProtectionEnabled: true,
@@ -98,6 +101,33 @@ export const tweakCatalog: TweakCatalog = {
 export const appliedTweakCatalog: TweakCatalog = {
   ...tweakCatalog,
   tweaks: tweakCatalog.tweaks.map((tweak) => ({ ...tweak, state: 'Applied' as const })),
+};
+
+/**
+ * Mixed tiers and an unknown category. No Advanced Tweak ships yet — E5 adds them — so this is the
+ * only place the gate around them can be exercised end to end.
+ */
+export const mixedTweakCatalog: TweakCatalog = {
+  ...tweakCatalog,
+  tweaks: [
+    ...tweakCatalog.tweaks,
+    {
+      id: 'advanced.memoryIntegrity',
+      category: 'security',
+      riskTier: 'Advanced',
+      kind: 'registry',
+      state: 'NotApplied',
+      recommended: false,
+    },
+    {
+      id: 'network.tcpTuning',
+      category: 'somethingNewTheHostInvented',
+      riskTier: 'Safe',
+      kind: 'registry',
+      state: 'NotApplied',
+      recommended: false,
+    },
+  ],
 };
 
 export const snapshotBefore: OptimizationSnapshot = {

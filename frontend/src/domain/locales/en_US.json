@@ -218,27 +218,46 @@
     "settings": "Settings"
   },
   "optimize": {
+    "advancedConfirmBody": "You are about to apply {{apply}} optimization(s), at least one of which REDUCES the security of Windows. Read each risk below before continuing.",
+    "advancedConfirmBtn": "I understand the risk, apply",
+    "advancedConfirmTitle": "These optimizations reduce your security",
+    "advancedDesc": "Bigger gains, at a real cost in security or stability. Never included by a preset.",
+    "advancedTitle": "Advanced (may reduce security)",
     "applyBtn": "Apply changes",
     "category": {
       "boot": "Boot and timers",
       "cpu": "Processor and priorities",
+      "other": "Other",
       "services": "Windows services"
     },
     "clearBtn": "Clear selection",
     "empty": "No optimizations available. Use Refresh to query the system again.",
+    "loading": "Querying the system...",
     "noPending": "No pending changes. Tick or untick items to build the change.",
+    "partialHint": "Partly applied: some of this item's settings do not match. Tick it and apply again to complete it.",
     "pending": "{{apply}} to apply · {{revert}} to revert",
     "preset": {
       "quick": "Quick preset"
     },
     "presetLabel": "Start from a preset",
+    "presetModified": "(modified)",
+    "recommendedBtn": "Recommended",
     "revertBtn": "Revert",
     "revertConfirmBody": "You are about to undo {{revert}} already applied optimization(s) and apply {{apply}}. The items below will go back to the value Windows had before, captured when they were applied.",
     "revertConfirmBtn": "Undo and apply",
     "revertConfirmTitle": "Confirm revert",
+    "revertItemDetail": "Goes back to the value captured before it was applied.",
     "revertSingleBody": "This optimization will go back to the value Windows had before it was applied.",
+    "risk": {
+      "advanced": "Advanced",
+      "advancedHint": "Reduces security or stability; requires an explicit confirmation.",
+      "safe": "Safe",
+      "safeHint": "Reversible, with no impact on Windows security."
+    },
+    "sectionCount": "{{selected}} of {{total}} ticked",
     "sectionDesc": "Tick what you want applied and untick what you want undone. A Safety Checkpoint is created before any change.",
     "sectionTitle": "Select optimizations",
+    "staleRead": "The host sent an invalid catalog; these are the last valid rows. Use Refresh to try again.",
     "state": {
       "applied": "Applied",
       "notApplied": "Not applied",

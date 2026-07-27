@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  AlertTriangle,
   Zap,
   Rocket,
   Calendar,
@@ -31,6 +32,7 @@ import {
 } from 'lucide-react';
 
 export type IconName =
+  | 'alert-triangle'
   | 'zap'
   | 'rocket'
   | 'calendar'
@@ -60,6 +62,7 @@ export type IconName =
   | 'chevrons-right';
 
 const iconMap: Record<IconName, React.FC<LucideProps>> = {
+  'alert-triangle': AlertTriangle,
   zap: Zap,
   rocket: Rocket,
   calendar: Calendar,

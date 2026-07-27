@@ -55,10 +55,26 @@ type Unsubscribe = () => void;
 type WebViewTransport = NonNullable<NonNullable<Window['chrome']>['webview']>;
 
 const listeners = new Map<IpcEventName, Set<EventListener>>();
+const rejectionListeners = new Set<(channel: string) => void>();
 let listeningWebView: WebViewTransport | undefined;
 
 function reject(channel: string, issues: unknown): void {
   console.error(`[IPC Bridge] ${channel} payload rejected`, issues);
+  for (const listener of rejectionListeners) listener(channel);
+}
+
+/**
+ * Observes payloads this module refused.
+ *
+ * Rejecting keeps the last valid state on screen, which is the right behaviour and also an
+ * invisible one: the user sees data that silently stopped updating. Screens subscribe here to say
+ * so, without every one of them having to re-validate anything.
+ */
+export function subscribeRejections(callback: (channel: string) => void): Unsubscribe {
+  rejectionListeners.add(callback);
+  return () => {
+    rejectionListeners.delete(callback);
+  };
 }
 
 function readPayload<T>(channel: string, schema: z.ZodType<T>, raw: unknown): T | null {

@@ -10,6 +10,7 @@ const tweak: Tweak = {
   riskTier: 'Safe',
   kind: 'registry',
   state: 'NotApplied',
+  recommended: false,
 };
 
 const renderRow = (props: Partial<React.ComponentProps<typeof TweakRow>> = {}) => {
@@ -74,6 +75,28 @@ describe('TweakRow', () => {
 
     const revert = container.querySelector('[data-cy="tweak-revert-cpu.win32PrioritySeparation"]');
     expect(Boolean(revert)).toBe(visible);
+  });
+
+  it.each<[TweakState, boolean]>([
+    ['Partial', true],
+    ['Applied', false],
+    ['NotApplied', false],
+  ])('explains what %s means, rather than leaving a bare badge', (state, explained) => {
+    const { container } = renderRow({ tweak: { ...tweak, state } });
+
+    const hint = container.querySelector('[data-cy="tweak-partial-cpu.win32PrioritySeparation"]');
+    expect(Boolean(hint)).toBe(explained);
+  });
+
+  it('calls out only the Advanced tier, with its risk spelled out', () => {
+    const { container } = renderRow({
+      tweak: { ...tweak, riskTier: 'Advanced' },
+    });
+
+    expect(container.querySelector('[data-cy="risk-badge-Advanced"]')).toBeInTheDocument();
+    // Badging every ordinary Tweak "Safe" would turn the badge into decoration.
+    renderRow();
+    expect(document.querySelectorAll('[data-cy="risk-badge-Safe"]')).toHaveLength(0);
   });
 
   it('reverts the Tweak it belongs to', () => {
