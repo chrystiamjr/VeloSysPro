@@ -23,6 +23,13 @@ In hybrid desktop applications composed of a C# .NET 8 WPF host and a React WebV
      comparison so pure format strings are not flagged.
 4. **Alphabetical Insertion**: New keys go in recursive alphabetical order — enforced by
    `frontend/tests/unit/domain/i18n.test.ts`.
+4b. **Resolve Host-Emitted Keys, Not Just Locale Parity**: Comparing the two locales against *each
+   other* cannot catch a key that sits under the wrong parent in **both** of them. Every
+   `log.*` / `status.*` literal the C# host hands to `IStatusSink` must resolve to a string in both
+   locale files. This caught `log.protection.*` landing under `act.` instead of `log.` — perfectly
+   in parity, and rendering as the raw key in the live console. The guard scans `desktop/**/*.cs`
+   for the literals rather than trusting a hand-kept list, so a new emitter is covered the moment
+   it is written.
 5. **Locale-Neutral Payloads**: Values crossing the IPC boundary must not be culture-formatted when
    the frontend sorts or branches on them — see
    [locale-neutral-boundary-data.md](./locale-neutral-boundary-data.md).
