@@ -39,6 +39,48 @@ internal sealed class FakeCommandRunner : ICommandRunner
     public void ClearDirectory(string path) => ClearedDirectories.Add(path);
 }
 
+/// <summary>
+/// Command runner whose RunCapture answers a queued script, so a single test can drive a sequence
+/// of different query results (value before the change, value after it) instead of one canned
+/// string that would make every step agree with itself.
+/// </summary>
+internal sealed class ScriptedCommandRunner : ICommandRunner
+{
+    private readonly Queue<(string Output, bool Success)> _captures = new();
+
+    public List<(string Exe, string Args)> Runs { get; } = new();
+    public CommandResult Result { get; set; } = new(0, true);
+
+    /// <summary>Result for a capture that runs out of script (an absent value queries as failure).</summary>
+    public CommandResult ExhaustedResult { get; set; } = new(1, false);
+
+    public void EnqueueCapture(string output, bool success = true) =>
+        _captures.Enqueue((output, success));
+
+    /// <summary>Queues a query that fails, e.g. a registry value or key that is not there.</summary>
+    public void EnqueueFailedCapture() => _captures.Enqueue(("", false));
+
+    public CommandResult Run(string exe, string args)
+    {
+        Runs.Add((exe, args));
+        return Result;
+    }
+
+    public CaptureResult RunCapture(string exe, string args)
+    {
+        Runs.Add((exe, args));
+        if (_captures.Count == 0)
+            return new CaptureResult("", ExhaustedResult.ExitCode, ExhaustedResult.Success);
+
+        (string Output, bool Success) scripted = _captures.Dequeue();
+        return new CaptureResult(scripted.Output, scripted.Success ? 0 : 1, scripted.Success);
+    }
+
+    public void CleanTempFolder() { }
+
+    public void ClearDirectory(string path) { }
+}
+
 internal sealed class RecordingStatusSink : IStatusSink
 {
     public List<(string Key, string Type, object? Args)> Logs { get; } = new();

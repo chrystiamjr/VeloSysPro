@@ -12,5 +12,8 @@ namespace VeloSysPro
         public const string SettingsLoaded = "settingsLoaded";
         public const string UpdateAvailable = "updateAvailable";
         public const string ActionFinished = "actionFinished";
+        public const string TweaksLoaded = "tweaksLoaded";
+        public const string SnapshotCaptured = "snapshotCaptured";
+        public const string HistoryLoaded = "historyLoaded";
     }
 }

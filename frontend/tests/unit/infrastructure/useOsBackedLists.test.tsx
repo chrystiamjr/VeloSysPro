@@ -30,6 +30,43 @@ describe('useOsBackedLists', () => {
     expect(actions()).toEqual(['getRestorePoints']);
   });
 
+  it('re-queries the Tweak catalog when the Optimize screen is opened', () => {
+    const { rerender } = renderHook(({ screen }) => useOsBackedLists(screen), {
+      initialProps: { screen: AppScreen.Dashboard },
+    });
+    vi.clearAllMocks();
+
+    rerender({ screen: AppScreen.Optimize });
+
+    expect(actions()).toEqual(['loadTweaks']);
+  });
+
+  it('keeps the last valid Tweak catalog when the host emits a broken one', () => {
+    const { result } = renderHook(() => useOsBackedLists(AppScreen.Optimize));
+    const catalog = {
+      tweaks: [
+        {
+          id: 'cpu.win32PrioritySeparation',
+          category: 'cpu',
+          riskTier: 'Safe' as const,
+          kind: 'registry' as const,
+          state: 'Applied' as const,
+        },
+      ],
+      presets: [{ id: 'quick', tweakIds: ['cpu.win32PrioritySeparation'] }],
+    };
+
+    act(() => emitHostEventForTest('tweaksLoaded', catalog));
+    expect(result.current.tweakCatalog).toEqual(catalog);
+
+    act(() => emitHostEventForTest('tweaksLoaded', { tweaks: [{ id: 'broken' }], presets: [] }));
+    expect(result.current.tweakCatalog).toEqual(catalog);
+
+    vi.clearAllMocks();
+    act(() => result.current.refreshTweaks());
+    expect(actions()).toEqual(['loadTweaks']);
+  });
+
   it('keeps host-emitted list state and exposes explicit refresh Actions', () => {
     const { result } = renderHook(() => useOsBackedLists(AppScreen.Backup));
     const backups = [

@@ -93,6 +93,10 @@
       "subtitle": "Manutenção, aceleração de rede e recuperação do Windows",
       "title": "Painel de Otimização"
     },
+    "optimize": {
+      "subtitle": "Escolha, aplique e reverta otimizações individualmente",
+      "title": "Otimizações à la carte"
+    },
     "restorePoints": {
       "subtitle": "Crie e reverta pontos de restauração do sistema Windows",
       "title": "Pontos de Restauração"
@@ -167,10 +171,26 @@
       "done": "Configurações revertidas com sucesso.",
       "start": "Revertendo configurações de rede para o padrão..."
     },
+    "snapshot": {
+      "unavailable": "Não foi possível medir o sistema; as métricas ficarão zeradas."
+    },
     "task": {
       "created": "Tarefa agendada criada: {{name}}",
       "deleted": "Tarefa agendada removida: {{name}}",
       "failed": "Falha na operação de agendamento: {{message}}"
+    },
+    "tweaks": {
+      "applied": "Otimização aplicada: {{id}}",
+      "applyFailed": "Falha ao aplicar a otimização: {{id}}",
+      "checkpointCreated": "Ponto de Segurança criado antes das alterações.",
+      "checkpointFailed": "Falha ao criar o Ponto de Segurança: {{message}}. Nada foi alterado.",
+      "checkpointSkipped": "Ponto de Segurança desativado nas preferências; seguindo sem rede de proteção.",
+      "done": "Otimizações selecionadas aplicadas com sucesso.",
+      "noCapture": "Sem estado anterior guardado para {{id}}; reversão cancelada.",
+      "noneSelected": "Selecione ao menos uma otimização antes de aplicar.",
+      "revertFailed": "Falha ao reverter a otimização: {{id}}",
+      "reverted": "Otimização revertida: {{id}}",
+      "unknown": "Otimização desconhecida: {{id}}"
     },
     "updateCache": {
       "done": "Cache do Windows Update limpo com sucesso.",
@@ -183,9 +203,53 @@
     "dashboard": "Painel Inicial",
     "expand": "Expandir menu",
     "logsFolder": "Pasta de Logs",
+    "optimize": "Otimizações",
     "restorePoints": "Pontos de Restauração",
     "scheduling": "Agendamento",
     "settings": "Configurações"
+  },
+  "optimize": {
+    "applyBtn": "Aplicar selecionadas ({{count}})",
+    "category": {
+      "boot": "Inicialização e temporizadores",
+      "cpu": "Processador e prioridades",
+      "services": "Serviços do Windows"
+    },
+    "clearBtn": "Limpar seleção",
+    "empty": "Nenhuma otimização disponível. Use Atualizar para consultar o sistema novamente.",
+    "preset": {
+      "quick": "Predefinição Rápida"
+    },
+    "presetLabel": "Comece por uma predefinição",
+    "revertBtn": "Reverter",
+    "revertConfirm": "Reverter esta otimização restaura o valor original guardado antes da aplicação. Deseja continuar?",
+    "sectionDesc": "Marque as otimizações desejadas. Um Ponto de Segurança é criado antes de qualquer alteração e cada item pode ser revertido individualmente.",
+    "sectionTitle": "Selecionar otimizações",
+    "state": {
+      "applied": "Aplicada",
+      "notApplied": "Não aplicada",
+      "partial": "Parcial"
+    },
+    "tweak": {
+      "boot": {
+        "disableDynamicTick": {
+          "desc": "Desativa o tick dinâmico do temporizador de boot, deixando os intervalos do relógio constantes. Exige reinicialização.",
+          "title": "Desativar tick dinâmico do temporizador"
+        }
+      },
+      "cpu": {
+        "win32PrioritySeparation": {
+          "desc": "Dá quantum curto e fixo ao aplicativo em primeiro plano, favorecendo jogos e janelas ativas.",
+          "title": "Prioridade para o aplicativo em primeiro plano"
+        }
+      },
+      "services": {
+        "sysMain": {
+          "desc": "Coloca o SysMain (Superfetch) em início Manual, reduzindo leitura de disco em segundo plano.",
+          "title": "SysMain em início Manual"
+        }
+      }
+    }
   },
   "rp": {
     "colActions": "Ações",
@@ -253,6 +317,25 @@
     "updateLatest": "Você está na versão mais recente.",
     "updateTitle": "Atualizações"
   },
+  "snapshot": {
+    "after": "Depois",
+    "before": "Antes",
+    "capturedAt": "Medição feita em {{timestamp}}",
+    "colMetric": "Métrica",
+    "empty": "Aplique otimizações para ver a comparação antes/depois.",
+    "metric": {
+      "automaticServices": "Serviços automáticos",
+      "bootDuration": "Duração do último boot",
+      "freeDisk": "Espaço livre em disco",
+      "freeMemory": "Memória livre",
+      "pendingReboot": "Reinicialização pendente",
+      "runningServices": "Serviços em execução",
+      "startupApps": "Programas na inicialização"
+    },
+    "notMeasured": "—",
+    "sectionDesc": "Medições feitas apenas com recursos nativos do Windows, antes e depois do lote aplicado.",
+    "sectionTitle": "Comparativo do sistema"
+  },
   "status": {
     "diskHealth": {
       "done": "Relatório de disco gerado!",
@@ -295,6 +378,12 @@
       "ip": "Resetando IP stack...",
       "start": "Revertendo configurações...",
       "winsock": "Resetando Winsock..."
+    },
+    "tweaks": {
+      "applying": "Aplicando {{id}}...",
+      "done": "Otimizações concluídas!",
+      "measuring": "Medindo o sistema...",
+      "reverting": "Revertendo {{id}}..."
     },
     "updateCache": {
       "done": "Cache do Windows Update limpo!",

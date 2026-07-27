@@ -24,6 +24,7 @@ namespace VeloSysPro
         private readonly Optimizer _optimizer;
         private readonly SchedulerManager _scheduler;
         private readonly SettingsManager _settings;
+        private readonly TweakEngine _tweaks;
         private readonly IpcEventEmitter _events;
         private readonly ActionHost _actionHost;
 
@@ -51,10 +52,19 @@ namespace VeloSysPro
             _scheduler = new SchedulerManager(_cmd, this);
             _settings = new SettingsManager();
             _events = new IpcEventEmitter(PostEventJson);
+            _tweaks = new TweakEngine(
+                TweakCatalog.CreateDefault(_cmd, _backup),
+                new JsonTweakCaptureStore(),
+                _systemRestore,
+                new SnapshotManager(_cmd, this),
+                new JsonlSnapshotStore(),
+                this
+            );
             _optimizer.CreateSafetyBackupEnabled = _settings.Current.CreateBackupBeforeOptimize;
+            _tweaks.CreateSafetyBackupEnabled = _settings.Current.CreateBackupBeforeOptimize;
 
             _actionHost = new ActionHost(
-                _optimizer, _backup, _systemRestore, _scheduler, _settings,
+                _optimizer, _backup, _systemRestore, _scheduler, _settings, _tweaks,
                 _events, this, _logsDir, _backupsDir
             );
 

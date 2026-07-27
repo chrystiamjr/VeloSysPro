@@ -23,6 +23,16 @@ export function formatDateTime(value: string, language: AppLanguage): string {
   }).format(timestamp);
 }
 
+/** Milliseconds as seconds, for the boot duration the host reads from the Windows event log. */
+export function formatDuration(milliseconds: number, language: AppLanguage): string {
+  const seconds = Number.isFinite(milliseconds) && milliseconds > 0 ? milliseconds / 1000 : 0;
+  const formatted = new Intl.NumberFormat(localeByLanguage[language], {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(seconds);
+  return `${formatted} s`;
+}
+
 export function formatBytes(value: number, language: AppLanguage): string {
   const kilobytes = Number.isFinite(value) && value >= 0 ? value / 1024 : 0;
   const formatted = new Intl.NumberFormat(localeByLanguage[language], {

@@ -93,6 +93,10 @@
       "subtitle": "Windows maintenance, network acceleration, and recovery",
       "title": "Optimization Dashboard"
     },
+    "optimize": {
+      "subtitle": "Pick, apply, and revert optimizations one by one",
+      "title": "À-la-carte Optimizations"
+    },
     "restorePoints": {
       "subtitle": "Create and roll back Windows system restore points",
       "title": "System Restore Points"
@@ -167,10 +171,26 @@
       "done": "Settings reverted successfully.",
       "start": "Reverting network settings to defaults..."
     },
+    "snapshot": {
+      "unavailable": "The system could not be measured; the metrics will read as zero."
+    },
     "task": {
       "created": "Scheduled task created: {{name}}",
       "deleted": "Scheduled task removed: {{name}}",
       "failed": "Scheduling operation failed: {{message}}"
+    },
+    "tweaks": {
+      "applied": "Optimization applied: {{id}}",
+      "applyFailed": "Failed to apply the optimization: {{id}}",
+      "checkpointCreated": "Safety Checkpoint created before any change.",
+      "checkpointFailed": "Failed to create the Safety Checkpoint: {{message}}. Nothing was changed.",
+      "checkpointSkipped": "Safety Checkpoint turned off in preferences; proceeding without a safety net.",
+      "done": "Selected optimizations applied successfully.",
+      "noCapture": "No prior state stored for {{id}}; revert cancelled.",
+      "noneSelected": "Select at least one optimization before applying.",
+      "revertFailed": "Failed to revert the optimization: {{id}}",
+      "reverted": "Optimization reverted: {{id}}",
+      "unknown": "Unknown optimization: {{id}}"
     },
     "updateCache": {
       "done": "Windows Update cache cleared successfully.",
@@ -183,9 +203,53 @@
     "dashboard": "Dashboard",
     "expand": "Expand menu",
     "logsFolder": "Logs Folder",
+    "optimize": "Optimizations",
     "restorePoints": "Restore Points",
     "scheduling": "Scheduler",
     "settings": "Settings"
+  },
+  "optimize": {
+    "applyBtn": "Apply selected ({{count}})",
+    "category": {
+      "boot": "Boot and timers",
+      "cpu": "Processor and priorities",
+      "services": "Windows services"
+    },
+    "clearBtn": "Clear selection",
+    "empty": "No optimizations available. Use Refresh to query the system again.",
+    "preset": {
+      "quick": "Quick preset"
+    },
+    "presetLabel": "Start from a preset",
+    "revertBtn": "Revert",
+    "revertConfirm": "Reverting this optimization restores the original value captured before it was applied. Continue?",
+    "sectionDesc": "Tick the optimizations you want. A Safety Checkpoint is created before any change, and every item can be reverted on its own.",
+    "sectionTitle": "Select optimizations",
+    "state": {
+      "applied": "Applied",
+      "notApplied": "Not applied",
+      "partial": "Partial"
+    },
+    "tweak": {
+      "boot": {
+        "disableDynamicTick": {
+          "desc": "Turns off the dynamic boot timer tick so clock intervals stay constant. Requires a restart.",
+          "title": "Disable the dynamic timer tick"
+        }
+      },
+      "cpu": {
+        "win32PrioritySeparation": {
+          "desc": "Gives the foreground application short, fixed quanta, favouring games and the active window.",
+          "title": "Boost the foreground application"
+        }
+      },
+      "services": {
+        "sysMain": {
+          "desc": "Sets SysMain (Superfetch) to Manual start, cutting background disk activity.",
+          "title": "SysMain on Manual start"
+        }
+      }
+    }
   },
   "rp": {
     "colActions": "Actions",
@@ -253,6 +317,25 @@
     "updateLatest": "You are on the latest version.",
     "updateTitle": "Updates"
   },
+  "snapshot": {
+    "after": "After",
+    "before": "Before",
+    "capturedAt": "Measured at {{timestamp}}",
+    "colMetric": "Metric",
+    "empty": "Apply optimizations to see the before/after comparison.",
+    "metric": {
+      "automaticServices": "Automatic services",
+      "bootDuration": "Last boot duration",
+      "freeDisk": "Free disk space",
+      "freeMemory": "Free memory",
+      "pendingReboot": "Restart pending",
+      "runningServices": "Running services",
+      "startupApps": "Startup programs"
+    },
+    "notMeasured": "—",
+    "sectionDesc": "Measured with built-in Windows facilities only, before and after the applied batch.",
+    "sectionTitle": "System comparison"
+  },
   "status": {
     "diskHealth": {
       "done": "Disk report generated!",
@@ -295,6 +378,12 @@
       "ip": "Resetting IP stack...",
       "start": "Reverting settings...",
       "winsock": "Resetting Winsock..."
+    },
+    "tweaks": {
+      "applying": "Applying {{id}}...",
+      "done": "Optimizations completed!",
+      "measuring": "Measuring the system...",
+      "reverting": "Reverting {{id}}..."
     },
     "updateCache": {
       "done": "Windows Update cache cleared!",

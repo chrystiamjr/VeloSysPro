@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MainLayout } from './components/templates/MainLayout';
 import { DashboardPage } from './components/pages/DashboardPage';
+import { OptimizePage } from './components/pages/OptimizePage';
 import { SchedulingPage } from './components/pages/SchedulingPage';
 import { BackupPage } from './components/pages/BackupPage';
 import { RestorePointsPage } from './components/pages/RestorePointsPage';
@@ -12,11 +13,17 @@ import {
   LogEntryItem,
   LogRecord,
   LocalizedMessage,
+  SnapshotCapturedPayload,
   UpdateInfo,
   SystemActions,
 } from './domain/types';
 import { useTranslation, LanguageProvider } from './infrastructure/i18nContext';
-import { subscribeLogs, subscribeStatus, subscribeUpdate } from './infrastructure/bridge';
+import {
+  subscribeLogs,
+  subscribeSnapshot,
+  subscribeStatus,
+  subscribeUpdate,
+} from './infrastructure/bridge';
 import { formatDateTime } from './domain/formatters';
 import { useExecutionLifecycle } from './infrastructure/useExecutionLifecycle';
 import { useOsBackedLists } from './infrastructure/useOsBackedLists';
@@ -24,6 +31,7 @@ import { usePreferences } from './infrastructure/usePreferences';
 
 const SCREEN_HEADERS: Record<AppScreen, { title: string; subtitle: string }> = {
   [AppScreen.Dashboard]: { title: 'header.dashboard.title', subtitle: 'header.dashboard.subtitle' },
+  [AppScreen.Optimize]: { title: 'header.optimize.title', subtitle: 'header.optimize.subtitle' },
   [AppScreen.Scheduling]: {
     title: 'header.scheduling.title',
     subtitle: 'header.scheduling.subtitle',
@@ -45,10 +53,19 @@ function AppContent() {
   const [updateDismissed, setUpdateDismissed] = useState(false);
   const [logs, setLogs] = useState<LogRecord[]>([{ key: 'log.appStarted', type: 'success' }]);
   const [consoleExpanded, setConsoleExpanded] = useState(false);
+  const [snapshot, setSnapshot] = useState<SnapshotCapturedPayload | null>(null);
   const { activeAction, progressPercent, executionHasError, runRead, runMutation } =
     useExecutionLifecycle();
-  const { backups, tasks, restorePoints, refreshBackups, refreshTasks, refreshRestorePoints } =
-    useOsBackedLists(activeScreen);
+  const {
+    backups,
+    tasks,
+    restorePoints,
+    tweakCatalog,
+    refreshBackups,
+    refreshTasks,
+    refreshRestorePoints,
+    refreshTweaks,
+  } = useOsBackedLists(activeScreen);
   const { settings, setLanguage, setSafetyBackup, toggleSidebar } = usePreferences(setLang);
 
   useEffect(() => {
@@ -62,6 +79,10 @@ function AppContent() {
 
       subscribeStatus((msg) => {
         setStatus(msg);
+      }),
+
+      subscribeSnapshot((payload) => {
+        setSnapshot(payload);
       }),
 
       subscribeUpdate((info) => {
@@ -146,6 +167,17 @@ function AppContent() {
           consoleExpanded={consoleExpanded}
           executionHasError={executionHasError}
           onToggleConsole={() => setConsoleExpanded((value) => !value)}
+        />
+      )}
+
+      {activeScreen === AppScreen.Optimize && (
+        <OptimizePage
+          catalog={tweakCatalog}
+          snapshot={snapshot}
+          disabled={activeAction !== null}
+          onApply={(tweakIds) => runMutation(SystemActions.APPLY_TWEAKS, { tweakIds })}
+          onRevert={(tweakId) => runMutation(SystemActions.REVERT_TWEAK, tweakId)}
+          onRefresh={refreshTweaks}
         />
       )}
 

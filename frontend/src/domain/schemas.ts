@@ -48,6 +48,52 @@ export const UpdateInfoSchema = z.object({
   url: z.string(),
 });
 
+/** Narrow: the badge and the Revert control branch on this, so an unknown state must be rejected. */
+export const TweakStateSchema = z.enum(['Applied', 'NotApplied', 'Partial']);
+
+export const RiskTierSchema = z.enum(['Safe', 'Advanced']);
+
+export const TweakSchema = z.object({
+  id: z.string().min(1),
+  category: z.string().min(1),
+  riskTier: RiskTierSchema,
+  kind: z.enum(['registry', 'bcd', 'service']),
+  state: TweakStateSchema,
+});
+
+export const PresetSchema = z.object({
+  id: z.string().min(1),
+  tweakIds: z.array(z.string().min(1)),
+});
+
+export const TweakCatalogSchema = z.object({
+  tweaks: z.array(TweakSchema),
+  presets: z.array(PresetSchema),
+});
+
+/**
+ * Every metric is a number the host measured, never a formatted string: the diff is rendered and
+ * compared in React, so a culture-formatted value would break both.
+ */
+export const OptimizationSnapshotSchema = z.object({
+  capturedAt: z.iso.datetime(),
+  bootDurationMs: z.number().int().nonnegative(),
+  freeMemoryBytes: z.number().int().nonnegative(),
+  totalMemoryBytes: z.number().int().nonnegative(),
+  freeDiskBytes: z.number().int().nonnegative(),
+  totalDiskBytes: z.number().int().nonnegative(),
+  automaticServices: z.number().int().nonnegative(),
+  runningServices: z.number().int().nonnegative(),
+  startupApps: z.number().int().nonnegative(),
+  pendingReboot: z.boolean(),
+});
+
+/** `before` is null for a standalone measurement, which has no baseline to compare against. */
+export const SnapshotCapturedPayloadSchema = z.object({
+  before: OptimizationSnapshotSchema.nullable(),
+  after: OptimizationSnapshotSchema,
+});
+
 export const LogTypeSchema = z.enum(['info', 'error', 'success']);
 
 export const LocalizedMessageSchema = z.object({
@@ -65,6 +111,9 @@ export const IpcEventNameSchema = z.enum([
   'settingsLoaded',
   'updateAvailable',
   'actionFinished',
+  'tweaksLoaded',
+  'snapshotCaptured',
+  'historyLoaded',
 ]);
 
 export const IpcEventEnvelopeSchema = z.object({
@@ -82,6 +131,13 @@ export const ActionFinishedPayloadSchema = z.object({
   ok: z.boolean(),
 });
 
+export type Tweak = z.infer<typeof TweakSchema>;
+export type TweakState = z.infer<typeof TweakStateSchema>;
+export type RiskTier = z.infer<typeof RiskTierSchema>;
+export type Preset = z.infer<typeof PresetSchema>;
+export type TweakCatalog = z.infer<typeof TweakCatalogSchema>;
+export type OptimizationSnapshot = z.infer<typeof OptimizationSnapshotSchema>;
+export type SnapshotCapturedPayload = z.infer<typeof SnapshotCapturedPayloadSchema>;
 export type BackupItem = z.infer<typeof BackupItemSchema>;
 export type ScheduledTaskItem = z.infer<typeof ScheduledTaskItemSchema>;
 export type RestorePointItem = z.infer<typeof RestorePointItemSchema>;

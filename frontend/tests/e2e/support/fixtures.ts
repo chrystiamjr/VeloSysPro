@@ -1,8 +1,10 @@
 import type {
   AppSettings,
   BackupItem,
+  OptimizationSnapshot,
   RestorePointItem,
   ScheduledTaskItem,
+  TweakCatalog,
   UpdateInfo,
 } from '../../../src/domain/types';
 
@@ -58,6 +60,66 @@ export const restorePoints: RestorePointItem[] = [
     Description: 'Windows Update',
   },
 ];
+
+/** Mirrors what TweakCatalog.CreateDefault seeds: one Tweak per revert mechanism. */
+export const tweakCatalog: TweakCatalog = {
+  tweaks: [
+    {
+      id: 'cpu.win32PrioritySeparation',
+      category: 'cpu',
+      riskTier: 'Safe',
+      kind: 'registry',
+      state: 'NotApplied',
+    },
+    {
+      id: 'boot.disableDynamicTick',
+      category: 'boot',
+      riskTier: 'Safe',
+      kind: 'bcd',
+      state: 'NotApplied',
+    },
+    {
+      id: 'services.sysMain',
+      category: 'services',
+      riskTier: 'Safe',
+      kind: 'service',
+      state: 'NotApplied',
+    },
+  ],
+  presets: [
+    {
+      id: 'quick',
+      tweakIds: ['cpu.win32PrioritySeparation', 'boot.disableDynamicTick', 'services.sysMain'],
+    },
+  ],
+};
+
+export const appliedTweakCatalog: TweakCatalog = {
+  ...tweakCatalog,
+  tweaks: tweakCatalog.tweaks.map((tweak) => ({ ...tweak, state: 'Applied' as const })),
+};
+
+export const snapshotBefore: OptimizationSnapshot = {
+  capturedAt: '2026-07-25T10:00:00.000Z',
+  bootDurationMs: 32000,
+  freeMemoryBytes: 4194304,
+  totalMemoryBytes: 17179869184,
+  freeDiskBytes: 10485760,
+  totalDiskBytes: 500000000000,
+  automaticServices: 100,
+  runningServices: 80,
+  startupApps: 15,
+  pendingReboot: false,
+};
+
+export const snapshotAfter: OptimizationSnapshot = {
+  ...snapshotBefore,
+  capturedAt: '2026-07-25T10:04:00.000Z',
+  bootDurationMs: 21500,
+  freeMemoryBytes: 8388608,
+  automaticServices: 94,
+  runningServices: 71,
+};
 
 export const updateInfo: UpdateInfo = {
   version: '0.9.0',

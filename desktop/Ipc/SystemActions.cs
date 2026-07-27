@@ -24,5 +24,10 @@ namespace VeloSysPro
         public const string RestoreToPoint = "restoreToPoint";
         public const string GetSettings = "getSettings";
         public const string SaveSettings = "saveSettings";
+        public const string LoadTweaks = "loadTweaks";
+        public const string ApplyTweaks = "applyTweaks";
+        public const string RevertTweak = "revertTweak";
+        public const string CaptureSnapshot = "captureSnapshot";
+        public const string LoadHistory = "loadHistory";
     }
 }

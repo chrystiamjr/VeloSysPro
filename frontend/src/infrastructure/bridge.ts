@@ -12,16 +12,22 @@ import {
   IpcEventEnvelopeSchema,
   LocalizedMessageSchema,
   LogReceivedPayloadSchema,
+  OptimizationSnapshotSchema,
   RestorePointItemSchema,
   ScheduledTaskItemSchema,
+  SnapshotCapturedPayloadSchema,
+  TweakCatalogSchema,
   UpdateInfoSchema,
   type AppSettings,
   type BackupItem,
   type IpcEventName,
   type LocalizedMessage,
   type LogType,
+  type OptimizationSnapshot,
   type RestorePointItem,
   type ScheduledTaskItem,
+  type SnapshotCapturedPayload,
+  type TweakCatalog,
   type UpdateInfo,
 } from '../domain/schemas';
 
@@ -156,6 +162,20 @@ export function subscribeTasks(callback: (data: ScheduledTaskItem[]) => void): U
 
 export function subscribeRestorePoints(callback: (data: RestorePointItem[]) => void): Unsubscribe {
   return subscribeCollection('restorePointsLoaded', z.array(RestorePointItemSchema), callback);
+}
+
+export function subscribeTweaks(callback: (data: TweakCatalog) => void): Unsubscribe {
+  return subscribeCollection('tweaksLoaded', TweakCatalogSchema, callback);
+}
+
+export function subscribeSnapshot(
+  callback: (payload: SnapshotCapturedPayload) => void
+): Unsubscribe {
+  return subscribeCollection('snapshotCaptured', SnapshotCapturedPayloadSchema, callback);
+}
+
+export function subscribeHistory(callback: (data: OptimizationSnapshot[]) => void): Unsubscribe {
+  return subscribeCollection('historyLoaded', z.array(OptimizationSnapshotSchema), callback);
 }
 
 export function subscribeSettings(callback: (data: AppSettings) => void): Unsubscribe {

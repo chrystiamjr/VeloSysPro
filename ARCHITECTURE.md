@@ -7,9 +7,10 @@ carries its own front end with no external `ui/` folder.
 
 This document describes how the two halves communicate, how ownership is divided, and the invariants
 that keep an elevated, bilingual optimizer safe and testable. Domain vocabulary is defined in
-[`CONTEXT.md`](CONTEXT.md); the two load-bearing decisions are recorded as ADRs
+[`CONTEXT.md`](CONTEXT.md); the load-bearing decisions are recorded as ADRs — the IPC seam in
 [0001](docs/adr/0001-use-webview2-event-envelopes.md) and
-[0002](docs/adr/0002-use-structured-validated-actions.md).
+[0002](docs/adr/0002-use-structured-validated-actions.md), and the Tweak framework in
+[0003](docs/adr/0003-tweak-as-reversible-unit.md)–[0007](docs/adr/0007-jsonl-snapshot-store.md).
 
 ---
 
@@ -78,7 +79,8 @@ string-payload compatibility to maintain.
 ### Canonical Event names (`desktop/Ipc/IpcEvents.cs`)
 
 `logReceived` · `statusUpdated` · `progressUpdated` · `backupsLoaded` · `tasksLoaded` ·
-`restorePointsLoaded` · `settingsLoaded` · `updateAvailable` · `actionFinished`
+`restorePointsLoaded` · `settingsLoaded` · `updateAvailable` · `actionFinished` · `tweaksLoaded` ·
+`snapshotCaptured` · `historyLoaded`
 
 ---
 
@@ -110,7 +112,10 @@ WebView2 and that tests capture directly.
 | Module | Responsibility |
 | :-- | :-- |
 | `Optimizer` | Runs the named **Optimization Plans** — `Quick`, `Full`, `Gaming`, `Revert` — plus `ClearUpdateCache`, `CleanPrefetch`, `ReportDiskHealth`. Success is derived from **exit codes**, not stderr presence. Honors the safety-backup preference. |
-| `RegistryBackupManager` | Exports/imports TCP/IP registry `.reg` backups; lists them as Management Records. |
+| `TweakCatalog` + `ITweak` | The **Tweak** catalog: one registry, BCD, or service optimization each, able to `Detect`, `Capture`, `Apply`, and `Revert` itself. **Presets** are Tweak-id sets over it, keyed by the CLI task names, and may reference `Safe` Tweaks only (ADR [0003](docs/adr/0003-tweak-as-reversible-unit.md), [0005](docs/adr/0005-advanced-risk-tier.md)). |
+| `TweakEngine` | Orchestrates a batch: **Safety Checkpoint**, per-Tweak capture, apply, before/after measurement — and the single-Tweak Revert the capture makes possible (ADR [0004](docs/adr/0004-safety-checkpoint.md)). Returns facts; `ActionHost` publishes them. |
+| `SnapshotManager` + `ISnapshotStore` | Captures an **Optimization Snapshot** from built-in facilities only (CIM, `Get-Service`, the Diagnostics-Performance log) and appends it to the append-only JSONL **Optimization History** (ADR [0006](docs/adr/0006-built-in-only-boundary.md), [0007](docs/adr/0007-jsonl-snapshot-store.md)). |
+| `RegistryBackupManager` | Exports/imports TCP/IP registry `.reg` backups and lists them as Management Records; also exports/imports arbitrary keys as a Tweak's capture archive. |
 | `SystemRestoreManager` | Lists, creates, and rolls back Windows System Restore points (rollback reboots). |
 | `SchedulerManager` + `SchedulePolicy` | Create/list/delete Task Scheduler entries that run the exe headlessly. `SchedulePolicy` owns schedule validation, normalization, task-name encoding/decoding, and **locale-neutral** fallback states (`Unknown`). |
 | `SettingsManager` | Persists preferences in `%LOCALAPPDATA%\VeloSysPro\settings.json`. |
@@ -127,7 +132,8 @@ WebView2 and that tests capture directly.
 - `ManagedStream` + `MainWindow` — serve the embedded `ui/` bundle from memory via WebView2
   `WebResourceRequested` under `https://velosys.app/`, so the release needs no `ui/` folder on disk.
 - `AppPaths` — centralizes all mutable runtime data under `%LOCALAPPDATA%\VeloSysPro`: preferences,
-  logs, Registry backups, and the WebView2 user-data profile. The executable directory stays clean.
+  logs, Registry backups, per-Tweak captures, the Optimization History (`history.jsonl`), and the
+  WebView2 user-data profile. The executable directory stays clean.
 
 ---
 
@@ -153,7 +159,7 @@ React state is split into three focused owners instead of one mega-component:
 | Hook | Owns |
 | :-- | :-- |
 | `useExecutionLifecycle` | The execution lock, mirroring the host: `runMutation` acquires it and only the matching `actionFinished` Event releases it; `runRead` never locks; progress is visual-only. |
-| `useOsBackedLists` | The **Management Records** (backups, tasks, restore points). Refreshes on relevant navigation and after successful mutations; a failed read **keeps the last valid list** rather than blanking it. |
+| `useOsBackedLists` | The **Management Records** (backups, tasks, restore points) and the Tweak catalog. Refreshes on relevant navigation and after successful mutations; a failed read **keeps the last valid list** rather than blanking it. |
 | `usePreferences` | Settings. Updates are optimistic, but the host re-emits the persisted settings after acceptance or rejection, which wins. |
 
 ### UI conventions

@@ -11,8 +11,15 @@ export type {
   BackupItem,
   LocalizedMessage,
   LogType,
+  OptimizationSnapshot,
+  Preset,
   RestorePointItem,
+  RiskTier,
   ScheduledTaskItem,
+  SnapshotCapturedPayload,
+  Tweak,
+  TweakCatalog,
+  TweakState,
   UpdateInfo,
 } from './schemas';
 
@@ -40,12 +47,18 @@ export const SystemActions = {
   RESTORE_TO_POINT: 'restoreToPoint',
   GET_SETTINGS: 'getSettings',
   SAVE_SETTINGS: 'saveSettings',
+  LOAD_TWEAKS: 'loadTweaks',
+  APPLY_TWEAKS: 'applyTweaks',
+  REVERT_TWEAK: 'revertTweak',
+  CAPTURE_SNAPSHOT: 'captureSnapshot',
+  LOAD_HISTORY: 'loadHistory',
 } as const;
 
 export type SystemActionType = (typeof SystemActions)[keyof typeof SystemActions];
 
 export enum AppScreen {
   Dashboard = 'Dashboard',
+  Optimize = 'Optimize',
   Scheduling = 'Scheduling',
   Backup = 'Backup',
   RestorePoints = 'RestorePoints',
