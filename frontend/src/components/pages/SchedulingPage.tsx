@@ -96,7 +96,7 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
   ];
 
   return (
-    <div className="flex select-none flex-col gap-6">
+    <div className="flex select-none flex-col gap-6 pb-4 sm:pb-6 lg:pb-8">
       {/* Create form */}
       <div className="flex flex-col gap-5 rounded-xl border border-borderColor bg-bgCard p-6">
         <div>

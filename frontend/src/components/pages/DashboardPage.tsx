@@ -45,7 +45,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   };
 
   return (
-    <div className="flex select-none flex-col gap-6">
+    <div className="flex select-none flex-col gap-6 pb-4 sm:pb-6 lg:pb-8">
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <HealthCard
           testId="health-backups"

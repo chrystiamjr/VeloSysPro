@@ -165,7 +165,7 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
   ];
 
   return (
-    <div className="flex select-none flex-col gap-6">
+    <div className="flex min-h-full flex-1 select-none flex-col gap-6">
       {!catalog.systemProtectionEnabled && (
         <SystemProtectionNotice onEnable={onEnableProtection} disabled={disabled} />
       )}
@@ -209,7 +209,7 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
           and the action stay in view however far the catalog scrolls. */}
       <div
         data-cy="tweak-action-bar"
-        className="sticky bottom-0 z-20 -mx-4 -mb-4 mt-2 flex flex-col gap-3 border-t border-borderColor bg-bgSidebar/95 px-4 py-4 shadow-[0_-8px_24px_rgba(0,0,0,0.35)] backdrop-blur sm:-mx-6 sm:-mb-6 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:-mx-8 lg:-mb-8 lg:px-8"
+        className="sticky bottom-0 z-20 -mx-4 mt-auto flex flex-col gap-3 border-t border-borderColor bg-bgSidebar/95 px-4 py-4 shadow-[0_-8px_24px_rgba(0,0,0,0.35)] backdrop-blur sm:-mx-6 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:-mx-8 lg:px-8"
       >
         <span data-cy="tweak-pending-summary" className="text-xs text-textMuted">
           {hasPendingChange

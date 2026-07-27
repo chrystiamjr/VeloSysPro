@@ -32,7 +32,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   const { t } = useTranslation();
 
   return (
-    <div className="flex select-none flex-col gap-6">
+    <div className="flex select-none flex-col gap-6 pb-4 sm:pb-6 lg:pb-8">
       {/* Language */}
       <div className="rounded-xl border border-borderColor bg-bgCard p-6">
         <h3 className="text-lg font-bold text-white">{t('settings.languageTitle')}</h3>

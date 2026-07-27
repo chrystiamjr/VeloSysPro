@@ -77,7 +77,10 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
       <main
         data-cy="app-main"
-        className="flex h-screen min-w-0 flex-1 flex-col overflow-y-auto p-4 sm:p-6 lg:p-8"
+        // No bottom padding: a `sticky bottom-0` element pins to the scrollport, which is this
+        // element's padding box, so any padding here would always show as a strip beneath it.
+        // Each page adds its own bottom breathing room; a page ending in an action bar does not.
+        className="flex h-screen min-w-0 flex-1 flex-col overflow-y-auto p-4 pb-0 sm:p-6 sm:pb-0 lg:p-8 lg:pb-0"
       >
         <header className="mb-6">
           <h2 className="text-2xl font-bold text-white">{title}</h2>

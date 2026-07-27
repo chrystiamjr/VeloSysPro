@@ -73,7 +73,7 @@ export const RestorePointsPage: React.FC<RestorePointsPageProps> = ({
   ];
 
   return (
-    <div className="flex select-none flex-col gap-6">
+    <div className="flex select-none flex-col gap-6 pb-4 sm:pb-6 lg:pb-8">
       <div className="rounded-xl border border-borderColor bg-bgCard p-6">
         <div className="flex flex-col gap-5">
           <div>
