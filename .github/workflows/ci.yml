@@ -83,7 +83,7 @@ jobs:
           wait-on-timeout: 120
       - name: Upload Cypress failure screenshots
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: cypress-failure-screenshots
           path: frontend/cypress/screenshots
