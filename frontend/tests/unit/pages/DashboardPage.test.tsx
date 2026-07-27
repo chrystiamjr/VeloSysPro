@@ -41,7 +41,7 @@ describe('DashboardPage', () => {
   it('prioritizes primary actions and opens only the maintenance group initially', () => {
     renderDashboard();
 
-    expect(screen.getByText('Ações principais')).toBeVisible();
+    expect(screen.getByText('Rotinas de manutenção')).toBeVisible();
     expect(screen.getByText('Saúde do Disco')).toBeVisible();
     expect(screen.queryByText('Backup de Registro')).not.toBeInTheDocument();
 

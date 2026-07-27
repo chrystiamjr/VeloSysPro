@@ -98,11 +98,13 @@ export const PresetPicker: React.FC<PresetPickerProps> = ({
         />
       </div>
 
-      <div className="flex flex-wrap justify-end gap-1">
+      {/* Side by side and shorter than the cards above them: still clearly actions, but not
+          competing with the choice this screen is actually about. */}
+      <div className="grid gap-3 sm:grid-cols-2">
         <Button
           testId="tweak-clear"
-          variant="ghost"
-          className="w-auto gap-1.5 px-3 py-2"
+          variant="danger"
+          className="gap-1.5 py-2.5"
           disabled={disabled}
           onClick={onClear}
         >
@@ -110,8 +112,8 @@ export const PresetPicker: React.FC<PresetPickerProps> = ({
         </Button>
         <Button
           testId="tweak-refresh"
-          variant="ghost"
-          className="w-auto gap-1.5 px-3 py-2"
+          variant="primary"
+          className="gap-1.5 py-2.5"
           disabled={disabled}
           onClick={onRefresh}
         >

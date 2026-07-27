@@ -10,7 +10,7 @@
     },
     "full": {
       "desc": "Executa SFC, DISM, verificação de disco, flush DNS e limpeza completa.",
-      "title": "Otimização Completa"
+      "title": "Reparo Completo"
     },
     "gaming": {
       "desc": "Ajusta pilha TCP (RSS, Autotuning) focados em latência e jogos online.",
@@ -22,7 +22,7 @@
     },
     "quick": {
       "desc": "Limpeza de cache DNS, arquivos temporários do sistema e manutenção leve.",
-      "title": "Otimização Rápida"
+      "title": "Limpeza Rápida"
     },
     "restorePoint": {
       "desc": "Cria um ponto de restauração verificado do Windows antes de alterações.",
@@ -72,8 +72,8 @@
       "title": "Manutenção"
     },
     "primary": {
-      "desc": "Escolha a rotina mais adequada para otimizar o sistema.",
-      "title": "Ações principais"
+      "desc": "Rotinas que limpam e reparam o Windows. Não alteram configurações — para isso, use Otimizações.",
+      "title": "Rotinas de manutenção"
     },
     "recovery": {
       "desc": "Backups, pontos de restauração e reversão de rede.",
@@ -140,8 +140,8 @@
       "start": "Gerando relatório de saúde do disco..."
     },
     "full": {
-      "done": "Otimização Completa concluída com sucesso.",
-      "start": "Iniciando Otimização Completa..."
+      "done": "Reparo Completo concluído com sucesso.",
+      "start": "Iniciando Reparo Completo..."
     },
     "gaming": {
       "done": "Modo Gaming aplicado com sucesso.",
@@ -161,8 +161,8 @@
       "failed": "Falha ao ativar a Proteção do Sistema: {{message}}"
     },
     "quick": {
-      "done": "Otimização Rápida concluída com sucesso.",
-      "start": "Iniciando Otimização Rápida..."
+      "done": "Limpeza Rápida concluída com sucesso.",
+      "start": "Iniciando Limpeza Rápida..."
     },
     "raw": "{{text}}",
     "restorePoint": {
@@ -395,9 +395,9 @@
     "full": {
       "dism": "[2/4] Limpando imagem do sistema (DISM)...",
       "dns": "[3/4] Limpando cache DNS...",
-      "done": "Otimização Completa concluída!",
+      "done": "Reparo Completo concluído!",
       "sfc": "[1/4] Verificando arquivos do sistema (SFC)...",
-      "start": "Iniciando Otimização Completa...",
+      "start": "Iniciando Reparo Completo...",
       "temp": "[4/4] Limpando arquivos temporários..."
     },
     "gaming": {
@@ -415,8 +415,8 @@
     "quick": {
       "cleanmgr": "[2/3] Executando limpeza de temporários...",
       "dns": "[1/3] Limpando cache DNS...",
-      "done": "Otimização Rápida concluída com sucesso!",
-      "start": "Iniciando Otimização Rápida...",
+      "done": "Limpeza Rápida concluída com sucesso!",
+      "start": "Iniciando Limpeza Rápida...",
       "temp": "[3/3] Finalizando limpeza de arquivos..."
     },
     "restorePoint": {

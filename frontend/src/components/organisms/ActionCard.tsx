@@ -21,8 +21,6 @@ const borderStripe: Record<ButtonVariant, string> = {
   pink: 'before:bg-pink',
   info: 'before:bg-info',
   danger: 'before:bg-danger',
-  // A ghost action carries no emphasis, so it gets no accent stripe either.
-  ghost: 'before:bg-borderColor',
 };
 
 export const ActionCard: React.FC<ActionCardProps> = ({

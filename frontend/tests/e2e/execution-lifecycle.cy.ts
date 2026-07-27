@@ -64,7 +64,7 @@ describe('global execution lifecycle', () => {
     });
     cy.getByCy('terminal-toggle').click();
     cy.getByCy('terminal-content')
-      .should('contain', 'Iniciando Otimização Rápida')
+      .should('contain', 'Iniciando Limpeza Rápida')
       .and('contain', 'native output');
     cy.getByCy('terminal-clear').click();
     cy.getByCy('terminal-content').should('contain', 'Aguardando logs');
@@ -85,6 +85,6 @@ describe('global execution lifecycle', () => {
     cy.getByCy('nav-Settings').click();
     cy.getByCy('language-en').click();
     cy.getByCy('nav-Dashboard').click();
-    cy.getByCy('terminal-content').should('contain', 'Starting Quick Optimization');
+    cy.getByCy('terminal-content').should('contain', 'Starting Quick Cleanup');
   });
 });
