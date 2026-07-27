@@ -92,7 +92,8 @@ export const TweakRow: React.FC<TweakRowProps> = ({
           <Button
             testId={`tweak-revert-${tweak.id}`}
             variant="warning"
-            className="w-auto gap-1.5 px-4 py-2"
+            fullWidth={false}
+            className="gap-1.5 px-4 py-2"
             disabled={disabled}
             onClick={() => onRevert(tweak.id)}
           >

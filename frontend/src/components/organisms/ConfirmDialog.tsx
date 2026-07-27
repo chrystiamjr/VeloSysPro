@@ -131,7 +131,8 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           <Button
             testId={`${testId}-cancel`}
             variant="primary"
-            className="w-auto px-5"
+            fullWidth={false}
+            className="px-5"
             buttonRef={cancelRef}
             onClick={onCancel}
           >
@@ -140,7 +141,8 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           <Button
             testId={`${testId}-confirm`}
             variant={confirmVariant}
-            className="w-auto px-5"
+            fullWidth={false}
+            className="px-5"
             onClick={onConfirm}
           >
             {confirmLabel}

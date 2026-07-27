@@ -204,11 +204,12 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
 
       <SnapshotDiff snapshot={snapshot} />
 
-      {/* Sticky so the action stays reachable as the catalog grows past one screenful, and so the
-          pending difference is always in view while the user is drawing it. */}
+      {/* Bleeds through the page padding to span the whole content panel, so it reads as a bar the
+          screen sits on rather than one more card in the stack. Sticky so the pending difference
+          and the action stay in view however far the catalog scrolls. */}
       <div
         data-cy="tweak-action-bar"
-        className="sticky bottom-0 z-10 flex flex-col gap-3 rounded-xl border border-borderColor bg-bgCard/95 p-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between"
+        className="sticky bottom-0 z-20 -mx-4 -mb-4 mt-2 flex flex-col gap-3 border-t border-borderColor bg-bgSidebar/95 px-4 py-4 shadow-[0_-8px_24px_rgba(0,0,0,0.35)] backdrop-blur sm:-mx-6 sm:-mb-6 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:-mx-8 lg:-mb-8 lg:px-8"
       >
         <span data-cy="tweak-pending-summary" className="text-xs text-textMuted">
           {hasPendingChange
@@ -218,7 +219,8 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
         <Button
           testId="tweak-apply"
           variant="success"
-          className="w-auto items-center gap-2 px-5"
+          fullWidth={false}
+          className="items-center gap-2 px-6"
           disabled={disabled || !hasPendingChange}
           onClick={submit}
         >

@@ -63,7 +63,8 @@ export const BackupPage: React.FC<BackupPageProps> = ({
         <Button
           testId={`backup-restore-${backup.Name}`}
           variant="warning"
-          className="ml-auto flex w-auto items-center gap-1.5 px-4 py-2"
+          fullWidth={false}
+          className="ml-auto flex items-center gap-1.5 px-4 py-2"
           disabled={disabled}
           onClick={() => handleRestore(backup.Name)}
         >

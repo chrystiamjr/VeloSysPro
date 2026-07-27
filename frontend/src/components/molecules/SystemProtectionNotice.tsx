@@ -42,7 +42,8 @@ export const SystemProtectionNotice: React.FC<SystemProtectionNoticeProps> = ({
       <Button
         testId="system-protection-enable"
         variant="warning"
-        className="w-auto items-center gap-2 self-start px-5"
+        fullWidth={false}
+        className="items-center gap-2 self-start px-5"
         disabled={disabled}
         onClick={onEnable}
       >

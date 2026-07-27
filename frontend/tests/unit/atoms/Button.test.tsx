@@ -21,4 +21,20 @@ describe('Button Atom Component (Tailwind Design System)', () => {
     fireEvent.click(screen.getByText('Desabilitado'));
     expect(handleClick).not.toHaveBeenCalled();
   });
+
+  it('fills its container by default', () => {
+    const { container } = render(<Button>Aplicar</Button>);
+
+    expect(container.querySelector('button')).toHaveClass('w-full');
+  });
+
+  it('shrinks to its content when asked, without leaving w-full behind', () => {
+    // Tailwind emits .w-full after .w-auto, so a "w-auto" passed through className silently lost
+    // and every button that tried it stayed full width. Deciding this by prop is the whole point.
+    const { container } = render(<Button fullWidth={false}>Aplicar</Button>);
+
+    const button = container.querySelector('button')!;
+    expect(button).toHaveClass('w-auto');
+    expect(button).not.toHaveClass('w-full');
+  });
 });

@@ -61,7 +61,8 @@ export const RestorePointsPage: React.FC<RestorePointsPageProps> = ({
         <Button
           testId={`restore-point-restore-${point.Sequence}`}
           variant="warning"
-          className="ml-auto flex w-auto items-center gap-1.5 px-4 py-2"
+          fullWidth={false}
+          className="ml-auto flex items-center gap-1.5 px-4 py-2"
           disabled={disabled}
           onClick={() => handleRestore(point.Sequence)}
         >
