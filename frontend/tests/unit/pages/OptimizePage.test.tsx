@@ -37,6 +37,11 @@ const catalog: TweakCatalog = {
   ],
 };
 
+const allApplied: TweakCatalog = {
+  ...catalog,
+  tweaks: catalog.tweaks.map((tweak) => ({ ...tweak, state: 'Applied' as const })),
+};
+
 const renderPage = (props: Partial<React.ComponentProps<typeof OptimizePage>> = {}) => {
   const merged = {
     catalog,
@@ -47,18 +52,21 @@ const renderPage = (props: Partial<React.ComponentProps<typeof OptimizePage>> = 
     onEnableProtection: vi.fn(),
     ...props,
   };
-  const { container } = render(
+  const { container, rerender } = render(
     <LanguageProvider>
       <OptimizePage {...merged} />
     </LanguageProvider>
   );
-  return { ...merged, container };
+  return { ...merged, container, rerender };
 };
 
 const click = (container: HTMLElement, testId: string) =>
   fireEvent.click(container.querySelector(`[data-cy="${testId}"]`)!);
 
-describe('OptimizePage (selection screen)', () => {
+const box = (container: HTMLElement, id: string) =>
+  container.querySelector(`[data-cy="tweak-select-${id}"]`) as HTMLInputElement;
+
+describe('OptimizePage (desired-state selection screen)', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
@@ -71,48 +79,147 @@ describe('OptimizePage (selection screen)', () => {
     expect(container.querySelector('[data-cy="tweak-category-services"]')).toBeInTheDocument();
   });
 
-  it('applies exactly the Tweaks the user ticked', () => {
+  it('starts with the boxes mirroring what the system already has', () => {
+    // The contradiction the old model produced: an "Applied" badge beside an empty box.
+    const { container } = renderPage();
+
+    expect(box(container, 'boot.disableDynamicTick')).toBeChecked();
+    expect(box(container, 'cpu.win32PrioritySeparation')).not.toBeChecked();
+  });
+
+  it('has nothing to submit until the drawn state differs from the live one', () => {
+    const { container } = renderPage();
+
+    expect(container.querySelector('[data-cy="tweak-apply"]')).toBeDisabled();
+    expect(screen.getByText(/Nenhuma alteração pendente/i)).toBeInTheDocument();
+  });
+
+  it('submits only the newly ticked Tweaks', () => {
     const { container, onApply } = renderPage();
 
     click(container, 'tweak-select-cpu.win32PrioritySeparation');
-    click(container, 'tweak-select-services.sysMain');
     click(container, 'tweak-apply');
 
-    expect(onApply).toHaveBeenCalledWith(['cpu.win32PrioritySeparation', 'services.sysMain']);
+    expect(onApply).toHaveBeenCalledWith({
+      tweakIds: ['cpu.win32PrioritySeparation'],
+      revertIds: [],
+    });
   });
 
-  it('unticks a Tweak that is clicked twice', () => {
-    const { container, onApply } = renderPage();
+  it('summarizes the pending difference in both directions', () => {
+    const { container } = renderPage();
 
     click(container, 'tweak-select-cpu.win32PrioritySeparation');
-    click(container, 'tweak-select-services.sysMain');
-    click(container, 'tweak-select-cpu.win32PrioritySeparation');
-    click(container, 'tweak-apply');
+    click(container, 'tweak-select-boot.disableDynamicTick');
 
-    expect(onApply).toHaveBeenCalledWith(['services.sysMain']);
+    expect(screen.getByText(/1 para aplicar · 1 para reverter/)).toBeInTheDocument();
   });
 
-  it('starts a selection from a preset', () => {
+  it('asks before undoing anything, naming what will be undone', () => {
     const { container, onApply } = renderPage();
 
-    click(container, 'tweak-preset-quick');
-    click(container, 'tweak-apply');
-
-    expect(onApply).toHaveBeenCalledWith([
-      'cpu.win32PrioritySeparation',
-      'boot.disableDynamicTick',
-      'services.sysMain',
-    ]);
-  });
-
-  it('lets the user adjust a preset before applying it', () => {
-    const { container, onApply } = renderPage();
-
-    click(container, 'tweak-preset-quick');
     click(container, 'tweak-select-boot.disableDynamicTick');
     click(container, 'tweak-apply');
 
-    expect(onApply).toHaveBeenCalledWith(['cpu.win32PrioritySeparation', 'services.sysMain']);
+    expect(onApply).not.toHaveBeenCalled();
+    const items = container.querySelector('[data-cy="revert-confirm-items"]') as HTMLElement;
+    expect(items).toHaveTextContent('Desativar tick dinâmico do temporizador');
+  });
+
+  it('submits both directions as one batch once confirmed', () => {
+    const { container, onApply } = renderPage();
+
+    click(container, 'tweak-select-boot.disableDynamicTick');
+    click(container, 'tweak-select-services.sysMain');
+    click(container, 'tweak-apply');
+    click(container, 'revert-confirm-confirm');
+
+    expect(onApply).toHaveBeenCalledWith({
+      tweakIds: ['services.sysMain'],
+      revertIds: ['boot.disableDynamicTick'],
+    });
+  });
+
+  it('dispatches nothing when the revert confirmation is dismissed', () => {
+    const { container, onApply } = renderPage();
+
+    click(container, 'tweak-select-boot.disableDynamicTick');
+    click(container, 'tweak-apply');
+    click(container, 'revert-confirm-cancel');
+
+    expect(onApply).not.toHaveBeenCalled();
+    expect(container.querySelector('[data-cy="revert-confirm"]')).toBeNull();
+  });
+
+  it('does not gate a batch that only applies', () => {
+    const { container, onApply } = renderPage();
+
+    click(container, 'tweak-select-cpu.win32PrioritySeparation');
+    click(container, 'tweak-apply');
+
+    expect(container.querySelector('[data-cy="revert-confirm"]')).toBeNull();
+    expect(onApply).toHaveBeenCalledTimes(1);
+  });
+
+  it('turns clearing the selection into undoing everything that is applied', () => {
+    const { container, onApply } = renderPage({ catalog: allApplied });
+
+    click(container, 'tweak-clear');
+    click(container, 'tweak-apply');
+    click(container, 'revert-confirm-confirm');
+
+    expect(onApply).toHaveBeenCalledWith({
+      tweakIds: [],
+      revertIds: [
+        'cpu.win32PrioritySeparation',
+        'boot.disableDynamicTick',
+        'services.sysMain',
+      ],
+    });
+  });
+
+  it('draws a preset as the desired state', () => {
+    const { container, onApply } = renderPage();
+
+    click(container, 'tweak-preset-quick');
+    click(container, 'tweak-apply');
+
+    expect(onApply).toHaveBeenCalledWith({
+      tweakIds: ['cpu.win32PrioritySeparation', 'services.sysMain'],
+      revertIds: [],
+    });
+  });
+
+  it('refuses to draw an Advanced Tweak a malformed preset tries to include', () => {
+    // The host rejects this when building the catalog; the screen refuses it again, because a
+    // Preset is the one control a non-expert clicks without reading.
+    const { container, onApply } = renderPage({
+      catalog: {
+        ...catalog,
+        tweaks: [
+          ...catalog.tweaks,
+          {
+            id: 'advanced.memoryIntegrity',
+            category: 'cpu',
+            riskTier: 'Advanced',
+            kind: 'registry',
+            state: 'NotApplied',
+          },
+        ],
+        presets: [
+          { id: 'quick', tweakIds: ['cpu.win32PrioritySeparation', 'advanced.memoryIntegrity'] },
+        ],
+      },
+    });
+
+    click(container, 'tweak-preset-quick');
+    click(container, 'tweak-apply');
+    click(container, 'revert-confirm-confirm');
+
+    expect(onApply).toHaveBeenCalledWith({
+      tweakIds: ['cpu.win32PrioritySeparation'],
+      revertIds: ['boot.disableDynamicTick'],
+    });
   });
 
   it('ignores a preset entry the catalog no longer offers', () => {
@@ -125,49 +232,53 @@ describe('OptimizePage (selection screen)', () => {
 
     click(container, 'tweak-preset-quick');
     click(container, 'tweak-apply');
+    // The preset leaves an applied Tweak unticked, so this batch also undoes one and is gated.
+    click(container, 'revert-confirm-confirm');
 
-    expect(onApply).toHaveBeenCalledWith(['cpu.win32PrioritySeparation']);
+    expect(onApply).toHaveBeenCalledWith({
+      tweakIds: ['cpu.win32PrioritySeparation'],
+      revertIds: ['boot.disableDynamicTick'],
+    });
   });
 
-  it('clears the selection', () => {
-    const { container, onApply } = renderPage();
+  it('drops the drawn intent when the host re-reports the catalog', () => {
+    // A partly failed batch must not leave the user looking at what they wanted instead of
+    // what the machine actually has.
+    const { container, rerender } = renderPage();
+    click(container, 'tweak-select-cpu.win32PrioritySeparation');
+    expect(box(container, 'cpu.win32PrioritySeparation')).toBeChecked();
 
-    click(container, 'tweak-preset-quick');
-    click(container, 'tweak-clear');
-    click(container, 'tweak-apply');
+    rerender(
+      <LanguageProvider>
+        <OptimizePage
+          catalog={{ ...catalog }}
+          snapshot={null}
+          onApply={vi.fn()}
+          onRevert={vi.fn()}
+          onRefresh={vi.fn()}
+          onEnableProtection={vi.fn()}
+        />
+      </LanguageProvider>
+    );
 
-    expect(onApply).not.toHaveBeenCalled();
+    expect(box(container, 'cpu.win32PrioritySeparation')).not.toBeChecked();
   });
 
-  it('cannot apply an empty selection', () => {
-    const { container } = renderPage();
-
-    expect(container.querySelector('[data-cy="tweak-apply"]')).toBeDisabled();
-  });
-
-  it('counts the selection on the apply control', () => {
-    const { container } = renderPage();
-
-    click(container, 'tweak-preset-quick');
-
-    expect(screen.getByRole('button', { name: /Aplicar selecionadas \(3\)/ })).toBeInTheDocument();
-  });
-
-  it('reverts a Tweak only after the user confirms', () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+  it('reverts a single Tweak from its row after confirmation', () => {
     const { container, onRevert } = renderPage();
 
     click(container, 'tweak-revert-boot.disableDynamicTick');
+    expect(onRevert).not.toHaveBeenCalled();
 
-    expect(confirmSpy).toHaveBeenCalledTimes(1);
+    click(container, 'single-revert-confirm-confirm');
     expect(onRevert).toHaveBeenCalledWith('boot.disableDynamicTick');
   });
 
-  it('does not revert when the user cancels', () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
+  it('does not revert a single Tweak when that confirmation is dismissed', () => {
     const { container, onRevert } = renderPage();
 
     click(container, 'tweak-revert-boot.disableDynamicTick');
+    click(container, 'single-revert-confirm-cancel');
 
     expect(onRevert).not.toHaveBeenCalled();
   });
@@ -181,7 +292,9 @@ describe('OptimizePage (selection screen)', () => {
   });
 
   it('keeps the refresh control reachable when the catalog is empty', () => {
-    const { container, onRefresh } = renderPage({ catalog: { tweaks: [], presets: [] } });
+    const { container, onRefresh } = renderPage({
+      catalog: { tweaks: [], presets: [], systemProtectionEnabled: true },
+    });
 
     expect(screen.getByText(/Nenhuma otimização disponível/i)).toBeInTheDocument();
     click(container, 'tweak-refresh');
@@ -191,13 +304,19 @@ describe('OptimizePage (selection screen)', () => {
   it('locks every control while a mutation is in flight', () => {
     const { container } = renderPage({ disabled: true });
 
-    click(container, 'tweak-preset-quick');
-    for (const testId of ['tweak-apply', 'tweak-refresh', 'tweak-clear', 'tweak-preset-quick']) {
+    for (const testId of ['tweak-refresh', 'tweak-clear', 'tweak-preset-quick']) {
       expect(container.querySelector(`[data-cy="${testId}"]`)).toBeDisabled();
     }
+    expect(box(container, 'cpu.win32PrioritySeparation')).toBeDisabled();
   });
 
-  it('shows the before/after comparison once a batch has been measured', () => {
+  it('keeps the action bar in view as the page scrolls', () => {
+    const { container } = renderPage();
+
+    expect(container.querySelector('[data-cy="tweak-action-bar"]')).toHaveClass('sticky');
+  });
+
+  it('shows the comparison once a batch has been measured', () => {
     const snapshot = {
       before: null,
       changes: [],

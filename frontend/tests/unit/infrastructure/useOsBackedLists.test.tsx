@@ -30,7 +30,8 @@ describe('useOsBackedLists', () => {
     expect(actions()).toEqual(['getRestorePoints']);
   });
 
-  it('re-queries the Tweak catalog when the Optimize screen is opened', () => {
+  it('re-queries the Tweak catalog and the history when Optimize is opened', () => {
+    // The history is what puts the last comparison back on screen after the app is reopened.
     const { rerender } = renderHook(({ screen }) => useOsBackedLists(screen), {
       initialProps: { screen: AppScreen.Dashboard },
     });
@@ -38,7 +39,30 @@ describe('useOsBackedLists', () => {
 
     rerender({ screen: AppScreen.Optimize });
 
-    expect(actions()).toEqual(['loadTweaks']);
+    expect(actions()).toEqual(['loadTweaks', 'loadHistory']);
+  });
+
+  it('keeps the persisted Snapshot series the host reports', () => {
+    const { result } = renderHook(() => useOsBackedLists(AppScreen.Optimize));
+    const snapshot = {
+      capturedAt: '2026-07-25T10:00:00.000Z',
+      bootDurationMs: 21345,
+      freeMemoryBytes: 8589934592,
+      totalMemoryBytes: 17179869184,
+      freeDiskBytes: 120000000000,
+      totalDiskBytes: 500000000000,
+      automaticServices: 94,
+      runningServices: 71,
+      startupApps: 13,
+      pendingReboot: false,
+      lastBootUpTime: '2026-07-25T08:00:00.000Z',
+    };
+
+    act(() => emitHostEventForTest('historyLoaded', [snapshot, snapshot]));
+    expect(result.current.history).toHaveLength(2);
+
+    act(() => emitHostEventForTest('historyLoaded', [{ capturedAt: 'nope' }]));
+    expect(result.current.history).toHaveLength(2);
   });
 
   it('keeps the last valid Tweak catalog when the host emits a broken one', () => {

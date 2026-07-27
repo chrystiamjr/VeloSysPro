@@ -14,7 +14,7 @@ namespace VeloSysPro
     {
         private sealed record SchedulePayload(string Type, string Frequency, string Time, string Day);
 
-        private sealed record ApplyTweaksPayload(string[]? TweakIds);
+        private sealed record ApplyTweaksPayload(string[]? TweakIds, string[]? RevertIds);
 
         private readonly Optimizer _optimizer;
         private readonly RegistryBackupManager _registryBackups;
@@ -156,10 +156,12 @@ namespace VeloSysPro
         private bool ApplyTweaks(JsonElement payload)
         {
             ApplyTweaksPayload parsed = ReadObject<ApplyTweaksPayload>(payload);
-            if (parsed.TweakIds == null || parsed.TweakIds.Length == 0)
+            string[] toApply = parsed.TweakIds ?? Array.Empty<string>();
+            string[] toRevert = parsed.RevertIds ?? Array.Empty<string>();
+            if (toApply.Length == 0 && toRevert.Length == 0)
                 throw new ArgumentException("applyTweaks requires at least one Tweak id.");
 
-            TweakBatchResult result = _tweaks.ApplyTweaks(parsed.TweakIds);
+            TweakBatchResult result = _tweaks.ApplyTweaks(toApply, toRevert);
 
             // A null diff means the batch never got past its Safety Checkpoint, so nothing was
             // touched. Once it did run, the badges must reflect reality even if one Tweak failed —

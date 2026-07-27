@@ -84,6 +84,9 @@
       "title": "Ferramentas"
     }
   },
+  "dialog": {
+    "cancel": "Cancelar"
+  },
   "header": {
     "backup": {
       "subtitle": "Gerencie backups manuais do registro e pontos de restauração",
@@ -215,7 +218,7 @@
     "settings": "Configurações"
   },
   "optimize": {
-    "applyBtn": "Aplicar selecionadas ({{count}})",
+    "applyBtn": "Aplicar alterações",
     "category": {
       "boot": "Inicialização e temporizadores",
       "cpu": "Processador e prioridades",
@@ -223,13 +226,18 @@
     },
     "clearBtn": "Limpar seleção",
     "empty": "Nenhuma otimização disponível. Use Atualizar para consultar o sistema novamente.",
+    "noPending": "Nenhuma alteração pendente. Marque ou desmarque itens para montar a mudança.",
+    "pending": "{{apply}} para aplicar · {{revert}} para reverter",
     "preset": {
       "quick": "Predefinição Rápida"
     },
     "presetLabel": "Comece por uma predefinição",
     "revertBtn": "Reverter",
-    "revertConfirm": "Reverter esta otimização restaura o valor original guardado antes da aplicação. Deseja continuar?",
-    "sectionDesc": "Marque as otimizações desejadas. Um Ponto de Segurança é criado antes de qualquer alteração e cada item pode ser revertido individualmente.",
+    "revertConfirmBody": "Você está prestes a desfazer {{revert}} otimização(ões) já aplicada(s) e aplicar {{apply}}. As opções abaixo voltarão ao valor que o Windows tinha antes, guardado quando foram aplicadas.",
+    "revertConfirmBtn": "Desfazer e aplicar",
+    "revertConfirmTitle": "Confirmar reversão",
+    "revertSingleBody": "Esta otimização voltará ao valor que o Windows tinha antes de ela ser aplicada.",
+    "sectionDesc": "Marque o que você quer aplicado e desmarque o que quer desfeito. Um Ponto de Segurança é criado antes de qualquer alteração.",
     "sectionTitle": "Selecionar otimizações",
     "state": {
       "applied": "Aplicada",

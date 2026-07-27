@@ -319,6 +319,102 @@ public class TweakEngineTests
     }
 
     [Fact]
+    public void ApplyTweaks_UndoesAndAppliesUnderOneCheckpoint()
+    {
+        // The screen submits a desired state, so one intention can both undo and do. Splitting it
+        // would mean two restore points around halves of a single change.
+        var toRevert = new SpyTweak("cpu.a");
+        var toApply = new SpyTweak("cpu.b");
+        var harness = new Harness(toRevert, toApply);
+        harness.Engine.ApplyTweaks(new[] { "cpu.a" });
+        toRevert.Calls.Clear();
+        int checkpointsBefore = harness.Runner.Runs.Count(run => run.Args.Contains("Checkpoint-Computer"));
+
+        Assert.True(harness.Engine.ApplyTweaks(new[] { "cpu.b" }, new[] { "cpu.a" }).Ok);
+
+        Assert.Contains("revert", toRevert.Calls);
+        Assert.Contains("apply", toApply.Calls);
+        Assert.Equal(
+            checkpointsBefore + 1,
+            harness.Runner.Runs.Count(run => run.Args.Contains("Checkpoint-Computer"))
+        );
+    }
+
+    [Fact]
+    public void ApplyTweaks_UndoesBeforeApplyingSoTheBatchEndsInTheDrawnState()
+    {
+        var reverted = new SpyTweak("cpu.a");
+        var applied = new SpyTweak("cpu.b");
+        var harness = new Harness(reverted, applied);
+        harness.Engine.ApplyTweaks(new[] { "cpu.a" });
+        reverted.Calls.Clear();
+        applied.Calls.Clear();
+        var order = new List<string>();
+        harness.Sink.Logs.Clear();
+
+        harness.Engine.ApplyTweaks(new[] { "cpu.b" }, new[] { "cpu.a" });
+
+        foreach ((string Key, string Type, object? Args) log in harness.Sink.Logs)
+        {
+            if (log.Key == "log.tweaks.reverted") order.Add("revert");
+            if (log.Key == "log.tweaks.applied") order.Add("apply");
+        }
+        Assert.Equal(new[] { "revert", "apply" }, order);
+    }
+
+    [Fact]
+    public void ApplyTweaks_ReportsBothDirectionsInTheChangeList()
+    {
+        var toRevert = new SpyTweak("cpu.a");
+        var toApply = new SpyTweak("cpu.b");
+        var harness = new Harness(toRevert, toApply);
+        harness.Engine.ApplyTweaks(new[] { "cpu.a" });
+
+        TweakBatchResult result = harness.Engine.ApplyTweaks(new[] { "cpu.b" }, new[] { "cpu.a" });
+
+        Assert.Contains(result.Changes, change => change.TweakId == "cpu.b");
+    }
+
+    [Fact]
+    public void ApplyTweaks_FailsTheBatchButKeepsGoingWhenATweakHasNoCaptureToUndo()
+    {
+        var neverApplied = new SpyTweak("cpu.a");
+        var toApply = new SpyTweak("cpu.b");
+        var harness = new Harness(neverApplied, toApply);
+
+        Assert.False(harness.Engine.ApplyTweaks(new[] { "cpu.b" }, new[] { "cpu.a" }).Ok);
+
+        Assert.DoesNotContain("revert", neverApplied.Calls);
+        Assert.Contains("apply", toApply.Calls);
+        Assert.Contains(harness.Sink.Logs, log => log.Key == "log.tweaks.noCapture");
+    }
+
+    [Fact]
+    public void ApplyTweaks_RejectsAnUnknownIdOnEitherSideOfTheBatch()
+    {
+        var known = new SpyTweak("cpu.a");
+        var harness = new Harness(known);
+
+        Assert.False(harness.Engine.ApplyTweaks(Array.Empty<string>(), new[] { "cpu.ghost" }).Ok);
+
+        Assert.Empty(known.Calls);
+        Assert.DoesNotContain(harness.Runner.Runs, run => run.Args.Contains("Checkpoint-Computer"));
+    }
+
+    [Fact]
+    public void ApplyTweaks_AcceptsABatchThatOnlyUndoes()
+    {
+        var tweak = new SpyTweak("cpu.a");
+        var harness = new Harness(tweak);
+        harness.Engine.ApplyTweaks(new[] { "cpu.a" });
+        tweak.Calls.Clear();
+
+        Assert.True(harness.Engine.ApplyTweaks(Array.Empty<string>(), new[] { "cpu.a" }).Ok);
+
+        Assert.Contains("revert", tweak.Calls);
+    }
+
+    [Fact]
     public void RevertTweak_RestoresFromTheCaptureTakenWhenItWasApplied()
     {
         var tweak = new SpyTweak("cpu.a");

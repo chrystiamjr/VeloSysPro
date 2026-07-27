@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { AppScreen, SystemActions } from '../domain/types';
 import type {
   BackupItem,
+  OptimizationSnapshot,
   RestorePointItem,
   ScheduledTaskItem,
   TweakCatalog,
@@ -9,6 +10,7 @@ import type {
 import {
   sendAction,
   subscribeBackups,
+  subscribeHistory,
   subscribeRestorePoints,
   subscribeTasks,
   subscribeTweaks,
@@ -16,7 +18,8 @@ import {
 
 const refreshActions: Record<AppScreen, readonly string[]> = {
   [AppScreen.Dashboard]: [SystemActions.GET_BACKUPS, SystemActions.GET_TASKS],
-  [AppScreen.Optimize]: [SystemActions.LOAD_TWEAKS],
+  // History too: the last comparison lives on disk, so it survives closing the app.
+  [AppScreen.Optimize]: [SystemActions.LOAD_TWEAKS, SystemActions.LOAD_HISTORY],
   [AppScreen.Scheduling]: [SystemActions.GET_TASKS],
   [AppScreen.Backup]: [SystemActions.GET_BACKUPS],
   [AppScreen.RestorePoints]: [SystemActions.GET_RESTORE_POINTS],
@@ -32,6 +35,7 @@ export interface OsBackedLists {
   tasks: ScheduledTaskItem[];
   restorePoints: RestorePointItem[];
   tweakCatalog: TweakCatalog;
+  history: OptimizationSnapshot[];
   refreshBackups: () => void;
   refreshTasks: () => void;
   refreshRestorePoints: () => void;
@@ -43,6 +47,7 @@ export function useOsBackedLists(activeScreen: AppScreen): OsBackedLists {
   const [tasks, setTasks] = useState<ScheduledTaskItem[]>([]);
   const [restorePoints, setRestorePoints] = useState<RestorePointItem[]>([]);
   const [tweakCatalog, setTweakCatalog] = useState<TweakCatalog>(emptyCatalog);
+  const [history, setHistory] = useState<OptimizationSnapshot[]>([]);
 
   useEffect(() => {
     const unsubscribers = [
@@ -50,6 +55,7 @@ export function useOsBackedLists(activeScreen: AppScreen): OsBackedLists {
       subscribeTasks(setTasks),
       subscribeRestorePoints(setRestorePoints),
       subscribeTweaks(setTweakCatalog),
+      subscribeHistory(setHistory),
     ];
     return () => {
       for (const unsubscribe of unsubscribers) unsubscribe();
@@ -70,6 +76,7 @@ export function useOsBackedLists(activeScreen: AppScreen): OsBackedLists {
     tasks,
     restorePoints,
     tweakCatalog,
+    history,
     refreshBackups,
     refreshTasks,
     refreshRestorePoints,

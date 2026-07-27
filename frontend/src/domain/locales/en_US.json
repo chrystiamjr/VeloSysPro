@@ -84,6 +84,9 @@
       "title": "Tools"
     }
   },
+  "dialog": {
+    "cancel": "Cancel"
+  },
   "header": {
     "backup": {
       "subtitle": "Manage manual registry backups and system restore points",
@@ -215,7 +218,7 @@
     "settings": "Settings"
   },
   "optimize": {
-    "applyBtn": "Apply selected ({{count}})",
+    "applyBtn": "Apply changes",
     "category": {
       "boot": "Boot and timers",
       "cpu": "Processor and priorities",
@@ -223,13 +226,18 @@
     },
     "clearBtn": "Clear selection",
     "empty": "No optimizations available. Use Refresh to query the system again.",
+    "noPending": "No pending changes. Tick or untick items to build the change.",
+    "pending": "{{apply}} to apply · {{revert}} to revert",
     "preset": {
       "quick": "Quick preset"
     },
     "presetLabel": "Start from a preset",
     "revertBtn": "Revert",
-    "revertConfirm": "Reverting this optimization restores the original value captured before it was applied. Continue?",
-    "sectionDesc": "Tick the optimizations you want. A Safety Checkpoint is created before any change, and every item can be reverted on its own.",
+    "revertConfirmBody": "You are about to undo {{revert}} already applied optimization(s) and apply {{apply}}. The items below will go back to the value Windows had before, captured when they were applied.",
+    "revertConfirmBtn": "Undo and apply",
+    "revertConfirmTitle": "Confirm revert",
+    "revertSingleBody": "This optimization will go back to the value Windows had before it was applied.",
+    "sectionDesc": "Tick what you want applied and untick what you want undone. A Safety Checkpoint is created before any change.",
     "sectionTitle": "Select optimizations",
     "state": {
       "applied": "Applied",

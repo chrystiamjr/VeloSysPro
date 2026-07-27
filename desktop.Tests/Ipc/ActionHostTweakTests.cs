@@ -172,6 +172,25 @@ public class ActionHostTweakTests
     }
 
     [Fact]
+    public void ApplyTweaks_AcceptsABatchThatOnlyUndoes()
+    {
+        // The screen submits a desired state, so "revert everything" arrives as an applyTweaks
+        // with an empty apply list — which must not be mistaken for an empty payload.
+        using var harness = new Harness();
+        harness.Runner.CapturedOutput = "Automatic\r\n";
+        harness.Dispatch(SystemActions.ApplyTweaks, """{"tweakIds":["services.sysMain"]}""");
+
+        Assert.True(
+            harness.Dispatch(
+                SystemActions.ApplyTweaks,
+                """{"tweakIds":[],"revertIds":["services.sysMain"]}"""
+            )
+        );
+
+        Assert.Contains(harness.Runner.Runs, run => run.Args == "config SysMain start= auto");
+    }
+
+    [Fact]
     public void ApplyTweaks_RejectsAnUnknownTweakId()
     {
         using var harness = new Harness();

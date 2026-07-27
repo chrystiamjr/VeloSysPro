@@ -113,7 +113,7 @@ WebView2 and that tests capture directly.
 | :-- | :-- |
 | `Optimizer` | Runs the named **Optimization Plans** — `Quick`, `Full`, `Gaming`, `Revert` — plus `ClearUpdateCache`, `CleanPrefetch`, `ReportDiskHealth`. Success is derived from **exit codes**, not stderr presence. Honors the safety-backup preference. |
 | `TweakCatalog` + `ITweak` | The **Tweak** catalog: one registry, BCD, or service optimization each, able to `Detect`, `Capture`, `Apply`, and `Revert` itself. **Presets** are Tweak-id sets over it, keyed by the CLI task names, and may reference `Safe` Tweaks only (ADR [0003](docs/adr/0003-tweak-as-reversible-unit.md), [0005](docs/adr/0005-advanced-risk-tier.md)). |
-| `TweakEngine` | Orchestrates a batch: **Safety Checkpoint**, per-Tweak capture, apply, before/after measurement — and the single-Tweak Revert the capture makes possible (ADR [0004](docs/adr/0004-safety-checkpoint.md)). Returns facts; `ActionHost` publishes them. |
+| `TweakEngine` | Orchestrates a batch: **Safety Checkpoint**, per-Tweak capture, then apply **and revert together under that one checkpoint** (reverts first), and the before/after measurement (ADR [0004](docs/adr/0004-safety-checkpoint.md)). Reports which settings actually moved, read back off the live system. Returns facts; `ActionHost` publishes them. |
 | `SnapshotManager` + `ISnapshotStore` | Captures an **Optimization Snapshot** from built-in facilities only (CIM, `Get-Service`, the Diagnostics-Performance log) and appends it to the append-only JSONL **Optimization History** (ADR [0006](docs/adr/0006-built-in-only-boundary.md), [0007](docs/adr/0007-jsonl-snapshot-store.md)). |
 | `RegistryBackupManager` | Exports/imports TCP/IP registry `.reg` backups and lists them as Management Records; also exports/imports arbitrary keys as a Tweak's capture archive. |
 | `SystemRestoreManager` | Lists, creates, and rolls back Windows System Restore points (rollback reboots). |
@@ -166,6 +166,10 @@ React state is split into three focused owners instead of one mega-component:
 
 - **Atomic Design** (`atoms → molecules → organisms → templates → pages`) with TypeScript prop
   interfaces.
+- **Desired state, not queued commands.** The Optimize screen's checkboxes start mirroring what the
+  host reports and the action bar submits the *difference*, so one batch can both apply and revert
+  under a single Safety Checkpoint. A host re-emit always wins over the drawn intent, and anything
+  that undoes an applied Tweak passes a `ConfirmDialog` naming exactly what will be undone.
 - **Tailwind design tokens only** — no inline hex/colors.
 - **i18n** via Rosetta with nested keys mirrored in `pt_BR.json` / `en_US.json`. Host log/status
   messages travel as **i18n keys + args** and are translated in React, so the live console follows

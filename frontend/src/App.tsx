@@ -61,6 +61,7 @@ function AppContent() {
     tasks,
     restorePoints,
     tweakCatalog,
+    history,
     refreshBackups,
     refreshTasks,
     refreshRestorePoints,
@@ -98,6 +99,16 @@ function AppContent() {
   const handleClearLogs = () => {
     setLogs([]);
   };
+
+  // The live measurement wins while the app is open; otherwise fall back to the last pair on disk,
+  // so the comparison is still there after a restart. A batch appends its before and after
+  // consecutively, and nothing else writes to the history, so the last two rows are that pair.
+  // The changes list is not persisted, hence empty — only the metrics come back.
+  const displayedSnapshot: SnapshotCapturedPayload | null =
+    snapshot ??
+    (history.length >= 2
+      ? { before: history[history.length - 2], after: history[history.length - 1], changes: [] }
+      : null);
 
   // Translate at render time so logs/status re-localize when the language changes.
   const translatedLogs: LogEntryItem[] = logs.map((log) => ({
@@ -173,9 +184,9 @@ function AppContent() {
       {activeScreen === AppScreen.Optimize && (
         <OptimizePage
           catalog={tweakCatalog}
-          snapshot={snapshot}
+          snapshot={displayedSnapshot}
           disabled={activeAction !== null}
-          onApply={(tweakIds) => runMutation(SystemActions.APPLY_TWEAKS, { tweakIds })}
+          onApply={(change) => runMutation(SystemActions.APPLY_TWEAKS, change)}
           onRevert={(tweakId) => runMutation(SystemActions.REVERT_TWEAK, tweakId)}
           onRefresh={refreshTweaks}
           onEnableProtection={() => runMutation(SystemActions.ENABLE_SYSTEM_PROTECTION)}

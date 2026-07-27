@@ -120,29 +120,35 @@ namespace VeloSysPro
         }
 
         /// <summary>
-        /// Applies a selection of Tweaks behind a Safety Checkpoint, measuring the system before and
-        /// after. An unknown id fails the whole batch rather than silently applying a subset.
+        /// Puts the selected Tweaks into the state the user asked for, behind one Safety Checkpoint,
+        /// measuring the system before and after. An unknown id fails the whole batch rather than
+        /// silently acting on a subset.
         /// </summary>
-        public TweakBatchResult ApplyTweaks(IReadOnlyList<string> ids)
+        /// <remarks>
+        /// Applying and reverting travel together because the screen expresses a desired state, not
+        /// a queue of commands: unticking one Tweak and ticking another is a single intention, and
+        /// splitting it into two batches would mean two restore points and two measurements around
+        /// halves of one change. Reverts run first so the batch ends in the state the user drew,
+        /// whatever order they clicked in.
+        /// </remarks>
+        public TweakBatchResult ApplyTweaks(
+            IReadOnlyList<string> applyIds,
+            IReadOnlyList<string>? revertIds = null
+        )
         {
+            IReadOnlyList<string> toRevert = revertIds ?? Array.Empty<string>();
             var noChanges = Array.Empty<TweakChange>();
 
-            if (ids.Count == 0)
+            if (applyIds.Count == 0 && toRevert.Count == 0)
             {
                 _sink.Log("log.tweaks.noneSelected", "error");
                 return new TweakBatchResult(false, null, noChanges);
             }
 
-            var selected = new List<ITweak>(ids.Count);
-            foreach (string id in ids)
+            if (!Resolve(applyIds, out List<ITweak> toApplyTweaks)
+                || !Resolve(toRevert, out List<ITweak> toRevertTweaks))
             {
-                ITweak? tweak = _catalog.Find(id);
-                if (tweak == null)
-                {
-                    _sink.Log("log.tweaks.unknown", "error", new { id });
-                    return new TweakBatchResult(false, null, noChanges);
-                }
-                selected.Add(tweak);
+                return new TweakBatchResult(false, null, noChanges);
             }
 
             _sink.Status("status.tweaks.measuring", 10);
@@ -152,14 +158,37 @@ namespace VeloSysPro
 
             bool ok = true;
             var changes = new List<TweakChange>();
-            for (int i = 0; i < selected.Count; i++)
+            int total = toApplyTweaks.Count + toRevertTweaks.Count;
+            int done = 0;
+
+            foreach (ITweak tweak in toRevertTweaks)
             {
-                ITweak tweak = selected[i];
-                _sink.Status(
-                    "status.tweaks.applying",
-                    40 + (40 * i / selected.Count),
-                    new { id = tweak.Id }
-                );
+                _sink.Status("status.tweaks.reverting", 40 + (40 * done++ / total), new { id = tweak.Id });
+
+                TweakCapture? capture = _captures.LoadLatest(tweak.Id);
+                if (capture == null)
+                {
+                    _sink.Log("log.tweaks.noCapture", "error", new { id = tweak.Id });
+                    ok = false;
+                    continue;
+                }
+
+                if (tweak.Revert(capture))
+                {
+                    _sink.Log("log.tweaks.reverted", "success", new { id = tweak.Id });
+                }
+                else
+                {
+                    _sink.Log("log.tweaks.revertFailed", "error", new { id = tweak.Id });
+                    ok = false;
+                }
+
+                changes.AddRange(DescribeChange(tweak, capture));
+            }
+
+            foreach (ITweak tweak in toApplyTweaks)
+            {
+                _sink.Status("status.tweaks.applying", 40 + (40 * done++ / total), new { id = tweak.Id });
 
                 TweakCapture capture = tweak.Capture();
                 _captures.Save(capture);
@@ -184,6 +213,22 @@ namespace VeloSysPro
             _sink.Log(ok ? "log.tweaks.done" : "log.op.completedWithErrors", ok ? "success" : "error");
 
             return new TweakBatchResult(ok, new SnapshotDiff(before, after), changes);
+        }
+
+        private bool Resolve(IReadOnlyList<string> ids, out List<ITweak> resolved)
+        {
+            resolved = new List<ITweak>(ids.Count);
+            foreach (string id in ids)
+            {
+                ITweak? tweak = _catalog.Find(id);
+                if (tweak == null)
+                {
+                    _sink.Log("log.tweaks.unknown", "error", new { id });
+                    return false;
+                }
+                resolved.Add(tweak);
+            }
+            return true;
         }
 
         /// <summary>
