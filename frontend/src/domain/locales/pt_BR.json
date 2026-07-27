@@ -152,6 +152,11 @@
       "done": "Prefetch limpo com sucesso.",
       "start": "Limpando pasta Prefetch..."
     },
+    "protection": {
+      "enabled": "Proteção do Sistema ativada e ponto de restauração liberado por otimização.",
+      "enabling": "Ativando a Proteção do Sistema...",
+      "failed": "Falha ao ativar a Proteção do Sistema: {{message}}"
+    },
     "quick": {
       "done": "Otimização Rápida concluída com sucesso.",
       "start": "Iniciando Otimização Rápida..."
@@ -188,6 +193,7 @@
       "done": "Otimizações selecionadas aplicadas com sucesso.",
       "noCapture": "Sem estado anterior guardado para {{id}}; reversão cancelada.",
       "noneSelected": "Selecione ao menos uma otimização antes de aplicar.",
+      "protectionDisabled": "A Proteção do Sistema do Windows está desativada, então nenhum ponto de restauração pode ser criado. Nada foi alterado.",
       "revertFailed": "Falha ao reverter a otimização: {{id}}",
       "reverted": "Otimização revertida: {{id}}",
       "unknown": "Otimização desconhecida: {{id}}"
@@ -250,6 +256,12 @@
         }
       }
     }
+  },
+  "protection": {
+    "desc": "A Proteção do Sistema do Windows está desativada. Sem ela o VeloSys Pro não consegue criar o ponto de restauração que antecede cada otimização, e as alterações seriam aplicadas sem essa rede de proteção.",
+    "enableBtn": "Ativar Proteção do Sistema",
+    "manualPath": "Prefere fazer manualmente? Painel de Controle → Sistema → Proteção do Sistema → selecione o disco do Windows → Configurar → Ativar proteção do sistema.",
+    "title": "Ative a Proteção do Sistema antes de otimizar"
   },
   "rp": {
     "colActions": "Ações",
@@ -318,23 +330,28 @@
     "updateTitle": "Atualizações"
   },
   "snapshot": {
+    "absent": "(ausente)",
     "after": "Depois",
     "before": "Antes",
     "capturedAt": "Medição feita em {{timestamp}}",
+    "changesTitle": "Mudanças aplicadas",
     "colMetric": "Métrica",
-    "empty": "Aplique otimizações para ver a comparação antes/depois.",
+    "empty": "Aplique otimizações para ver o que mudou.",
+    "group": {
+      "immediate": "Efeito imediato",
+      "nextBoot": "Efeito na próxima inicialização"
+    },
     "metric": {
       "automaticServices": "Serviços automáticos",
       "bootDuration": "Duração do último boot",
-      "freeDisk": "Espaço livre em disco",
-      "freeMemory": "Memória livre",
       "pendingReboot": "Reinicialização pendente",
       "runningServices": "Serviços em execução",
       "startupApps": "Programas na inicialização"
     },
     "notMeasured": "—",
-    "sectionDesc": "Medições feitas apenas com recursos nativos do Windows, antes e depois do lote aplicado.",
-    "sectionTitle": "Comparativo do sistema"
+    "restartToMeasure": "reinicie para medir",
+    "sectionDesc": "As mudanças abaixo foram lidas de volta do sistema após a aplicação. As métricas são contexto: algumas só mudam depois de reiniciar.",
+    "sectionTitle": "O que mudou no sistema"
   },
   "status": {
     "diskHealth": {

@@ -19,6 +19,7 @@ export type {
   SnapshotCapturedPayload,
   Tweak,
   TweakCatalog,
+  TweakChange,
   TweakState,
   UpdateInfo,
 } from './schemas';
@@ -52,6 +53,7 @@ export const SystemActions = {
   REVERT_TWEAK: 'revertTweak',
   CAPTURE_SNAPSHOT: 'captureSnapshot',
   LOAD_HISTORY: 'loadHistory',
+  ENABLE_SYSTEM_PROTECTION: 'enableSystemProtection',
 } as const;
 
 export type SystemActionType = (typeof SystemActions)[keyof typeof SystemActions];

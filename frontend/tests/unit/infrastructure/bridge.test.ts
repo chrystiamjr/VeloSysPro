@@ -43,6 +43,7 @@ const validTweak = {
 const validCatalog = {
   tweaks: [validTweak],
   presets: [{ id: 'quick', tweakIds: ['cpu.win32PrioritySeparation'] }],
+  systemProtectionEnabled: true,
 };
 const validSnapshot = {
   capturedAt: '2026-07-25T10:00:00.000Z',
@@ -55,6 +56,13 @@ const validSnapshot = {
   runningServices: 71,
   startupApps: 13,
   pendingReboot: false,
+  lastBootUpTime: '2026-07-25T08:00:00.000Z',
+};
+const validChange = {
+  tweakId: 'cpu.win32PrioritySeparation',
+  setting: 'Win32PrioritySeparation',
+  before: '0x2',
+  after: '0x26',
 };
 
 describe('IPC Event module', () => {
@@ -181,7 +189,11 @@ describe('IPC Event module', () => {
     const unsubscribe = subscribeTweaks(callback);
     emitHostEventForTest('tweaksLoaded', validCatalog);
 
-    emitHostEventForTest('tweaksLoaded', { tweaks: [tweak], presets: [] });
+    emitHostEventForTest('tweaksLoaded', {
+      tweaks: [tweak],
+      presets: [],
+      systemProtectionEnabled: true,
+    });
 
     expect(callback).toHaveBeenCalledTimes(1);
     expect(callback).toHaveBeenCalledWith(validCatalog);
@@ -195,6 +207,86 @@ describe('IPC Event module', () => {
     emitHostEventForTest('tweaksLoaded', {
       tweaks: [validTweak],
       presets: [{ id: 'quick', tweakIds: 'cpu.win32PrioritySeparation' }],
+      systemProtectionEnabled: true,
+    });
+
+    expect(callback).not.toHaveBeenCalled();
+    unsubscribe();
+  });
+
+  it.each([
+    ['a stringly-typed protection flag', 'yes'],
+    ['a missing protection flag', undefined],
+  ])('rejects a catalog with %s', (_label, systemProtectionEnabled) => {
+    // The screen warns the user off optimizing on this value; a wrong one would hide the warning.
+    const callback = vi.fn();
+    const unsubscribe = subscribeTweaks(callback);
+
+    emitHostEventForTest('tweaksLoaded', { ...validCatalog, systemProtectionEnabled });
+
+    expect(callback).not.toHaveBeenCalled();
+    unsubscribe();
+  });
+
+  it('carries the settings a batch actually changed', () => {
+    const callback = vi.fn();
+    const unsubscribe = subscribeSnapshot(callback);
+
+    emitHostEventForTest('snapshotCaptured', {
+      before: validSnapshot,
+      after: validSnapshot,
+      changes: [validChange],
+    });
+
+    expect(callback).toHaveBeenCalledWith(
+      expect.objectContaining({ changes: [validChange] })
+    );
+    unsubscribe();
+  });
+
+  it.each([
+    ['a non-string before value', { ...validChange, before: 38 }],
+    ['a non-string after value', { ...validChange, after: 38 }],
+    ['an empty setting name', { ...validChange, setting: '' }],
+    ['an empty tweak id', { ...validChange, tweakId: '' }],
+    ['no changes array at all', undefined],
+  ])('rejects a measurement carrying %s', (_label, change) => {
+    const callback = vi.fn();
+    const unsubscribe = subscribeSnapshot(callback);
+
+    emitHostEventForTest('snapshotCaptured', {
+      before: null,
+      after: validSnapshot,
+      changes: change === undefined ? undefined : [change],
+    });
+
+    expect(callback).not.toHaveBeenCalled();
+    unsubscribe();
+  });
+
+  it('accepts a Snapshot whose boot identity could not be read', () => {
+    // Rows written before the field existed, and machines where the query failed.
+    const callback = vi.fn();
+    const unsubscribe = subscribeSnapshot(callback);
+
+    emitHostEventForTest('snapshotCaptured', {
+      before: null,
+      after: { ...validSnapshot, lastBootUpTime: '' },
+      changes: [],
+    });
+
+    expect(callback).toHaveBeenCalledOnce();
+    unsubscribe();
+  });
+
+  it('rejects a Snapshot whose boot identity is neither a timestamp nor empty', () => {
+    const callback = vi.fn();
+    const unsubscribe = subscribeSnapshot(callback);
+
+    emitHostEventForTest('snapshotCaptured', {
+      before: null,
+      after: { ...validSnapshot, lastBootUpTime: '25/07/2026 08:00' },
+      changes: [],
     });
 
     expect(callback).not.toHaveBeenCalled();
@@ -205,9 +297,9 @@ describe('IPC Event module', () => {
     const callback = vi.fn();
     const unsubscribe = subscribeSnapshot(callback);
 
-    emitHostEventForTest('snapshotCaptured', { before: null, after: validSnapshot });
+    emitHostEventForTest('snapshotCaptured', { before: null, after: validSnapshot, changes: [] });
 
-    expect(callback).toHaveBeenCalledWith({ before: null, after: validSnapshot });
+    expect(callback).toHaveBeenCalledWith({ before: null, after: validSnapshot, changes: [] });
     unsubscribe();
   });
 
@@ -223,7 +315,7 @@ describe('IPC Event module', () => {
     const callback = vi.fn();
     const unsubscribe = subscribeSnapshot(callback);
 
-    emitHostEventForTest('snapshotCaptured', { before: null, after });
+    emitHostEventForTest('snapshotCaptured', { before: null, after, changes: [] });
 
     expect(callback).not.toHaveBeenCalled();
     unsubscribe();
@@ -233,7 +325,7 @@ describe('IPC Event module', () => {
     const callback = vi.fn();
     const unsubscribe = subscribeSnapshot(callback);
 
-    emitHostEventForTest('snapshotCaptured', { before: validSnapshot, after: null });
+    emitHostEventForTest('snapshotCaptured', { before: validSnapshot, after: null, changes: [] });
 
     expect(callback).not.toHaveBeenCalled();
     unsubscribe();

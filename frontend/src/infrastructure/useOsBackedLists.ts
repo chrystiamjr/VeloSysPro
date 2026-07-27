@@ -23,7 +23,9 @@ const refreshActions: Record<AppScreen, readonly string[]> = {
   [AppScreen.Settings]: [],
 };
 
-const emptyCatalog: TweakCatalog = { tweaks: [], presets: [] };
+// Assume protection is on until the host says otherwise, so the warning appears as a fact the
+// host reported rather than flashing on every load before the first tweaksLoaded arrives.
+const emptyCatalog: TweakCatalog = { tweaks: [], presets: [], systemProtectionEnabled: true };
 
 export interface OsBackedLists {
   backups: BackupItem[];

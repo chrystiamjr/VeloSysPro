@@ -69,6 +69,14 @@ namespace VeloSysPro
         /// <summary>Reads the live system. Never mutates anything.</summary>
         TweakState Detect();
 
+        /// <summary>
+        /// The Tweak's settings exactly as they are right now, with no archiving side effect.
+        /// This is what makes an honest "what changed" report possible: the engine reads it once
+        /// before applying and once after, so the report states what the system actually holds
+        /// rather than what the catalog intended to write.
+        /// </summary>
+        IReadOnlyList<CapturedValue> ReadCurrentValues();
+
         /// <summary>Records the exact prior state so <see cref="Revert"/> can restore it.</summary>
         TweakCapture Capture();
 
@@ -78,6 +86,16 @@ namespace VeloSysPro
         /// <summary>Restores the captured prior state.</summary>
         bool Revert(TweakCapture capture);
     }
+
+    /// <summary>
+    /// One setting a batch actually changed, read off the live system before and after.
+    /// </summary>
+    /// <remarks>
+    /// This is the only part of the report that is fully attributable to the Tweaks applied: the
+    /// system metrics around it move for reasons of their own. An empty <paramref name="Before"/>
+    /// or <paramref name="After"/> means the setting was absent at that moment.
+    /// </remarks>
+    public sealed record TweakChange(string TweakId, string Setting, string Before, string After);
 
     /// <summary>
     /// The one way a capture or Snapshot is timestamped: UTC, round-trippable, culture invariant.

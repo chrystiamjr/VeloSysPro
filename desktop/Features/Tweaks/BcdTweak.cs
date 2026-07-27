@@ -9,11 +9,12 @@ namespace VeloSysPro
     /// A Tweak backed by one Boot Configuration Data element on the current boot entry.
     /// </summary>
     /// <remarks>
-    /// <c>bcdedit</c> is the only built-in way to read and write these, and it renders its output in
-    /// the Windows display language: a Portuguese machine prints <c>Sim</c> where an English one
-    /// prints <c>Yes</c>. Detection therefore compares through <see cref="BcdBoolean"/> instead of
-    /// byte-comparing the printed token — the same "never branch on a localized OS string" rule the
-    /// scheduler follows (.agents/rules/locale-neutral-boundary-data.md).
+    /// <c>bcdedit</c> is the only built-in way to read and write these. Its element *values* are
+    /// rendered from a fixed table, not translated: a pt-BR Windows prints <c>Yes</c>, verified on a
+    /// real machine on 2026-07-27. Only bcdedit's own messages follow the display language, and we
+    /// never parse those. <see cref="BcdBoolean"/> therefore normalizes the spellings the BCD store
+    /// itself uses, and an unrecognized token deliberately reads as "not applied" — visible and
+    /// harmless — rather than being guessed at.
     /// </remarks>
     public sealed class BcdTweak : ITweak
     {
@@ -54,8 +55,11 @@ namespace VeloSysPro
                 : TweakState.NotApplied;
         }
 
+        public IReadOnlyList<CapturedValue> ReadCurrentValues() =>
+            new List<CapturedValue> { Read() };
+
         public TweakCapture Capture() =>
-            new(Id, Kind, TweakClock.NowUtc(), new List<CapturedValue> { Read() });
+            new(Id, Kind, TweakClock.NowUtc(), ReadCurrentValues());
 
         public bool Apply(TweakCapture capture) => Set(_element, _desiredValue);
 
@@ -114,19 +118,22 @@ namespace VeloSysPro
     }
 
     /// <summary>
-    /// Compares BCD boolean values across the display languages VeloSys Pro supports, falling back
-    /// to a plain comparison for the non-boolean elements (numbers, GUIDs, paths).
+    /// Compares BCD boolean values across the spellings the store uses, falling back to a plain
+    /// comparison for the non-boolean elements (numbers, GUIDs, paths).
     /// </summary>
     public static class BcdBoolean
     {
+        // Only the spellings bcdedit and the BCD store actually produce. Translated tokens were
+        // tried here first and removed: a pt-BR Windows prints "Yes", so they guarded nothing and
+        // would have quietly accepted a word the store never emits.
         private static readonly HashSet<string> True = new(StringComparer.OrdinalIgnoreCase)
         {
-            "yes", "true", "on", "1", "sim", "sí", "si", "ja", "oui",
+            "yes", "true", "on", "1",
         };
 
         private static readonly HashSet<string> False = new(StringComparer.OrdinalIgnoreCase)
         {
-            "no", "false", "off", "0", "não", "nao", "nein", "non",
+            "no", "false", "off", "0",
         };
 
         public static bool SameValue(string actual, string desired)

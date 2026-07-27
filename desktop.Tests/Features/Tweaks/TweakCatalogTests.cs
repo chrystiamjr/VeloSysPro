@@ -22,7 +22,9 @@ public class TweakCatalogTests
 
         public TweakState Detect() => TweakState.NotApplied;
 
-        public TweakCapture Capture() => new(Id, Kind, "", new CapturedValue[0]);
+        public IReadOnlyList<CapturedValue> ReadCurrentValues() => new CapturedValue[0];
+
+        public TweakCapture Capture() => new(Id, Kind, "", ReadCurrentValues());
 
         public bool Apply(TweakCapture capture) => true;
 

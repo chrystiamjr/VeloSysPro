@@ -25,7 +25,8 @@ namespace VeloSysPro
             int AutomaticServices,
             int RunningServices,
             int StartupApps,
-            bool PendingReboot
+            bool PendingReboot,
+            string? LastBootUpTime
         );
 
         /// <summary>
@@ -49,7 +50,8 @@ namespace VeloSysPro
             + "automaticServices=@($svc | Where-Object { [string]$_.StartType -eq 'Automatic' }).Count;"
             + "runningServices=@($svc | Where-Object { [string]$_.Status -eq 'Running' }).Count;"
             + "startupApps=@(Get-CimInstance Win32_StartupCommand).Count;"
-            + "pendingReboot=[bool](Test-Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Component Based Servicing\\RebootPending')"
+            + "pendingReboot=[bool](Test-Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Component Based Servicing\\RebootPending');"
+            + "lastBootUpTime=$os.LastBootUpTime.ToUniversalTime().ToString('o')"
             + "} | ConvertTo-Json -Compress";
 
         private static readonly JsonSerializerOptions Options = new()
@@ -74,7 +76,7 @@ namespace VeloSysPro
             if (metrics == null)
             {
                 _sink.Log("log.snapshot.unavailable", "info");
-                return new OptimizationSnapshot(capturedAt, 0, 0, 0, 0, 0, 0, 0, 0, false);
+                return new OptimizationSnapshot(capturedAt, 0, 0, 0, 0, 0, 0, 0, 0, false, "");
             }
 
             return new OptimizationSnapshot(
@@ -87,7 +89,8 @@ namespace VeloSysPro
                 metrics.AutomaticServices,
                 metrics.RunningServices,
                 metrics.StartupApps,
-                metrics.PendingReboot
+                metrics.PendingReboot,
+                metrics.LastBootUpTime ?? ""
             );
         }
 

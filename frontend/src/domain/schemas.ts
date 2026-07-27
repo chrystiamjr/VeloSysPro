@@ -69,6 +69,20 @@ export const PresetSchema = z.object({
 export const TweakCatalogSchema = z.object({
   tweaks: z.array(TweakSchema),
   presets: z.array(PresetSchema),
+  /** Whether Windows System Protection is on — the precondition for every Safety Checkpoint. */
+  systemProtectionEnabled: z.boolean(),
+});
+
+/**
+ * One setting a batch actually moved, read off the live system before and after. An empty string
+ * means the setting was absent at that point; the values are raw registry/service data, never
+ * localized text.
+ */
+export const TweakChangeSchema = z.object({
+  tweakId: z.string().min(1),
+  setting: z.string().min(1),
+  before: z.string(),
+  after: z.string(),
 });
 
 /**
@@ -86,12 +100,21 @@ export const OptimizationSnapshotSchema = z.object({
   runningServices: z.number().int().nonnegative(),
   startupApps: z.number().int().nonnegative(),
   pendingReboot: z.boolean(),
+  /**
+   * The Snapshot's boot identity. Two Snapshots sharing it came from the same session, so their
+   * boot duration cannot differ. Empty when unreadable, or on rows written before this existed.
+   */
+  lastBootUpTime: z.union([z.iso.datetime(), z.literal('')]),
 });
 
-/** `before` is null for a standalone measurement, which has no baseline to compare against. */
+/**
+ * `before` is null for a standalone measurement, which has no baseline to compare against.
+ * `changes` is the attributable half of the report; the Snapshots around it are context.
+ */
 export const SnapshotCapturedPayloadSchema = z.object({
   before: OptimizationSnapshotSchema.nullable(),
   after: OptimizationSnapshotSchema,
+  changes: z.array(TweakChangeSchema),
 });
 
 export const LogTypeSchema = z.enum(['info', 'error', 'success']);
@@ -136,6 +159,7 @@ export type TweakState = z.infer<typeof TweakStateSchema>;
 export type RiskTier = z.infer<typeof RiskTierSchema>;
 export type Preset = z.infer<typeof PresetSchema>;
 export type TweakCatalog = z.infer<typeof TweakCatalogSchema>;
+export type TweakChange = z.infer<typeof TweakChangeSchema>;
 export type OptimizationSnapshot = z.infer<typeof OptimizationSnapshotSchema>;
 export type SnapshotCapturedPayload = z.infer<typeof SnapshotCapturedPayloadSchema>;
 export type BackupItem = z.infer<typeof BackupItemSchema>;

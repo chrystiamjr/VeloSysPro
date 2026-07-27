@@ -54,12 +54,17 @@ describe('useOsBackedLists', () => {
         },
       ],
       presets: [{ id: 'quick', tweakIds: ['cpu.win32PrioritySeparation'] }],
+      systemProtectionEnabled: true,
     };
 
     act(() => emitHostEventForTest('tweaksLoaded', catalog));
     expect(result.current.tweakCatalog).toEqual(catalog);
 
-    act(() => emitHostEventForTest('tweaksLoaded', { tweaks: [{ id: 'broken' }], presets: [] }));
+    act(() => emitHostEventForTest('tweaksLoaded', {
+        tweaks: [{ id: 'broken' }],
+        presets: [],
+        systemProtectionEnabled: true,
+      }));
     expect(result.current.tweakCatalog).toEqual(catalog);
 
     vi.clearAllMocks();

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
+import { SystemProtectionNotice } from '../molecules/SystemProtectionNotice';
 import { SnapshotDiff } from '../organisms/SnapshotDiff';
 import { TweakCatalogList } from '../organisms/TweakCatalogList';
 import type { SnapshotCapturedPayload, TweakCatalog } from '../../domain/types';
@@ -12,6 +13,7 @@ export interface OptimizePageProps {
   onApply: (tweakIds: string[]) => void;
   onRevert: (tweakId: string) => void;
   onRefresh: () => void;
+  onEnableProtection: () => void;
   disabled?: boolean;
 }
 
@@ -25,6 +27,7 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
   onApply,
   onRevert,
   onRefresh,
+  onEnableProtection,
   disabled = false,
 }) => {
   const { t } = useTranslation();
@@ -47,6 +50,10 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
 
   return (
     <div className="flex select-none flex-col gap-6">
+      {!catalog.systemProtectionEnabled && (
+        <SystemProtectionNotice onEnable={onEnableProtection} disabled={disabled} />
+      )}
+
       <div className="rounded-xl border border-borderColor bg-bgCard p-6">
         <div className="flex flex-col gap-5">
           <div>

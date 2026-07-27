@@ -20,6 +20,13 @@ namespace VeloSysPro
         int AutomaticServices,
         int RunningServices,
         int StartupApps,
-        bool PendingReboot
+        bool PendingReboot,
+        /// <summary>
+        /// When Windows last booted, ISO 8601 UTC. This is the Snapshot's boot identity: two
+        /// Snapshots sharing it were taken in the same session, so their boot duration is
+        /// necessarily identical and comparing them says nothing. Empty when unreadable, and on
+        /// rows written before this field existed.
+        /// </summary>
+        string LastBootUpTime = ""
     );
 }

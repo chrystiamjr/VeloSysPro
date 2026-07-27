@@ -68,25 +68,26 @@ namespace VeloSysPro
             return matches == 0 ? TweakState.NotApplied : TweakState.Partial;
         }
 
-        public TweakCapture Capture()
+        public IReadOnlyList<CapturedValue> ReadCurrentValues()
         {
             // "reg query" fails both for a value that is absent and for a key it could not read at
             // all, and those must not be confused: recording "absent" for a value that exists would
             // make Revert delete it. Only when the key itself reads back is an absent value real.
             var captured = new List<CapturedValue>(_values.Count);
-            if (KeyIsReadable())
-            {
-                foreach (RegistryValue value in _values) captured.Add(Read(value));
-            }
+            if (!KeyIsReadable()) return captured;
 
-            return new TweakCapture(
+            foreach (RegistryValue value in _values) captured.Add(Read(value));
+            return captured;
+        }
+
+        public TweakCapture Capture() =>
+            new(
                 Id,
                 Kind,
                 TweakClock.NowUtc(),
-                captured,
+                ReadCurrentValues(),
                 _backup.ExportKey(_keyPath, Id)
             );
-        }
 
         public bool Apply(TweakCapture capture)
         {

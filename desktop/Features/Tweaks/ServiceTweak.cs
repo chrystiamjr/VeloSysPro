@@ -65,19 +65,17 @@ namespace VeloSysPro
                 ? TweakState.Applied
                 : TweakState.NotApplied;
 
-        public TweakCapture Capture()
+        public IReadOnlyList<CapturedValue> ReadCurrentValues()
         {
             string startType = ReadStartType();
-            return new TweakCapture(
-                Id,
-                Kind,
-                TweakClock.NowUtc(),
-                new List<CapturedValue>
-                {
-                    new("StartType", "", startType, startType != Unknown),
-                }
-            );
+            return new List<CapturedValue>
+            {
+                new("StartType", "", startType, startType != Unknown),
+            };
         }
+
+        public TweakCapture Capture() =>
+            new(Id, Kind, TweakClock.NowUtc(), ReadCurrentValues());
 
         public bool Apply(TweakCapture capture) => Configure(_desiredStartType);
 

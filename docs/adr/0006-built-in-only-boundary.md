@@ -9,4 +9,8 @@ VeloSys Pro will perform every optimization and measurement using **only built-i
 
 ## Consequences
 
-Gains that exist only inside an external tool — frame limiting via RTSS, standby-list cleaning via ISLC — are simply not offered. The Optimization Snapshot measures boot duration, memory, disk, service counts, startup entries, and pending-reboot state through CIM and the Diagnostics-Performance log instead of a benchmark. The single-executable deliverable stays clean and the project takes on no supply-chain or support risk from someone else's installer.
+Gains that exist only inside an external tool — frame limiting via RTSS, standby-list cleaning via ISLC — are simply not offered. The Optimization Snapshot measures boot duration, memory, disk, service counts, startup entries, and pending-reboot state through CIM and the Diagnostics-Performance log instead of a benchmark.
+
+That choice bounds what a before/after pair can honestly claim, and the UI has to respect it. Boot duration comes from the event log for the *last* boot, so it cannot move until the machine restarts; each Snapshot therefore carries the boot it belongs to, and a pair from one session says "restart to measure" rather than reporting an unchanged figure as no gain. Free memory and free disk drift on their own between two readings taken a minute apart and no Tweak touches them, so they are captured for the history but kept out of the comparison. What a batch can be held to is the settings it actually moved, read back off the live system after applying — that half is fully attributable and is shown separately.
+
+The single-executable deliverable stays clean and the project takes on no supply-chain or support risk from someone else's installer.

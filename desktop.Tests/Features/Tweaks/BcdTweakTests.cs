@@ -51,20 +51,34 @@ public class BcdTweakTests
     }
 
     [Theory]
-    [InlineData("Sim")]
-    [InlineData("Sí")]
-    [InlineData("Ja")]
-    [InlineData("Oui")]
-    public void Detect_UnderstandsTheLocalizedBooleanBcdeditPrints(string affirmative)
+    [InlineData("Yes")] // what a pt-BR Windows actually prints, verified on a real machine
+    [InlineData("yes")]
+    [InlineData("true")]
+    [InlineData("1")]
+    public void Detect_AcceptsEverySpellingTheBcdStoreProduces(string affirmative)
     {
-        // bcdedit renders boolean elements in the Windows display language, so a byte comparison
-        // against "yes" would report the Tweak as not applied on a non-English machine.
         var runner = new FakeCommandRunner
         {
             CapturedOutput = BootLoader("disabledynamictick     " + affirmative + "\r\n"),
         };
 
         Assert.Equal(TweakState.Applied, Tweak(runner).Detect());
+    }
+
+    [Theory]
+    [InlineData("Sim")]
+    [InlineData("Talvez")]
+    public void Detect_TreatsAnUnrecognizedTokenAsNotAppliedRatherThanGuessing(string token)
+    {
+        // bcdedit does not translate element values, so a word like this means the store holds
+        // something we do not understand. Saying "not applied" is visible and re-applying is
+        // harmless; guessing "applied" would hide a real mismatch.
+        var runner = new FakeCommandRunner
+        {
+            CapturedOutput = BootLoader("disabledynamictick     " + token + "\r\n"),
+        };
+
+        Assert.Equal(TweakState.NotApplied, Tweak(runner).Detect());
     }
 
     [Fact]
@@ -119,9 +133,10 @@ public class BcdTweakTests
 
     [Theory]
     [InlineData("No")]
-    // A pt-BR machine captures what bcdedit printed; bcdedit will not accept "Não" back, so the
-    // restore has to be written in the canonical token.
-    [InlineData("Não")]
+    // The capture holds what bcdedit printed; the restore is written in the canonical token so
+    // bcdedit accepts it back whatever spelling it used.
+    [InlineData("false")]
+    [InlineData("0")]
     public void Revert_RestoresThePriorValueWhenTheElementExisted(string captured)
     {
         var runner = new FakeCommandRunner();

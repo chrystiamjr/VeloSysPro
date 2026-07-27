@@ -86,6 +86,7 @@ export const tweakCatalog: TweakCatalog = {
       state: 'NotApplied',
     },
   ],
+  systemProtectionEnabled: true,
   presets: [
     {
       id: 'quick',
@@ -110,6 +111,7 @@ export const snapshotBefore: OptimizationSnapshot = {
   runningServices: 80,
   startupApps: 15,
   pendingReboot: false,
+  lastBootUpTime: '2026-07-25T08:00:00.000Z',
 };
 
 export const snapshotAfter: OptimizationSnapshot = {

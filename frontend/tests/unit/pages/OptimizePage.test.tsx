@@ -28,6 +28,7 @@ const catalog: TweakCatalog = {
       state: 'NotApplied',
     },
   ],
+  systemProtectionEnabled: true,
   presets: [
     {
       id: 'quick',
@@ -43,6 +44,7 @@ const renderPage = (props: Partial<React.ComponentProps<typeof OptimizePage>> = 
     onApply: vi.fn(),
     onRevert: vi.fn(),
     onRefresh: vi.fn(),
+    onEnableProtection: vi.fn(),
     ...props,
   };
   const { container } = render(
@@ -198,6 +200,7 @@ describe('OptimizePage (selection screen)', () => {
   it('shows the before/after comparison once a batch has been measured', () => {
     const snapshot = {
       before: null,
+      changes: [],
       after: {
         capturedAt: '2026-07-25T10:04:00.000Z',
         bootDurationMs: 21500,
@@ -209,6 +212,7 @@ describe('OptimizePage (selection screen)', () => {
         runningServices: 71,
         startupApps: 13,
         pendingReboot: false,
+        lastBootUpTime: '2026-07-25T08:00:00.000Z',
       },
     };
     const { container } = renderPage({ snapshot });

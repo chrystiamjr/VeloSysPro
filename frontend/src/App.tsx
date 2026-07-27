@@ -178,6 +178,7 @@ function AppContent() {
           onApply={(tweakIds) => runMutation(SystemActions.APPLY_TWEAKS, { tweakIds })}
           onRevert={(tweakId) => runMutation(SystemActions.REVERT_TWEAK, tweakId)}
           onRefresh={refreshTweaks}
+          onEnableProtection={() => runMutation(SystemActions.ENABLE_SYSTEM_PROTECTION)}
         />
       )}
 

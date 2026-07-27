@@ -29,5 +29,6 @@ namespace VeloSysPro
         public const string RevertTweak = "revertTweak";
         public const string CaptureSnapshot = "captureSnapshot";
         public const string LoadHistory = "loadHistory";
+        public const string EnableSystemProtection = "enableSystemProtection";
     }
 }

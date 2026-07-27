@@ -29,6 +29,15 @@ public class TweakEngineTests
 
         public TweakState Detect() => DetectedState;
 
+        /// <summary>What the Tweak reads back after being applied; drives the change report.</summary>
+        public string CurrentData { get; set; } = "0x2";
+
+        public IReadOnlyList<CapturedValue> ReadCurrentValues()
+        {
+            Calls.Add("read");
+            return new[] { new CapturedValue("Value", "REG_DWORD", CurrentData, true) };
+        }
+
         public TweakCapture Capture()
         {
             Calls.Add("capture");
@@ -39,6 +48,7 @@ public class TweakEngineTests
         public bool Apply(TweakCapture capture)
         {
             Calls.Add("apply");
+            if (_applies) CurrentData = "0x26";
             return _applies;
         }
 
@@ -86,6 +96,12 @@ public class TweakEngineTests
 
         public Harness(IReadOnlyDictionary<string, IReadOnlyList<string>> presets, params ITweak[] tweaks)
         {
+            // A machine with System Protection on is the baseline; tests that care about it off
+            // override this entry.
+            Runner.CapturedOutputsByArgs.Add(
+                ("RPSessionInterval", "    RPSessionInterval    REG_DWORD    0x1\r\n")
+            );
+
             Engine = new TweakEngine(
                 new TweakCatalog(tweaks, presets),
                 Captures,
@@ -109,7 +125,7 @@ public class TweakEngineTests
             run => run.Args.Contains("Checkpoint-Computer")
         );
         Assert.True(restorePointIndex >= 0, "a Safety Checkpoint must be created");
-        Assert.Equal(new[] { "capture", "apply" }, tweak.Calls);
+        Assert.Equal(new[] { "capture", "apply", "read" }, tweak.Calls);
         Assert.Contains(harness.Sink.Logs, log => log.Key == "log.tweaks.checkpointCreated");
     }
 
@@ -121,6 +137,69 @@ public class TweakEngineTests
         harness.Engine.ApplyTweaks(new[] { "cpu.a", "cpu.b" });
 
         Assert.Single(harness.Runner.Runs, run => run.Args.Contains("Checkpoint-Computer"));
+    }
+
+    [Fact]
+    public void ApplyTweaks_StopsWithAnActionableMessageWhenSystemProtectionIsOff()
+    {
+        // The one failure the user can actually fix, so it must not arrive as a generic
+        // restore-point error.
+        var tweak = new SpyTweak("cpu.a");
+        var harness = new Harness(tweak);
+        harness.Runner.CapturedOutputsByArgs.Clear();
+        harness.Runner.CapturedOutputsByArgs.Add(
+            ("RPSessionInterval", "    RPSessionInterval    REG_DWORD    0x0\r\n")
+        );
+
+        Assert.False(harness.Engine.ApplyTweaks(new[] { "cpu.a" }).Ok);
+
+        Assert.Empty(tweak.Calls);
+        Assert.Contains(harness.Sink.Logs, log => log.Key == "log.tweaks.protectionDisabled");
+        Assert.DoesNotContain(harness.Runner.Runs, run => run.Args.Contains("Checkpoint-Computer"));
+    }
+
+    [Fact]
+    public void GetTweaksJson_TellsTheScreenWhetherTheSafetyNetIsAvailable()
+    {
+        var harness = new Harness(new SpyTweak("cpu.a"));
+        harness.Runner.CapturedOutputsByArgs.Clear();
+        harness.Runner.CapturedOutputsByArgs.Add(
+            ("RPSessionInterval", "    RPSessionInterval    REG_DWORD    0x0\r\n")
+        );
+
+        using JsonDocument off = JsonDocument.Parse(harness.Engine.GetTweaksJson());
+        Assert.False(off.RootElement.GetProperty("systemProtectionEnabled").GetBoolean());
+
+        harness.Runner.CapturedOutputsByArgs.Clear();
+        harness.Runner.CapturedOutputsByArgs.Add(
+            ("RPSessionInterval", "    RPSessionInterval    REG_DWORD    0x1\r\n")
+        );
+        using JsonDocument on = JsonDocument.Parse(harness.Engine.GetTweaksJson());
+        Assert.True(on.RootElement.GetProperty("systemProtectionEnabled").GetBoolean());
+    }
+
+    [Fact]
+    public void EnableSystemProtection_TurnsProtectionOnAndLiftsTheOncePerDayCap()
+    {
+        var harness = new Harness(new SpyTweak("cpu.a"));
+
+        Assert.True(harness.Engine.EnableSystemProtection());
+
+        Assert.Contains(harness.Runner.Runs, run => run.Args.Contains("Enable-ComputerRestore"));
+        Assert.Contains(
+            harness.Runner.Runs,
+            run => run.Args.Contains("SystemRestorePointCreationFrequency") && run.Args.Contains("/d 0")
+        );
+    }
+
+    [Fact]
+    public void EnableSystemProtection_ReportsFailureInsteadOfThrowingAtTheSeam()
+    {
+        var harness = new Harness(new SpyTweak("cpu.a"));
+        harness.Runner.Result = new CommandResult(1, false);
+
+        Assert.False(harness.Engine.EnableSystemProtection());
+        Assert.Contains(harness.Sink.Logs, log => log.Key == "log.protection.failed");
     }
 
     [Fact]
@@ -204,6 +283,39 @@ public class TweakEngineTests
         Assert.Equal(2, harness.History.Snapshots.Count);
         Assert.Same(harness.History.Snapshots[0], result.Diff!.Before);
         Assert.Same(harness.History.Snapshots[1], result.Diff.After);
+    }
+
+    [Fact]
+    public void ApplyTweaks_ReportsWhatEachTweakActuallyChanged()
+    {
+        var harness = new Harness(new SpyTweak("cpu.a"));
+
+        TweakBatchResult result = harness.Engine.ApplyTweaks(new[] { "cpu.a" });
+
+        TweakChange change = Assert.Single(result.Changes);
+        Assert.Equal("cpu.a", change.TweakId);
+        Assert.Equal("Value", change.Setting);
+        Assert.Equal("0x2", change.Before);
+        Assert.Equal("0x26", change.After);
+    }
+
+    [Fact]
+    public void ApplyTweaks_ReportsNoChangeForAWriteThatSilentlyDidNothing()
+    {
+        // Reading the value back is what separates "applied" from "claimed to apply": a Tweak
+        // whose write was a no-op must not show up as a change.
+        var harness = new Harness(new SpyTweak("cpu.a", applies: false));
+
+        Assert.Empty(harness.Engine.ApplyTweaks(new[] { "cpu.a" }).Changes);
+    }
+
+    [Fact]
+    public void ApplyTweaks_ReportsNoChangesWhenTheBatchNeverRan()
+    {
+        var harness = new Harness(new SpyTweak("cpu.a"));
+        harness.Runner.Result = new CommandResult(1, false);
+
+        Assert.Empty(harness.Engine.ApplyTweaks(new[] { "cpu.a" }).Changes);
     }
 
     [Fact]

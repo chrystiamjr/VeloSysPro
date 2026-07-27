@@ -65,14 +65,55 @@ describe('à-la-carte optimizations', () => {
     cy.getByCy('tweak-apply').click();
 
     // What the host does on success: publish the measurement, re-emit the catalog, then finish.
-    cy.emitHost('snapshotCaptured', { before: snapshotBefore, after: snapshotAfter });
+    cy.emitHost('snapshotCaptured', {
+      before: snapshotBefore,
+      after: snapshotAfter,
+      changes: [
+        {
+          tweakId: 'services.sysMain',
+          setting: 'StartType',
+          before: 'Automatic',
+          after: 'Manual',
+        },
+      ],
+    });
     cy.emitHost('tweaksLoaded', appliedTweakCatalog);
     cy.emitHost('actionFinished', { action: 'applyTweaks', ok: true });
 
     cy.getByCy('tweak-state-cpu.win32PrioritySeparation').should('contain', 'Aplicada');
     cy.getByCy('tweak-state-services.sysMain').should('contain', 'Aplicada');
     cy.getByCy('snapshot-metric-runningServices').should('contain', '80').and('contain', '71');
-    cy.getByCy('snapshot-metric-bootDuration').should('contain', '21,5 s');
+    cy.getByCy('snapshot-change-services.sysMain')
+      .should('contain', 'Automatic')
+      .and('contain', 'Manual');
+  });
+
+  it('does not pass off an unchanged boot figure as the batch making no difference', () => {
+    cy.emitHost('tweaksLoaded', tweakCatalog);
+    cy.emitHost('snapshotCaptured', {
+      // Both readings come from the same session, so the event log reports one boot twice.
+      before: snapshotBefore,
+      after: snapshotAfter,
+      changes: [],
+    });
+
+    cy.getByCy('snapshot-metric-bootDuration').should('contain', 'reinicie para medir');
+  });
+
+  it('warns and offers a fix when System Protection is off', () => {
+    cy.emitHost('tweaksLoaded', { ...tweakCatalog, systemProtectionEnabled: false });
+
+    cy.getByCy('system-protection-notice').should('be.visible');
+    cy.contains('Painel de Controle').should('be.visible');
+
+    cy.getByCy('system-protection-enable').click();
+    cy.expectIpc('enableSystemProtection');
+  });
+
+  it('keeps the warning out of the way once protection is on', () => {
+    cy.emitHost('tweaksLoaded', tweakCatalog);
+
+    cy.getByCy('system-protection-notice').should('not.exist');
   });
 
   it('reverts a single applied Tweak and flips its badge back', () => {

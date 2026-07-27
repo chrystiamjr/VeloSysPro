@@ -16,6 +16,14 @@ internal sealed class FakeCommandRunner : ICommandRunner
     /// </summary>
     public Dictionary<string, string> CapturedOutputs { get; } = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// Per-argument RunCapture output, matched by substring and checked before
+    /// <see cref="CapturedOutputs"/>. Needed once a manager queries the same executable for two
+    /// different things — reg.exe answers both "is System Protection on" and "what is this Tweak's
+    /// value", and one canned string cannot stand in for both.
+    /// </summary>
+    public List<(string ArgsContains, string Output)> CapturedOutputsByArgs { get; } = new();
+
     public CommandResult Result { get; set; } = new(0, true);
     public int TempCleanCount { get; private set; }
 
@@ -28,6 +36,13 @@ internal sealed class FakeCommandRunner : ICommandRunner
     public CaptureResult RunCapture(string exe, string args)
     {
         Runs.Add((exe, args));
+
+        foreach ((string ArgsContains, string Output) scripted in CapturedOutputsByArgs)
+        {
+            if (args.Contains(scripted.ArgsContains, StringComparison.OrdinalIgnoreCase))
+                return new CaptureResult(scripted.Output, 0, true);
+        }
+
         string output = CapturedOutputs.TryGetValue(exe, out string? configured)
             ? configured
             : CapturedOutput;

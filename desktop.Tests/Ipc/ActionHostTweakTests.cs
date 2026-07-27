@@ -24,6 +24,11 @@ public class ActionHostTweakTests
 
         public Harness()
         {
+            // Every batch now checks System Protection first; a machine with it on is the baseline.
+            Runner.CapturedOutputsByArgs.Add(
+                ("RPSessionInterval", "    RPSessionInterval    REG_DWORD    0x1\r\n")
+            );
+
             var emitter = new IpcEventEmitter(json =>
             {
                 using JsonDocument document = JsonDocument.Parse(json);

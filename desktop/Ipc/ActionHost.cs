@@ -71,6 +71,7 @@ namespace VeloSysPro
                 SystemActions.SaveSettings,
                 SystemActions.ApplyTweaks,
                 SystemActions.RevertTweak,
+                SystemActions.EnableSystemProtection,
             };
 
             _handlers = CreateHandlers();
@@ -148,6 +149,8 @@ namespace VeloSysPro
                     MutateAndRefresh(() => _tweaks.RevertTweak(ReadString(payload)), PushTweaks),
                 [SystemActions.CaptureSnapshot] = _ => Run(PushSnapshot),
                 [SystemActions.LoadHistory] = _ => Run(PushHistory),
+                [SystemActions.EnableSystemProtection] = _ =>
+                    MutateAndRefresh(_tweaks.EnableSystemProtection, PushTweaks),
             };
 
         private bool ApplyTweaks(JsonElement payload)
@@ -166,7 +169,12 @@ namespace VeloSysPro
             {
                 _events.Emit(
                     IpcEvents.SnapshotCaptured,
-                    new { before = result.Diff.Before, after = result.Diff.After }
+                    new
+                    {
+                        before = result.Diff.Before,
+                        after = result.Diff.After,
+                        changes = result.Changes,
+                    }
                 );
                 PushTweaks();
             }
@@ -237,11 +245,16 @@ namespace VeloSysPro
 
         private void PushTweaks() => _events.EmitJson(IpcEvents.TweaksLoaded, _tweaks.GetTweaksJson());
 
-        /// <summary>A standalone measurement has no "before" to compare against.</summary>
+        /// <summary>A standalone measurement has no "before" to compare against, and changed nothing.</summary>
         private void PushSnapshot() =>
             _events.Emit(
                 IpcEvents.SnapshotCaptured,
-                new { before = (OptimizationSnapshot?)null, after = _tweaks.CaptureSnapshot() }
+                new
+                {
+                    before = (OptimizationSnapshot?)null,
+                    after = _tweaks.CaptureSnapshot(),
+                    changes = Array.Empty<TweakChange>(),
+                }
             );
 
         private void PushHistory() => _events.Emit(IpcEvents.HistoryLoaded, _tweaks.LoadHistory());

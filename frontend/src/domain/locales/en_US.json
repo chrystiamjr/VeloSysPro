@@ -152,6 +152,11 @@
       "done": "Prefetch cleaned successfully.",
       "start": "Cleaning Prefetch folder..."
     },
+    "protection": {
+      "enabled": "System Protection enabled, and a restore point per optimization unlocked.",
+      "enabling": "Enabling System Protection...",
+      "failed": "Failed to enable System Protection: {{message}}"
+    },
     "quick": {
       "done": "Quick Optimization completed successfully.",
       "start": "Starting Quick Optimization..."
@@ -188,6 +193,7 @@
       "done": "Selected optimizations applied successfully.",
       "noCapture": "No prior state stored for {{id}}; revert cancelled.",
       "noneSelected": "Select at least one optimization before applying.",
+      "protectionDisabled": "Windows System Protection is turned off, so no restore point can be created. Nothing was changed.",
       "revertFailed": "Failed to revert the optimization: {{id}}",
       "reverted": "Optimization reverted: {{id}}",
       "unknown": "Unknown optimization: {{id}}"
@@ -250,6 +256,12 @@
         }
       }
     }
+  },
+  "protection": {
+    "desc": "Windows System Protection is turned off. Without it VeloSys Pro cannot create the restore point that precedes every optimization, and changes would be applied with no safety net.",
+    "enableBtn": "Enable System Protection",
+    "manualPath": "Rather do it yourself? Control Panel → System → System Protection → select the Windows drive → Configure → Turn on system protection.",
+    "title": "Enable System Protection before optimizing"
   },
   "rp": {
     "colActions": "Actions",
@@ -318,23 +330,28 @@
     "updateTitle": "Updates"
   },
   "snapshot": {
+    "absent": "(absent)",
     "after": "After",
     "before": "Before",
     "capturedAt": "Measured at {{timestamp}}",
+    "changesTitle": "Applied changes",
     "colMetric": "Metric",
-    "empty": "Apply optimizations to see the before/after comparison.",
+    "empty": "Apply optimizations to see what changed.",
+    "group": {
+      "immediate": "Immediate effect",
+      "nextBoot": "Effect on the next startup"
+    },
     "metric": {
       "automaticServices": "Automatic services",
       "bootDuration": "Last boot duration",
-      "freeDisk": "Free disk space",
-      "freeMemory": "Free memory",
       "pendingReboot": "Restart pending",
       "runningServices": "Running services",
       "startupApps": "Startup programs"
     },
     "notMeasured": "—",
-    "sectionDesc": "Measured with built-in Windows facilities only, before and after the applied batch.",
-    "sectionTitle": "System comparison"
+    "restartToMeasure": "restart to measure",
+    "sectionDesc": "The changes below were read back off the system after applying. The metrics are context: some cannot move until you restart.",
+    "sectionTitle": "What changed on the system"
   },
   "status": {
     "diskHealth": {

@@ -7,8 +7,20 @@ namespace VeloSysPro
     /// <summary>Before/after Optimization Snapshots taken around one batch.</summary>
     public sealed record SnapshotDiff(OptimizationSnapshot Before, OptimizationSnapshot After);
 
-    /// <summary>Outcome of a batch: whether every Tweak applied, and the gain it produced.</summary>
-    public sealed record TweakBatchResult(bool Ok, SnapshotDiff? Diff);
+    /// <summary>
+    /// Outcome of a batch: whether every Tweak applied, the settings it actually changed, and the
+    /// system metrics either side of it.
+    /// </summary>
+    /// <remarks>
+    /// <paramref name="Changes"/> and <paramref name="Diff"/> answer different questions and must
+    /// not be conflated in the UI. The changes are fully attributable to the Tweaks; the metrics
+    /// move for reasons of their own and some of them cannot move until the machine reboots.
+    /// </remarks>
+    public sealed record TweakBatchResult(
+        bool Ok,
+        SnapshotDiff? Diff,
+        IReadOnlyList<TweakChange> Changes
+    );
 
     /// <summary>
     /// Orchestrates a batch of Tweaks: Safety Checkpoint, per-Tweak capture, apply, and the
@@ -25,7 +37,11 @@ namespace VeloSysPro
 
         private record PresetInfo(string Id, IReadOnlyList<string> TweakIds);
 
-        private record CatalogInfo(IReadOnlyList<TweakInfo> Tweaks, IReadOnlyList<PresetInfo> Presets);
+        private record CatalogInfo(
+            IReadOnlyList<TweakInfo> Tweaks,
+            IReadOnlyList<PresetInfo> Presets,
+            bool SystemProtectionEnabled
+        );
 
         private static readonly JsonSerializerOptions Options = new()
         {
@@ -80,7 +96,27 @@ namespace VeloSysPro
             foreach (Preset preset in _catalog.Presets)
                 presets.Add(new PresetInfo(preset.Id, preset.TweakIds));
 
-            return JsonSerializer.Serialize(new CatalogInfo(tweaks, presets), Options);
+            // Travels with the catalog so the screen can warn about the missing safety net before
+            // the user selects anything, rather than after a batch has already failed.
+            return JsonSerializer.Serialize(
+                new CatalogInfo(tweaks, presets, _systemRestore.IsProtectionEnabled()),
+                Options
+            );
+        }
+
+        /// <summary>Turns Windows System Protection on so batches can build a Safety Checkpoint.</summary>
+        public bool EnableSystemProtection()
+        {
+            try
+            {
+                _systemRestore.EnableProtection();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _sink.Log("log.protection.failed", "error", new { message = ex.Message });
+                return false;
+            }
         }
 
         /// <summary>
@@ -89,10 +125,12 @@ namespace VeloSysPro
         /// </summary>
         public TweakBatchResult ApplyTweaks(IReadOnlyList<string> ids)
         {
+            var noChanges = Array.Empty<TweakChange>();
+
             if (ids.Count == 0)
             {
                 _sink.Log("log.tweaks.noneSelected", "error");
-                return new TweakBatchResult(false, null);
+                return new TweakBatchResult(false, null, noChanges);
             }
 
             var selected = new List<ITweak>(ids.Count);
@@ -102,7 +140,7 @@ namespace VeloSysPro
                 if (tweak == null)
                 {
                     _sink.Log("log.tweaks.unknown", "error", new { id });
-                    return new TweakBatchResult(false, null);
+                    return new TweakBatchResult(false, null, noChanges);
                 }
                 selected.Add(tweak);
             }
@@ -110,9 +148,10 @@ namespace VeloSysPro
             _sink.Status("status.tweaks.measuring", 10);
             OptimizationSnapshot before = CaptureSnapshot();
 
-            if (!BuildCheckpoint()) return new TweakBatchResult(false, null);
+            if (!BuildCheckpoint()) return new TweakBatchResult(false, null, noChanges);
 
             bool ok = true;
+            var changes = new List<TweakChange>();
             for (int i = 0; i < selected.Count; i++)
             {
                 ITweak tweak = selected[i];
@@ -134,6 +173,8 @@ namespace VeloSysPro
                     _sink.Log("log.tweaks.applyFailed", "error", new { id = tweak.Id });
                     ok = false;
                 }
+
+                changes.AddRange(DescribeChange(tweak, capture));
             }
 
             _sink.Status("status.tweaks.measuring", 90);
@@ -142,7 +183,38 @@ namespace VeloSysPro
             _sink.Status("status.tweaks.done", 100);
             _sink.Log(ok ? "log.tweaks.done" : "log.op.completedWithErrors", ok ? "success" : "error");
 
-            return new TweakBatchResult(ok, new SnapshotDiff(before, after));
+            return new TweakBatchResult(ok, new SnapshotDiff(before, after), changes);
+        }
+
+        /// <summary>
+        /// Re-reads a Tweak after applying it and reports only the settings that really moved.
+        /// </summary>
+        /// <remarks>
+        /// Reading back rather than reporting the catalog's intended value is the whole point: a
+        /// write that silently did nothing shows up here as "no change" instead of as a success.
+        /// </remarks>
+        private static IEnumerable<TweakChange> DescribeChange(ITweak tweak, TweakCapture before)
+        {
+            IReadOnlyList<CapturedValue> after = tweak.ReadCurrentValues();
+
+            foreach (CapturedValue current in after)
+            {
+                CapturedValue? prior = null;
+                foreach (CapturedValue candidate in before.Values)
+                {
+                    if (string.Equals(candidate.Name, current.Name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        prior = candidate;
+                        break;
+                    }
+                }
+
+                string priorData = prior is { Existed: true } ? prior.Data : "";
+                string currentData = current.Existed ? current.Data : "";
+                if (string.Equals(priorData, currentData, StringComparison.Ordinal)) continue;
+
+                yield return new TweakChange(tweak.Id, current.Name, priorData, currentData);
+            }
         }
 
         /// <summary>Restores one Tweak from its latest capture, without a reboot.</summary>
@@ -200,6 +272,14 @@ namespace VeloSysPro
             {
                 _sink.Log("log.tweaks.checkpointSkipped", "info");
                 return true;
+            }
+
+            // Checked before attempting the checkpoint so the user gets the one message they can
+            // act on — "turn System Protection on" — instead of a restore-point failure.
+            if (!_systemRestore.IsProtectionEnabled())
+            {
+                _sink.Log("log.tweaks.protectionDisabled", "error");
+                return false;
             }
 
             try
