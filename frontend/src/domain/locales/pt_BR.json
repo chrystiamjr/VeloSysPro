@@ -68,12 +68,12 @@
   },
   "dashboard": {
     "maintenance": {
-      "desc": "Diagnóstico e limpezas específicas do Windows.",
-      "title": "Manutenção"
+      "desc": "Ferramentas pontuais do Windows, para quando você já sabe o que quer resolver.",
+      "title": "Diagnóstico e limpeza"
     },
     "primary": {
       "desc": "Rotinas que limpam e reparam o Windows. Não alteram configurações — para isso, use Otimizações.",
-      "title": "Rotinas de manutenção"
+      "title": "Manutenção"
     },
     "recovery": {
       "desc": "Backups, pontos de restauração e reversão de rede.",

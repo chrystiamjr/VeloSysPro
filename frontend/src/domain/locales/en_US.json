@@ -68,12 +68,12 @@
   },
   "dashboard": {
     "maintenance": {
-      "desc": "Windows diagnostics and targeted cleanup tools.",
-      "title": "Maintenance"
+      "desc": "Targeted Windows tools, for when you already know what you want to fix.",
+      "title": "Diagnostics and cleanup"
     },
     "primary": {
       "desc": "Routines that clean and repair Windows. They change no settings — use Optimizations for that.",
-      "title": "Maintenance routines"
+      "title": "Maintenance"
     },
     "recovery": {
       "desc": "Backups, restore points, and network reset tools.",
