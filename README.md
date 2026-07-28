@@ -23,7 +23,9 @@
 ## 📌 Features
 
 - 🚀 **Quick / Full Optimization**: DNS flush, temp cleanup, `sfc /scannow`, DISM image repair.
-- 🎮 **Gaming Mode / Revert Defaults**: tunes the TCP stack (RSS, Autotuning) or resets IP & Winsock.
+- 🎮 **À-la-carte optimizations**: an individually selectable, individually **reversible** catalog of
+  processor, graphics, network, power, boot, and service Tweaks, applied behind a Safety Checkpoint
+  and measured before and after. **Revert Defaults** still resets IP & Winsock.
 - 🧹 **Maintenance tools**: clear the Windows Update cache, clean Prefetch, and a physical-disk (SMART) health report.
 - 💾 **Registry Backup & Restore**: exports/imports TCP/IP `.reg` backups with confirmation.
 - 🛡️ **System Restore Points**: list, create, and roll back Windows restore points.

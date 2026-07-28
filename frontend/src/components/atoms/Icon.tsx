@@ -8,7 +8,6 @@ import {
   ShieldCheck,
   Settings,
   FolderOpen,
-  Gamepad2,
   RotateCcw,
   Trash2,
   RefreshCw,
@@ -40,7 +39,6 @@ export type IconName =
   | 'shield-check'
   | 'settings'
   | 'folder-open'
-  | 'gamepad'
   | 'rotate-ccw'
   | 'trash'
   | 'refresh-cw'
@@ -70,7 +68,6 @@ const iconMap: Record<IconName, React.FC<LucideProps>> = {
   'shield-check': ShieldCheck,
   settings: Settings,
   'folder-open': FolderOpen,
-  gamepad: Gamepad2,
   'rotate-ccw': RotateCcw,
   trash: Trash2,
   'refresh-cw': RefreshCw,

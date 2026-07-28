@@ -80,6 +80,9 @@ namespace VeloSysPro
         public RiskTier RiskTier { get; }
         public string Kind => TweakKinds.Service;
 
+        /// <summary>The start type governs the next start, so the change is live immediately.</summary>
+        public bool RequiresReboot => false;
+
         public TweakState Detect() =>
             IsQuietEnough(ReadStartType()) ? TweakState.Applied : TweakState.NotApplied;
 
@@ -103,10 +106,14 @@ namespace VeloSysPro
 
         public bool Apply(TweakCapture capture)
         {
+            // An unread start type is one Revert refuses to restore, so reconfiguring the service
+            // now would leave it changed with nothing to put back. Fail rather than mutate blind.
+            if (capture.Values.Count == 0 || !capture.Values[0].Existed) return false;
+
             // Read from the capture the engine just took rather than querying again. A service that
             // is already quieter than this Tweak asks for is left alone: writing the desired value
             // would be a downgrade dressed up as an optimization.
-            string current = capture.Values.Count > 0 ? capture.Values[0].Data : Unknown;
+            string current = capture.Values[0].Data;
             return IsQuietEnough(current) || Configure(_desiredStartType);
         }
 

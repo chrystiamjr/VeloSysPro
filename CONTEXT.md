@@ -25,7 +25,7 @@ A Windows-managed snapshot used to return the system to an earlier state.
 _Avoid_: Registry backup, file backup
 
 **Optimization Plan**:
-A named VeloSys Pro recipe that applies quick, full, gaming, or revert system changes. Superseded for new work by **Preset**; kept for the maintenance operations and the CLI task names.
+A named VeloSys Pro maintenance recipe — quick cleanup, full repair, or network revert. Owns no Tweaks and takes no capture. Superseded for anything that changes a persistent setting by **Preset**.
 _Avoid_: Maintenance Action, individual Windows command
 
 **Tweak**:

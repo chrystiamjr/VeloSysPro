@@ -2,11 +2,15 @@ using System;
 
 namespace VeloSysPro
 {
+    /// <summary>
+    /// The maintenance recipes. <c>Gaming</c> used to sit here, writing TCP globals through
+    /// <c>netsh</c> with no capture and no undo; it is now the <c>gaming</c> Tweak Preset, which
+    /// runs behind a Safety Checkpoint and can be reverted setting by setting.
+    /// </summary>
     public enum OptimizationPlan
     {
         Quick,
         Full,
-        Gaming,
         Revert,
     }
 
@@ -53,7 +57,6 @@ namespace VeloSysPro
             {
                 OptimizationPlan.Quick => RunQuick(),
                 OptimizationPlan.Full => RunFull(),
-                OptimizationPlan.Gaming => RunGaming(),
                 OptimizationPlan.Revert => RevertDefaults(),
                 _ => false,
             };
@@ -99,26 +102,6 @@ namespace VeloSysPro
 
             _sink.Status("status.full.done", 100);
             return Finish(ok, "log.full.done");
-        }
-
-        private bool RunGaming()
-        {
-            _sink.Status("status.gaming.start", 10);
-            _sink.Log("log.gaming.start", "info");
-            CreateSafetyBackup();
-
-            bool ok = true;
-            _sink.Status("status.gaming.rss", 40);
-            ok &= _cmd.Run("netsh.exe", "int tcp set global rss=enabled").Success;
-
-            _sink.Status("status.gaming.autotuning", 70);
-            ok &= _cmd.Run("netsh.exe", "int tcp set global autotuninglevel=normal").Success;
-
-            _sink.Status("status.gaming.dns", 90);
-            ok &= _cmd.Run("ipconfig.exe", "/flushdns").Success;
-
-            _sink.Status("status.gaming.done", 100);
-            return Finish(ok, "log.gaming.done");
         }
 
         private bool RevertDefaults()

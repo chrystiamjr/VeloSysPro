@@ -11,9 +11,11 @@ namespace VeloSysPro
     /// The registry of every Tweak VeloSys Pro ships, plus the Presets defined over them.
     /// </summary>
     /// <remarks>
-    /// Presets are keyed by the headless CLI task names (<c>quick</c>, <c>gaming</c>) so the
-    /// scheduled <c>VeloSysPro.exe --task=…</c> entries keep working while the UI moves from fixed
-    /// Optimization Plans to an à-la-carte selection (docs/adr/0003-tweak-as-reversible-unit.md).
+    /// A Preset is keyed by the headless CLI task name it answers to, so a scheduled
+    /// <c>VeloSysPro.exe --task=gaming</c> written before the à-la-carte catalog existed keeps
+    /// working (docs/adr/0003-tweak-as-reversible-unit.md). Preset ids and the remaining
+    /// <see cref="OptimizationPlan"/> names therefore share one namespace and must not collide —
+    /// <c>--task=</c> would otherwise mean two different things.
     /// </remarks>
     public sealed class TweakCatalog
     {
@@ -54,6 +56,10 @@ namespace VeloSysPro
                     throw new ArgumentException("Unknown recommended Tweak: " + id);
                 if (tweak.RiskTier == RiskTier.Advanced)
                     throw new ArgumentException("Advanced Tweak may not be recommended: " + id);
+                if (tweak.RequiresReboot)
+                    throw new ArgumentException(
+                        "A Tweak that needs a restart may not be recommended: " + id
+                    );
             }
 
             Tweaks = tweaks;
@@ -75,10 +81,25 @@ namespace VeloSysPro
         public ITweak? Find(string id) => _byId.TryGetValue(id, out ITweak? tweak) ? tweak : null;
 
         /// <summary>
-        /// The shipped catalog. E0 seeds one Tweak per revert mechanism — a registry value, a BCD
-        /// element, and a service start type — so the whole detect/apply/revert loop is proven
-        /// before the catalog grows breadth.
+        /// The Multimedia Class Scheduler Service key.
         /// </summary>
+        /// <remarks>
+        /// Under <c>SOFTWARE\Microsoft\Windows NT</c>, not under <c>SYSTEM\CurrentControlSet\Control</c>
+        /// where the source guides place it — that key does not exist on Windows 11, verified on a
+        /// real machine on 2026-07-27. Writing there would have created a key nothing reads, and
+        /// every one of these Tweaks would have reported success while changing nothing.
+        /// </remarks>
+        private const string MmcssProfile =
+            @"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile";
+
+        /// <summary>
+        /// The shipped catalog: every Safe optimization VeloSys Pro knows how to apply and undo.
+        /// </summary>
+        /// <remarks>
+        /// Grouping is by what the user recognizes, not by which hive the value lives in — the MMCSS
+        /// key holds both a scheduler setting (<c>cpu</c>) and a network one (<c>network</c>), and
+        /// they are separate Tweaks so either can be reverted on its own.
+        /// </remarks>
         public static TweakCatalog CreateDefault(ICommandRunner cmd, RegistryBackupManager backup)
         {
             var win32PrioritySeparation = new RegistryTweak(
@@ -92,12 +113,152 @@ namespace VeloSysPro
                 backup
             );
 
+            var systemResponsiveness = new RegistryTweak(
+                "cpu.systemResponsiveness",
+                TweakCategories.Cpu,
+                RiskTier.Safe,
+                MmcssProfile,
+                // The share of CPU MMCSS reserves for background work. Windows ships 20; 10 hands
+                // the rest back to the foreground multimedia task.
+                new[] { new RegistryValue("SystemResponsiveness", "REG_DWORD", "10") },
+                cmd,
+                backup
+            );
+
+            var gamesTaskPriority = new RegistryTweak(
+                "cpu.gamesTaskPriority",
+                TweakCategories.Cpu,
+                RiskTier.Safe,
+                MmcssProfile + @"\Tasks\Games",
+                // One Tweak, three values: they describe a single scheduling profile, and half of
+                // it applied is exactly what TweakState.Partial exists to show.
+                new[]
+                {
+                    new RegistryValue("GPU Priority", "REG_DWORD", "8"),
+                    new RegistryValue("Priority", "REG_DWORD", "6"),
+                    new RegistryValue("Scheduling Category", "REG_SZ", "High"),
+                },
+                cmd,
+                backup
+            );
+
+            var networkThrottling = new RegistryTweak(
+                "network.throttlingIndex",
+                TweakCategories.Network,
+                RiskTier.Safe,
+                MmcssProfile,
+                // 0xffffffff is the documented "no throttling" sentinel, not a count.
+                new[] { new RegistryValue("NetworkThrottlingIndex", "REG_DWORD", "4294967295") },
+                cmd,
+                backup
+            );
+
+            var tcpParameters = new RegistryTweak(
+                "network.tcpParameters",
+                TweakCategories.Network,
+                RiskTier.Safe,
+                @"HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters",
+                new[]
+                {
+                    new RegistryValue("DefaultTTL", "REG_DWORD", "64"),
+                    new RegistryValue("Tcp1323Opts", "REG_DWORD", "1"),
+                    new RegistryValue("TCPTimedWaitDelay", "REG_DWORD", "30"),
+                    new RegistryValue("MaxUserPort", "REG_DWORD", "65534"),
+                },
+                cmd,
+                backup,
+                // The TCP/IP driver reads these once, as it starts.
+                requiresReboot: true
+            );
+
+            var fullscreenExclusive = new RegistryTweak(
+                "graphics.fullscreenExclusive",
+                TweakCategories.Graphics,
+                RiskTier.Safe,
+                // The location Windows itself uses; both values were read here on a real machine on
+                // 2026-07-27 rather than being taken from a guide.
+                @"HKCU\System\GameConfigStore",
+                new[]
+                {
+                    new RegistryValue("GameDVR_FSEBehaviorMode", "REG_DWORD", "2"),
+                    new RegistryValue("GameDVR_HonorUserFSEBehaviorMode", "REG_DWORD", "1"),
+                },
+                cmd,
+                backup
+            );
+
+            var hardwareScheduling = new RegistryTweak(
+                "graphics.hardwareScheduling",
+                TweakCategories.Graphics,
+                RiskTier.Safe,
+                @"HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers",
+                new[] { new RegistryValue("HwSchMode", "REG_DWORD", "2") },
+                cmd,
+                backup,
+                requiresReboot: true,
+                // Windows creates HwSchMode itself where the display driver supports the feature —
+                // it is absent on the machine this was verified against. Creating it elsewhere
+                // would report an optimization the driver is never going to honour.
+                requiresExistingValue: true
+            );
+
+            var gameMode = new RegistryTweak(
+                "graphics.gameMode",
+                TweakCategories.Graphics,
+                RiskTier.Safe,
+                @"HKCU\Software\Microsoft\GameBar",
+                new[] { new RegistryValue("AllowAutoGameMode", "REG_DWORD", "1") },
+                cmd,
+                backup
+            );
+
+            var visualEffects = new RegistryTweak(
+                "system.visualEffects",
+                TweakCategories.System,
+                RiskTier.Safe,
+                @"HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects",
+                // 2 == "Adjust for best performance" in the Performance Options dialog.
+                new[] { new RegistryValue("VisualFXSetting", "REG_DWORD", "2") },
+                cmd,
+                backup,
+                // Explorer reads this as it starts, so the desktop keeps its animations until the
+                // user signs out. Treated as needing a restart because that is what they must do.
+                requiresReboot: true
+            );
+
+            var powerPlan = new PowerPlanTweak(
+                "system.powerPlan",
+                TweakCategories.System,
+                RiskTier.Safe,
+                cmd
+            );
+
             var disableDynamicTick = new BcdTweak(
                 "boot.disableDynamicTick",
                 TweakCategories.Boot,
                 RiskTier.Safe,
                 "disabledynamictick",
                 "yes",
+                cmd
+            );
+
+            var platformTick = new BcdTweak(
+                "boot.platformTick",
+                TweakCategories.Boot,
+                RiskTier.Safe,
+                "useplatformtick",
+                "yes",
+                cmd
+            );
+
+            // The goal here is the element's absence, not a value: the research catalog states this
+            // one as "remove useplatformclock", letting Windows pick its own timer source again.
+            var platformClock = new BcdTweak(
+                "boot.platformClock",
+                TweakCategories.Boot,
+                RiskTier.Safe,
+                "useplatformclock",
+                null,
                 cmd
             );
 
@@ -111,19 +272,62 @@ namespace VeloSysPro
             );
 
             return new TweakCatalog(
-                new ITweak[] { win32PrioritySeparation, disableDynamicTick, sysMain },
+                new ITweak[]
+                {
+                    win32PrioritySeparation,
+                    systemResponsiveness,
+                    gamesTaskPriority,
+                    networkThrottling,
+                    tcpParameters,
+                    fullscreenExclusive,
+                    hardwareScheduling,
+                    gameMode,
+                    visualEffects,
+                    powerPlan,
+                    disableDynamicTick,
+                    platformTick,
+                    platformClock,
+                    sysMain,
+                },
                 new Dictionary<string, IReadOnlyList<string>>
                 {
-                    ["quick"] = new[]
+                    // Everything that serves a game and can be applied on any machine.
+                    //
+                    // Two deliberate omissions. Visual Effects changes how Windows looks, which is
+                    // not a side effect anyone clicking "gaming" is asking for. GPU Hardware
+                    // Scheduling refuses to apply where the display driver never exposed
+                    // `HwSchMode` — the common case — and a Preset is applied wholesale by the
+                    // scheduler, so including it would make every headless `--task=gaming` run
+                    // report failure on those machines. It stays individually selectable.
+                    ["gaming"] = new[]
                     {
                         win32PrioritySeparation.Id,
+                        systemResponsiveness.Id,
+                        gamesTaskPriority.Id,
+                        networkThrottling.Id,
+                        tcpParameters.Id,
+                        fullscreenExclusive.Id,
+                        gameMode.Id,
+                        powerPlan.Id,
                         disableDynamicTick.Id,
+                        platformTick.Id,
+                        platformClock.Id,
                         sysMain.Id,
                     },
                 },
-                // The boot timer Tweak is left out: it only takes effect after a restart, and a
-                // recommendation should not carry a condition the user has to notice.
-                new[] { win32PrioritySeparation.Id, sysMain.Id }
+                // One click for someone who will not read the list, so it holds only what suits any
+                // machine and acts immediately. The constructor enforces the "no restart" half; the
+                // two judgement calls it cannot are the power plan, which costs battery on a laptop,
+                // and forced fullscreen-exclusive, which is a preference rather than a gain.
+                new[]
+                {
+                    win32PrioritySeparation.Id,
+                    systemResponsiveness.Id,
+                    gamesTaskPriority.Id,
+                    networkThrottling.Id,
+                    gameMode.Id,
+                    sysMain.Id,
+                }
             );
         }
     }

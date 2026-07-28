@@ -29,7 +29,6 @@ import type { LogType } from './schemas';
 export const SystemActions = {
   RUN_QUICK_OPTIMIZATION: 'runQuickOptimization',
   RUN_FULL_OPTIMIZATION: 'runFullOptimization',
-  RUN_GAMING_MODE: 'runGamingMode',
   REVERT_DEFAULTS: 'revertDefaults',
   CLEAR_UPDATE_CACHE: 'clearUpdateCache',
   CLEAN_PREFETCH: 'cleanPrefetch',

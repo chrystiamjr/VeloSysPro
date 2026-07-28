@@ -57,10 +57,15 @@ export const TweakSchema = z.object({
   id: z.string().min(1),
   category: z.string().min(1),
   riskTier: RiskTierSchema,
-  kind: z.enum(['registry', 'bcd', 'service']),
+  kind: z.enum(['registry', 'bcd', 'service', 'power']),
   state: TweakStateSchema,
   /** Curated by the host: what the catalog stands behind for someone who will not read every entry. */
   recommended: z.boolean(),
+  /**
+   * Written immediately, but only in effect after a restart. Structured rather than a sentence in
+   * the description, so the badge cannot depend on which language the description was written in.
+   */
+  requiresReboot: z.boolean(),
 });
 
 export const PresetSchema = z.object({

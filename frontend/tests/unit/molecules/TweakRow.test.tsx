@@ -11,6 +11,7 @@ const tweak: Tweak = {
   kind: 'registry',
   state: 'NotApplied',
   recommended: false,
+  requiresReboot: false,
 };
 
 const renderRow = (props: Partial<React.ComponentProps<typeof TweakRow>> = {}) => {
@@ -50,6 +51,20 @@ describe('TweakRow', () => {
     renderRow({ selected: true });
 
     expect(screen.getByRole('checkbox')).toBeChecked();
+  });
+
+  it('warns that a Tweak only takes effect after a restart', () => {
+    renderRow({ tweak: { ...tweak, requiresReboot: true } });
+
+    expect(screen.getByText(/depois de reiniciar/i)).toBeInTheDocument();
+  });
+
+  it('says nothing about restarting for a Tweak that acts immediately', () => {
+    // The badge is read off the host's structured flag. Rendering it unconditionally, or deriving
+    // it from the description, would put it on every row in one locale and none in the other.
+    renderRow();
+
+    expect(screen.queryByText(/reiniciar/i)).not.toBeInTheDocument();
   });
 
   it.each<[TweakState, string]>([

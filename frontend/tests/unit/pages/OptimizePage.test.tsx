@@ -13,6 +13,7 @@ const catalog: TweakCatalog = {
       kind: 'registry',
       state: 'NotApplied',
       recommended: false,
+      requiresReboot: false,
     },
     {
       id: 'boot.disableDynamicTick',
@@ -21,6 +22,7 @@ const catalog: TweakCatalog = {
       kind: 'bcd',
       state: 'Applied',
       recommended: false,
+      requiresReboot: false,
     },
     {
       id: 'services.sysMain',
@@ -29,6 +31,7 @@ const catalog: TweakCatalog = {
       kind: 'service',
       state: 'NotApplied',
       recommended: false,
+      requiresReboot: false,
     },
   ],
   systemProtectionEnabled: true,
@@ -208,6 +211,7 @@ describe('OptimizePage (desired-state selection screen)', () => {
             kind: 'registry',
             state: 'NotApplied',
             recommended: false,
+            requiresReboot: false,
           },
         ],
         presets: [
@@ -328,6 +332,7 @@ describe('OptimizePage (desired-state selection screen)', () => {
         kind: 'registry',
         state,
         recommended: false,
+        requiresReboot: false,
       },
     ],
   });
@@ -390,6 +395,7 @@ describe('OptimizePage (desired-state selection screen)', () => {
       tweaks: catalog.tweaks.map((tweak) => ({
         ...tweak,
         recommended: tweak.id === 'services.sysMain',
+        requiresReboot: false,
       })),
     };
     const { container, onApply } = renderPage({ catalog: recommendedCatalog });
@@ -410,6 +416,7 @@ describe('OptimizePage (desired-state selection screen)', () => {
       tweaks: catalog.tweaks.map((tweak) => ({
         ...tweak,
         recommended: tweak.id !== 'boot.disableDynamicTick',
+        requiresReboot: false,
       })),
     };
     const { container } = renderPage({ catalog: recommendedCatalog });

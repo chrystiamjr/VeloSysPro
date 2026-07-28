@@ -5,7 +5,6 @@ namespace VeloSysPro
     {
         public const string RunQuickOptimization = "runQuickOptimization";
         public const string RunFullOptimization = "runFullOptimization";
-        public const string RunGamingMode = "runGamingMode";
         public const string RevertDefaults = "revertDefaults";
         public const string ClearUpdateCache = "clearUpdateCache";
         public const string CleanPrefetch = "cleanPrefetch";

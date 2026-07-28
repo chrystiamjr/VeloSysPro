@@ -16,8 +16,13 @@ export interface TweakCatalogListProps {
   stale?: boolean;
 }
 
-/** Categories the UI has copy for; anything else still renders, under a translated fallback. */
-const KNOWN_CATEGORIES = ['cpu', 'boot', 'services'];
+/**
+ * Categories the UI has copy for, in the order they are shown; anything else still renders, under
+ * a translated fallback. Ordered roughly by how many people will recognize what the section is for,
+ * not by hive or by reboot cost — a section holds a mix of both, and the per-row restart badge is
+ * what actually tells the user when a change lands.
+ */
+const KNOWN_CATEGORIES = ['cpu', 'graphics', 'network', 'system', 'boot', 'services'];
 
 /**
  * The catalog, grouped so it stays readable as it grows, with the Advanced tier held apart.

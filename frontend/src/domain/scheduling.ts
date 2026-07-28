@@ -5,10 +5,17 @@ import type { ScheduledTaskItem } from './schemas';
 
 export type Translate = (key: string, params?: Record<string, unknown> | unknown[]) => string;
 
+/**
+ * What a scheduled task can run, keyed by the `--task=` argument the host writes.
+ *
+ * `gaming` is labelled from the Preset it now runs, not from a Dashboard card: E2-03 replaced the
+ * unrevertable "Modo Gaming" action with the `gaming` Tweak Preset, and the dropdown has to name
+ * the thing that will actually happen.
+ */
 export const OPT_TYPES = [
   { value: 'quick', labelKey: 'act.quick.title' },
   { value: 'full', labelKey: 'act.full.title' },
-  { value: 'gaming', labelKey: 'act.gaming.title' },
+  { value: 'gaming', labelKey: 'optimize.preset.gaming.title' },
   { value: 'revert', labelKey: 'act.revert.title' },
 ] as const;
 

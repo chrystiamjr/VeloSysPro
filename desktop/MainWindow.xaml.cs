@@ -52,14 +52,7 @@ namespace VeloSysPro
             _scheduler = new SchedulerManager(_cmd, this);
             _settings = new SettingsManager();
             _events = new IpcEventEmitter(PostEventJson);
-            _tweaks = new TweakEngine(
-                TweakCatalog.CreateDefault(_cmd, _backup),
-                new JsonTweakCaptureStore(),
-                _systemRestore,
-                new SnapshotManager(_cmd, this),
-                new JsonlSnapshotStore(),
-                this
-            );
+            _tweaks = TweakEngine.CreateDefault(_cmd, _backup, _systemRestore, this);
             _optimizer.CreateSafetyBackupEnabled = _settings.Current.CreateBackupBeforeOptimize;
             _tweaks.CreateSafetyBackupEnabled = _settings.Current.CreateBackupBeforeOptimize;
 

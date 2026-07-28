@@ -12,10 +12,6 @@
       "desc": "Runs SFC scannow, DISM repair, disk check, DNS flush, and temp clean.",
       "title": "Full Repair"
     },
-    "gaming": {
-      "desc": "Tunes TCP stack (RSS, Autotuning) for low latency and online gaming.",
-      "title": "Gaming Mode"
-    },
     "prefetch": {
       "desc": "Removes prefetch files so the app launch cache is rebuilt fresh.",
       "title": "Clean Prefetch"
@@ -57,7 +53,6 @@
     "version": "Version 0.1.6 (C# / React Build)"
   },
   "btn": {
-    "applyMode": "Apply Mode",
     "clean": "Clean",
     "clearConsole": "Clear Console",
     "createNow": "Create Now",
@@ -143,10 +138,6 @@
       "done": "Full Repair completed successfully.",
       "start": "Starting Full Repair..."
     },
-    "gaming": {
-      "done": "Gaming Mode applied successfully.",
-      "start": "Applying low-latency network tweaks (Gaming Mode)..."
-    },
     "hostReady": ".NET 8 WPF + Edge Chromium WebView2 host initialized (embedded UI).",
     "op": {
       "completedWithErrors": "Operation completed with errors. Check the log above."
@@ -199,7 +190,8 @@
       "protectionDisabled": "Windows System Protection is turned off, so no restore point can be created. Nothing was changed.",
       "revertFailed": "Failed to revert the optimization: {{id}}",
       "reverted": "Optimization reverted: {{id}}",
-      "unknown": "Unknown optimization: {{id}}"
+      "unknown": "Unknown optimization: {{id}}",
+      "unknownPreset": "Unknown preset: {{id}}"
     },
     "updateCache": {
       "done": "Windows Update cache cleared successfully.",
@@ -227,8 +219,11 @@
     "category": {
       "boot": "Boot and timers",
       "cpu": "Processor and priorities",
+      "graphics": "Graphics and games",
+      "network": "Network",
       "other": "Other",
-      "services": "Windows services"
+      "services": "Windows services",
+      "system": "System and performance"
     },
     "clearBtn": "Clear selection",
     "empty": "No optimizations available. Use Refresh to query the system again.",
@@ -237,14 +232,15 @@
     "partialHint": "Partly applied: some of this item's settings do not match. Tick it and apply again to complete it.",
     "pending": "{{apply}} to apply · {{revert}} to revert",
     "preset": {
-      "quick": {
-        "desc": "Everything the catalog offers today: processor priority, boot timer, and background services.",
-        "title": "Quick preset"
+      "gaming": {
+        "desc": "Everything the catalog offers for games: processor priority, network, graphics, power, and background services.",
+        "title": "Gaming preset"
       }
     },
     "presetCount": "{{count}} optimizations",
     "presetLabel": "Start from a preset",
     "presetModified": "(modified)",
+    "rebootHint": "Only takes effect after Windows restarts.",
     "recommended": {
       "desc": "What suits most machines and takes effect right away — nothing that needs a Windows restart.",
       "title": "Recommended"
@@ -275,18 +271,68 @@
         "disableDynamicTick": {
           "desc": "Turns off the dynamic boot timer tick so clock intervals stay constant. Requires a restart.",
           "title": "Disable the dynamic timer tick"
+        },
+        "platformClock": {
+          "desc": "Removes the boot setting that pins one clock source and lets Windows choose the best one available again.",
+          "title": "Stop forcing the platform clock"
+        },
+        "platformTick": {
+          "desc": "Makes Windows use the motherboard's hardware timer, keeping clock intervals more predictable.",
+          "title": "Use the platform timer"
         }
       },
       "cpu": {
+        "gamesTaskPriority": {
+          "desc": "Raises the processor and graphics priority Windows grants to tasks registered as games.",
+          "title": "Scheduler priority for games"
+        },
+        "systemResponsiveness": {
+          "desc": "Lowers the share of the processor the multimedia scheduler holds back for background tasks and hands it to the foreground application.",
+          "title": "Reserve less CPU for background work"
+        },
         "win32PrioritySeparation": {
           "desc": "Gives the foreground application short, fixed quanta, favouring games and the active window.",
           "title": "Boost the foreground application"
+        }
+      },
+      "graphics": {
+        "fullscreenExclusive": {
+          "desc": "Makes games use exclusive fullscreen instead of the Windows fullscreen optimizations.",
+          "title": "Force fullscreen exclusive"
+        },
+        "gameMode": {
+          "desc": "Lets Windows prioritise the running game and hold back updates and notifications.",
+          "title": "Windows Game Mode"
+        },
+        "hardwareScheduling": {
+          "desc": "Hands video memory scheduling to the graphics card itself. Only available where the display driver offers the feature.",
+          "title": "Hardware-accelerated GPU scheduling"
+        }
+      },
+      "network": {
+        "tcpParameters": {
+          "desc": "Applies a set of TCP stack parameters aimed at low-latency connections and more simultaneous ports.",
+          "title": "Tune the Windows TCP parameters"
+        },
+        "throttlingIndex": {
+          "desc": "Removes the ceiling the multimedia scheduler puts on network traffic while audio or video is playing.",
+          "title": "Turn off multimedia network throttling"
         }
       },
       "services": {
         "sysMain": {
           "desc": "Sets SysMain (Superfetch) to Manual start, cutting background disk activity.",
           "title": "SysMain on Manual start"
+        }
+      },
+      "system": {
+        "powerPlan": {
+          "desc": "Activates the Ultimate Performance plan, or High performance when the machine does not have it. Draws more power on a laptop.",
+          "title": "High-performance power plan"
+        },
+        "visualEffects": {
+          "desc": "Trades the interface animations and shadows for the best-performance setting.",
+          "title": "Visual effects tuned for performance"
         }
       }
     }
@@ -399,13 +445,6 @@
       "sfc": "[1/4] Verifying system files (SFC)...",
       "start": "Starting Full Repair...",
       "temp": "[4/4] Cleaning temporary files..."
-    },
-    "gaming": {
-      "autotuning": "Adjusting autotuning...",
-      "dns": "Flushing DNS...",
-      "done": "Gaming Mode applied successfully!",
-      "rss": "Enabling RSS...",
-      "start": "Applying Gaming Mode..."
     },
     "idle": "Awaiting action",
     "prefetch": {

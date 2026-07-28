@@ -67,6 +67,17 @@ export const TweakRow: React.FC<TweakRowProps> = ({
           <span className="mt-1 block text-xs leading-relaxed text-textMuted">
             {t(`${labelKey}.desc`)}
           </span>
+          {/* Read off the host's structured flag, never off the description: the same sentence in
+              another language would have to be parsed differently, and the badge would go missing
+              in one locale. */}
+          {tweak.requiresReboot && (
+            <span
+              data-cy={`tweak-reboot-${tweak.id}`}
+              className="mt-1 flex items-center gap-1.5 text-xs text-info"
+            >
+              <Icon name="refresh-cw" className="h-3.5 w-3.5" /> {t('optimize.rebootHint')}
+            </span>
+          )}
           {tweak.riskTier === 'Advanced' && (
             <span className="mt-1 block text-xs leading-relaxed text-warning">
               {t(`${labelKey}.risk`)}

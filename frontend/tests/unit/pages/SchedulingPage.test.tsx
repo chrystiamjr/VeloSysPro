@@ -76,7 +76,7 @@ describe('SchedulingPage (functional scheduler)', () => {
       ],
     });
 
-    expect(screen.getByText('Semanal - Modo Gaming')).toBeInTheDocument();
+    expect(screen.getByText('Semanal - Predefinição Gaming')).toBeInTheDocument();
     expect(screen.getByText('Toda segunda-feira às 04:30')).toBeInTheDocument();
     expect(screen.getByText('Todo dia 15 às 02:00')).toBeInTheDocument();
   });

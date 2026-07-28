@@ -29,6 +29,11 @@ public class ActionHostTweakTests
                 ("RPSessionInterval", "    RPSessionInterval    REG_DWORD    0x1\r\n")
             );
 
+            // A readable start type for services.sysMain, the Tweak these tests dispatch. Without
+            // it the capture records "unknown", which ServiceTweak.Apply now refuses rather than
+            // reconfiguring a service it could not read and could not put back.
+            Runner.CapturedOutputsByArgs.Add(("Get-Service", "Automatic\r\n"));
+
             var emitter = new IpcEventEmitter(json =>
             {
                 using JsonDocument document = JsonDocument.Parse(json);

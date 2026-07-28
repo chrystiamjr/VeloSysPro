@@ -76,6 +76,7 @@ describe('useOsBackedLists', () => {
           kind: 'registry' as const,
           state: 'Applied' as const,
           recommended: false,
+          requiresReboot: false,
         },
       ],
       presets: [{ id: 'quick', tweakIds: ['cpu.win32PrioritySeparation'] }],

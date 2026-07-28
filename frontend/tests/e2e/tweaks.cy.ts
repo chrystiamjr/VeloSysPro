@@ -52,11 +52,16 @@ describe('à-la-carte optimizations', () => {
   it('submits only the newly ticked Tweaks', () => {
     cy.emitHost('tweaksLoaded', tweakCatalog);
 
-    cy.getByCy('tweak-preset-quick').click();
+    cy.getByCy('tweak-preset-gaming').click();
     cy.getByCy('tweak-apply').click();
 
     cy.expectIpc('applyTweaks', {
-      tweakIds: ['cpu.win32PrioritySeparation', 'boot.disableDynamicTick', 'services.sysMain'],
+      tweakIds: [
+        'cpu.win32PrioritySeparation',
+        'boot.disableDynamicTick',
+        'services.sysMain',
+        'system.powerPlan',
+      ],
       revertIds: [],
     });
   });
@@ -64,12 +69,12 @@ describe('à-la-carte optimizations', () => {
   it('lets the user drop a Tweak from a preset before applying', () => {
     cy.emitHost('tweaksLoaded', tweakCatalog);
 
-    cy.getByCy('tweak-preset-quick').click();
+    cy.getByCy('tweak-preset-gaming').click();
     cy.getByCy('tweak-select-boot.disableDynamicTick').click();
     cy.getByCy('tweak-apply').click();
 
     cy.expectIpc('applyTweaks', {
-      tweakIds: ['cpu.win32PrioritySeparation', 'services.sysMain'],
+      tweakIds: ['cpu.win32PrioritySeparation', 'services.sysMain', 'system.powerPlan'],
       revertIds: [],
     });
   });
@@ -101,7 +106,7 @@ describe('à-la-carte optimizations', () => {
     cy.emitHost('tweaksLoaded', appliedTweakCatalog);
 
     cy.getByCy('tweak-clear').click();
-    cy.contains('0 para aplicar · 3 para reverter').should('be.visible');
+    cy.contains('0 para aplicar · 4 para reverter').should('be.visible');
     cy.getByCy('tweak-apply').click();
     cy.getByCy('revert-confirm-confirm').click();
 
@@ -111,6 +116,7 @@ describe('à-la-carte optimizations', () => {
         'cpu.win32PrioritySeparation',
         'boot.disableDynamicTick',
         'services.sysMain',
+        'system.powerPlan',
       ],
     });
   });
@@ -143,7 +149,7 @@ describe('à-la-carte optimizations', () => {
 
   it('refreshes the badges and shows the gain after a batch completes', () => {
     cy.emitHost('tweaksLoaded', tweakCatalog);
-    cy.getByCy('tweak-preset-quick').click();
+    cy.getByCy('tweak-preset-gaming').click();
     cy.getByCy('tweak-apply').click();
 
     // What the host does on success: publish the measurement, re-emit the catalog, then finish.
@@ -241,7 +247,7 @@ describe('à-la-carte optimizations', () => {
 
   it('locks the screen while a batch is in flight and releases it on completion', () => {
     cy.emitHost('tweaksLoaded', tweakCatalog);
-    cy.getByCy('tweak-preset-quick').click();
+    cy.getByCy('tweak-preset-gaming').click();
     cy.getByCy('tweak-apply').click();
 
     cy.getByCy('tweak-refresh').should('be.disabled');
@@ -288,7 +294,7 @@ describe('à-la-carte optimizations', () => {
     cy.emitHost('tweaksLoaded', mixedTweakCatalog);
     cy.getByCy('tweak-advanced-toggle').click();
 
-    cy.getByCy('tweak-preset-quick').click();
+    cy.getByCy('tweak-preset-gaming').click();
     cy.getByCy('tweak-select-advanced.memoryIntegrity').should('not.be.checked');
 
     cy.getByCy('tweak-recommended').click();
@@ -305,11 +311,13 @@ describe('à-la-carte optimizations', () => {
   it('says when a preset has been edited by hand', () => {
     cy.emitHost('tweaksLoaded', tweakCatalog);
 
-    cy.getByCy('tweak-preset-quick').click();
+    cy.getByCy('tweak-preset-gaming').click();
     cy.getByCy('preset-modified').should('not.exist');
 
+    // Ticking a row scrolls the catalog, and the layout's outer overflow-hidden makes Cypress
+    // treat anything past the scrollport as hidden — so scroll back before asserting.
     cy.getByCy('tweak-select-services.sysMain').click();
-    cy.getByCy('preset-modified').should('be.visible');
+    cy.getByCy('preset-modified').scrollIntoView().should('be.visible');
   });
 
   it('keeps the last valid catalog and says so when the host sends garbage', () => {

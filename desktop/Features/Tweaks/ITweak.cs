@@ -63,8 +63,18 @@ namespace VeloSysPro
 
         RiskTier RiskTier { get; }
 
-        /// <summary>Kind of capture this Tweak produces: registry, bcd, or service.</summary>
+        /// <summary>Kind of capture this Tweak produces: registry, bcd, service, or power.</summary>
         string Kind { get; }
+
+        /// <summary>
+        /// True when the setting is written immediately but only takes effect after a restart.
+        /// </summary>
+        /// <remarks>
+        /// Structured rather than a sentence in the description, because two things branch on it:
+        /// the UI badges the row, and <see cref="TweakCatalog"/> refuses to recommend such a Tweak.
+        /// Deriving either from translated copy would make them wrong in one language.
+        /// </remarks>
+        bool RequiresReboot { get; }
 
         /// <summary>Reads the live system. Never mutates anything.</summary>
         TweakState Detect();
@@ -108,18 +118,22 @@ namespace VeloSysPro
             System.DateTime.UtcNow.ToString("O", System.Globalization.CultureInfo.InvariantCulture);
     }
 
-    /// <summary>Capture kinds, matching the three revert mechanisms.</summary>
+    /// <summary>Capture kinds, matching the four revert mechanisms.</summary>
     public static class TweakKinds
     {
         public const string Registry = "registry";
         public const string Bcd = "bcd";
         public const string Service = "service";
+        public const string Power = "power";
     }
 
     /// <summary>Selection-screen groupings. Kept as constants so the UI can translate them by key.</summary>
     public static class TweakCategories
     {
         public const string Cpu = "cpu";
+        public const string Graphics = "graphics";
+        public const string Network = "network";
+        public const string System = "system";
         public const string Boot = "boot";
         public const string Services = "services";
     }

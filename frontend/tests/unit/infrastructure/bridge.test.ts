@@ -40,6 +40,7 @@ const validTweak = {
   kind: 'registry',
   state: 'NotApplied',
   recommended: false,
+  requiresReboot: false,
 };
 const validCatalog = {
   tweaks: [validTweak],
@@ -184,6 +185,9 @@ describe('IPC Event module', () => {
     ['a non-string id', { ...validTweak, id: 42 }],
     ['an empty id', { ...validTweak, id: '' }],
     ['a non-string category', { ...validTweak, category: 7 }],
+    ['a missing reboot flag', { ...validTweak, requiresReboot: undefined }],
+    ['a stringly-typed reboot flag', { ...validTweak, requiresReboot: 'yes' }],
+    ['a missing recommended flag', { ...validTweak, recommended: undefined }],
     ['no state at all', { id: 'cpu.a', category: 'cpu', riskTier: 'Safe', kind: 'registry' }],
   ])('keeps the last valid catalog when a Tweak has %s', (_label, tweak) => {
     const callback = vi.fn();

@@ -49,6 +49,17 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Backup de Registro')).toBeVisible();
   });
 
+  it('no longer offers Modo Gaming, which cannot be undone from here', () => {
+    // E2-03 re-delivered its TCP settings as reversible Tweaks on the Optimize screen. This card
+    // was the last thing in the app that changed a persistent setting with no capture and no way
+    // back, so its absence is the point rather than an incidental layout detail.
+    renderDashboard();
+
+    expect(screen.queryByText('Modo Gaming')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Aplicar Modo' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Executar Agora' })).toHaveLength(2);
+  });
+
   it('navigates from summary metrics and recovery shortcuts', () => {
     const onNavigateToBackup = vi.fn();
     const onNavigateToRestorePoints = vi.fn();

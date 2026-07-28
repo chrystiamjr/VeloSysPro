@@ -61,7 +61,12 @@ export const restorePoints: RestorePointItem[] = [
   },
 ];
 
-/** Mirrors what TweakCatalog.CreateDefault seeds: one Tweak per revert mechanism. */
+/**
+ * A cross-section of what TweakCatalog.CreateDefault ships: one Tweak per revert mechanism, one
+ * that needs a restart, and one the host recommends. Deliberately not the whole catalog — these
+ * specs are about the screen's behaviour, and pinning all twelve here would make every E2 catalog
+ * addition edit a file that has nothing to do with it.
+ */
 export const tweakCatalog: TweakCatalog = {
   tweaks: [
     {
@@ -70,7 +75,8 @@ export const tweakCatalog: TweakCatalog = {
       riskTier: 'Safe',
       kind: 'registry',
       state: 'NotApplied',
-      recommended: false,
+      recommended: true,
+      requiresReboot: false,
     },
     {
       id: 'boot.disableDynamicTick',
@@ -79,6 +85,7 @@ export const tweakCatalog: TweakCatalog = {
       kind: 'bcd',
       state: 'NotApplied',
       recommended: false,
+      requiresReboot: true,
     },
     {
       id: 'services.sysMain',
@@ -86,14 +93,29 @@ export const tweakCatalog: TweakCatalog = {
       riskTier: 'Safe',
       kind: 'service',
       state: 'NotApplied',
+      recommended: true,
+      requiresReboot: false,
+    },
+    {
+      id: 'system.powerPlan',
+      category: 'system',
+      riskTier: 'Safe',
+      kind: 'power',
+      state: 'NotApplied',
       recommended: false,
+      requiresReboot: false,
     },
   ],
   systemProtectionEnabled: true,
   presets: [
     {
-      id: 'quick',
-      tweakIds: ['cpu.win32PrioritySeparation', 'boot.disableDynamicTick', 'services.sysMain'],
+      id: 'gaming',
+      tweakIds: [
+        'cpu.win32PrioritySeparation',
+        'boot.disableDynamicTick',
+        'services.sysMain',
+        'system.powerPlan',
+      ],
     },
   ],
 };
@@ -118,6 +140,7 @@ export const mixedTweakCatalog: TweakCatalog = {
       kind: 'registry',
       state: 'NotApplied',
       recommended: false,
+      requiresReboot: false,
     },
     {
       id: 'network.tcpTuning',
@@ -126,6 +149,7 @@ export const mixedTweakCatalog: TweakCatalog = {
       kind: 'registry',
       state: 'NotApplied',
       recommended: false,
+      requiresReboot: false,
     },
   ],
 };

@@ -24,6 +24,7 @@ public class TweakEngineTests
         public string Category => TweakCategories.Cpu;
         public RiskTier RiskTier => RiskTier.Safe;
         public string Kind => TweakKinds.Registry;
+        public bool RequiresReboot { get; set; }
         public TweakState DetectedState { get; set; } = TweakState.NotApplied;
         public List<string> Calls { get; } = new();
 
@@ -477,6 +478,63 @@ public class TweakEngineTests
             new[] { "cpu.a" },
             preset.GetProperty("tweakIds").EnumerateArray().Select(id => id.GetString())
         );
+    }
+
+    [Fact]
+    public void GetTweaksJson_CarriesTheRebootFlagPerTweak()
+    {
+        // The screen badges the row from this field. Derived from translated copy instead, the
+        // badge would go missing in whichever language nobody thought to check.
+        var immediate = new SpyTweak("cpu.a");
+        var afterRestart = new SpyTweak("boot.b") { RequiresReboot = true };
+        var harness = new Harness(immediate, afterRestart);
+
+        using JsonDocument document = JsonDocument.Parse(harness.Engine.GetTweaksJson());
+        JsonElement[] tweaks = document
+            .RootElement.GetProperty("tweaks")
+            .EnumerateArray()
+            .ToArray();
+
+        Assert.False(tweaks[0].GetProperty("requiresReboot").GetBoolean());
+        Assert.True(tweaks[1].GetProperty("requiresReboot").GetBoolean());
+    }
+
+    [Fact]
+    public void ApplyPreset_RunsEveryTweakThePresetNames()
+    {
+        // The headless CLI's entry point. It applies the whole selection rather than a difference,
+        // because a scheduled run has nobody drawing an intent on the screen.
+        var inPreset = new SpyTweak("cpu.a");
+        var outside = new SpyTweak("cpu.b");
+        var harness = new Harness(
+            new Dictionary<string, IReadOnlyList<string>> { ["gaming"] = new[] { "cpu.a" } },
+            inPreset,
+            outside
+        );
+
+        Assert.True(harness.Engine.ApplyPreset("gaming"));
+
+        Assert.Contains("apply", inPreset.Calls);
+        Assert.DoesNotContain("apply", outside.Calls);
+    }
+
+    [Fact]
+    public void HasPreset_SeparatesAnUnknownTaskNameFromAFailedRun()
+    {
+        // App.RunHeadless branches on this: folding "no such preset" into ApplyPreset's bool made a
+        // gaming batch that ran and failed report itself as an unknown task name.
+        var failing = new SpyTweak("cpu.a", applies: false);
+        var harness = new Harness(
+            new Dictionary<string, IReadOnlyList<string>> { ["gaming"] = new[] { "cpu.a" } },
+            failing
+        );
+
+        Assert.True(harness.Engine.HasPreset("gaming"));
+        Assert.False(harness.Engine.ApplyPreset("gaming"));
+
+        Assert.False(harness.Engine.HasPreset("quick"));
+        Assert.False(harness.Engine.ApplyPreset("quick"));
+        Assert.Contains(harness.Sink.Logs, log => log.Key == "log.tweaks.unknownPreset");
     }
 
     [Fact]

@@ -29,7 +29,7 @@ describe('structured schedule display (pt_BR)', () => {
     expect(taskDisplayName(task(), t)).toBe('Diária - Limpeza Rápida');
     expect(
       taskDisplayName(task({ Type: 'gaming', Frequency: 'WEEKLY' }), t)
-    ).toBe('Semanal - Modo Gaming');
+    ).toBe('Semanal - Predefinição Gaming');
   });
 
   it('falls back safely for a legacy record', () => {

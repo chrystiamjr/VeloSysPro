@@ -39,7 +39,8 @@ namespace VeloSysPro
             string RiskTier,
             string Kind,
             string State,
-            bool Recommended
+            bool Recommended,
+            bool RequiresReboot
         );
 
         private record PresetInfo(string Id, IReadOnlyList<string> TweakIds);
@@ -82,6 +83,64 @@ namespace VeloSysPro
             _sink = sink;
         }
 
+        /// <summary>
+        /// The engine as the app ships it, so the window and the headless CLI compose the same one.
+        /// </summary>
+        public static TweakEngine CreateDefault(
+            ICommandRunner cmd,
+            RegistryBackupManager backup,
+            SystemRestoreManager systemRestore,
+            IStatusSink sink
+        ) =>
+            new(
+                TweakCatalog.CreateDefault(cmd, backup),
+                new JsonTweakCaptureStore(),
+                systemRestore,
+                new SnapshotManager(cmd, sink),
+                new JsonlSnapshotStore(),
+                sink
+            );
+
+        /// <summary>
+        /// True when the catalog defines a Preset with this id.
+        /// </summary>
+        /// <remarks>
+        /// Asked separately from running it so the headless CLI can tell "no such task" from "the
+        /// task ran and failed". Folding both into one bool made a failed batch report itself as an
+        /// unknown task name.
+        /// </remarks>
+        public bool HasPreset(string presetId) => FindPreset(presetId) != null;
+
+        /// <summary>
+        /// Applies every Tweak in a Preset — the headless CLI's way into the à-la-carte catalog.
+        /// </summary>
+        /// <remarks>
+        /// Applies the Preset's whole selection rather than the difference against the live system,
+        /// because a scheduled run has no user drawing an intent. A Tweak already in place is a
+        /// no-op its own <see cref="ITweak.Apply"/> absorbs.
+        /// </remarks>
+        public bool ApplyPreset(string presetId)
+        {
+            Preset? preset = FindPreset(presetId);
+            if (preset == null)
+            {
+                _sink.Log("log.tweaks.unknownPreset", "error", new { id = presetId });
+                return false;
+            }
+
+            return ApplyTweaks(preset.TweakIds).Ok;
+        }
+
+        private Preset? FindPreset(string presetId)
+        {
+            foreach (Preset preset in _catalog.Presets)
+            {
+                if (string.Equals(preset.Id, presetId, StringComparison.OrdinalIgnoreCase))
+                    return preset;
+            }
+            return null;
+        }
+
         /// <summary>The catalog with each Tweak's live state, as the tweaksLoaded payload.</summary>
         public string GetTweaksJson()
         {
@@ -95,7 +154,8 @@ namespace VeloSysPro
                         tweak.RiskTier.ToString(),
                         tweak.Kind,
                         tweak.Detect().ToString(),
-                        _catalog.Recommended.Contains(tweak.Id)
+                        _catalog.Recommended.Contains(tweak.Id),
+                        tweak.RequiresReboot
                     )
                 );
             }

@@ -111,9 +111,9 @@ WebView2 and that tests capture directly.
 
 | Module | Responsibility |
 | :-- | :-- |
-| `Optimizer` | Runs the named **Optimization Plans** — `Quick`, `Full`, `Gaming`, `Revert` — plus `ClearUpdateCache`, `CleanPrefetch`, `ReportDiskHealth`. Success is derived from **exit codes**, not stderr presence. Honors the safety-backup preference. |
-| `TweakCatalog` + `ITweak` | The **Tweak** catalog: one registry, BCD, or service optimization each, able to `Detect`, `Capture`, `Apply`, and `Revert` itself. **Presets** are Tweak-id sets over it, keyed by the CLI task names, and may reference `Safe` Tweaks only (ADR [0003](docs/adr/0003-tweak-as-reversible-unit.md), [0005](docs/adr/0005-advanced-risk-tier.md)). |
-| `TweakEngine` | Orchestrates a batch: **Safety Checkpoint**, per-Tweak capture, then apply **and revert together under that one checkpoint** (reverts first), and the before/after measurement (ADR [0004](docs/adr/0004-safety-checkpoint.md)). Reports which settings actually moved, read back off the live system. Returns facts; `ActionHost` publishes them. |
+| `Optimizer` | Runs the named **Optimization Plans** — `Quick`, `Full`, `Revert` — plus `ClearUpdateCache`, `CleanPrefetch`, `ReportDiskHealth`. These are **maintenance**: cleanup and repair, owning no Tweaks. Success is derived from **exit codes**, not stderr presence. Honors the safety-backup preference. |
+| `TweakCatalog` + `ITweak` | The **Tweak** catalog: one registry, BCD, service, or power-plan optimization each, able to `Detect`, `Capture`, `Apply`, and `Revert` itself, and declaring whether it `RequiresReboot`. **Presets** are Tweak-id sets over it, keyed by the CLI task names, and may reference `Safe` Tweaks only; **Recommended** additionally excludes anything needing a restart (ADR [0003](docs/adr/0003-tweak-as-reversible-unit.md), [0005](docs/adr/0005-advanced-risk-tier.md)). |
+| `TweakEngine` | Orchestrates a batch: **Safety Checkpoint**, per-Tweak capture, then apply **and revert together under that one checkpoint** (reverts first), and the before/after measurement (ADR [0004](docs/adr/0004-safety-checkpoint.md)). Reports which settings actually moved, read back off the live system. Returns facts; `ActionHost` publishes them. `ApplyPreset` is the headless CLI's entry point. |
 | `SnapshotManager` + `ISnapshotStore` | Captures an **Optimization Snapshot** from built-in facilities only (CIM, `Get-Service`, the Diagnostics-Performance log) and appends it to the append-only JSONL **Optimization History** (ADR [0006](docs/adr/0006-built-in-only-boundary.md), [0007](docs/adr/0007-jsonl-snapshot-store.md)). |
 | `RegistryBackupManager` | Exports/imports TCP/IP registry `.reg` backups and lists them as Management Records; also exports/imports arbitrary keys as a Tweak's capture archive. |
 | `SystemRestoreManager` | Lists, creates, and rolls back Windows System Restore points (rollback reboots). |
@@ -128,7 +128,9 @@ WebView2 and that tests capture directly.
   mojibaked, and returning exit codes. The interface lets tests substitute in-memory fakes.
 - `IStatusSink` / `FileStatusSink` — the log/status/progress sink. In-app it feeds Events; in
   **headless CLI mode** (`VeloSysPro.exe --task=<quick|full|gaming|revert>`, used by the scheduler)
-  it writes to a file.
+  it writes to a file. Preset ids and Optimization Plan names share that one `--task=` namespace:
+  `gaming` resolves to the **Preset**, the rest to Plans, and a test forbids a Preset from
+  shadowing a Plan.
 - `ManagedStream` + `MainWindow` — serve the embedded `ui/` bundle from memory via WebView2
   `WebResourceRequested` under `https://velosys.app/`, so the release needs no `ui/` folder on disk.
 - `AppPaths` — centralizes all mutable runtime data under `%LOCALAPPDATA%\VeloSysPro`: preferences,

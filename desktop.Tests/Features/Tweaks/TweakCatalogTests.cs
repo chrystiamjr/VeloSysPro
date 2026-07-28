@@ -9,16 +9,18 @@ public class TweakCatalogTests
 {
     private sealed class StubTweak : ITweak
     {
-        public StubTweak(string id, RiskTier riskTier = RiskTier.Safe)
+        public StubTweak(string id, RiskTier riskTier = RiskTier.Safe, bool requiresReboot = false)
         {
             Id = id;
             RiskTier = riskTier;
+            RequiresReboot = requiresReboot;
         }
 
         public string Id { get; }
         public string Category => TweakCategories.Cpu;
         public RiskTier RiskTier { get; }
         public string Kind => TweakKinds.Registry;
+        public bool RequiresReboot { get; }
 
         public TweakState Detect() => TweakState.NotApplied;
 
@@ -109,6 +111,29 @@ public class TweakCatalogTests
     }
 
     [Fact]
+    public void Constructor_RejectsRecommendingATweakThatNeedsARestart()
+    {
+        // Recommended is one click that should just work. A Tweak whose effect only arrives after a
+        // reboot makes the click a lie unless the user notices a condition — so the rule that used
+        // to live in a comment beside the shipped list is enforced for every catalog.
+        var tweaks = new ITweak[]
+        {
+            new StubTweak("cpu.a"),
+            new StubTweak("boot.disableDynamicTick", requiresReboot: true),
+        };
+
+        ArgumentException error = Assert.Throws<ArgumentException>(
+            () =>
+                new TweakCatalog(
+                    tweaks,
+                    new Dictionary<string, IReadOnlyList<string>>(),
+                    new[] { "cpu.a", "boot.disableDynamicTick" }
+                )
+        );
+        Assert.Contains("boot.disableDynamicTick", error.Message);
+    }
+
+    [Fact]
     public void Constructor_RejectsRecommendingAnUnknownTweak()
     {
         Assert.Throws<ArgumentException>(
@@ -151,16 +176,71 @@ public class TweakCatalogTests
     [Fact]
     public void CreateDefault_KeysItsPresetsByTheHeadlessCliTaskNames()
     {
-        // The scheduler runs VeloSysPro.exe --task=quick; naming the Preset after the task keeps
-        // the two vocabularies from drifting as the catalog grows.
+        // The scheduler runs VeloSysPro.exe --task=gaming; naming the Preset after the task is what
+        // lets entries written against the old, unrevertable Gaming Plan keep working.
         TweakCatalog catalog = TweakCatalog.CreateDefault(
             new FakeCommandRunner(),
             NewBackupManager()
         );
 
         Preset preset = Assert.Single(catalog.Presets);
-        Assert.Equal("quick", preset.Id);
-        Assert.Equal(catalog.Tweaks.Select(tweak => tweak.Id).OrderBy(id => id), preset.TweakIds.OrderBy(id => id));
+        Assert.Equal("gaming", preset.Id);
+        Assert.All(preset.TweakIds, id => Assert.NotNull(catalog.Find(id)));
+    }
+
+    [Fact]
+    public void CreateDefault_NeverNamesAPresetAfterAnOptimizationPlan()
+    {
+        // Both vocabularies reach the same --task= argument, so a shared name would make the
+        // scheduler's intent ambiguous — App.RunHeadless resolves Presets first, and the Plan
+        // would silently become unreachable.
+        TweakCatalog catalog = TweakCatalog.CreateDefault(
+            new FakeCommandRunner(),
+            NewBackupManager()
+        );
+
+        foreach (Preset preset in catalog.Presets)
+        {
+            Assert.False(
+                Enum.TryParse(preset.Id, ignoreCase: true, out OptimizationPlan _),
+                "Preset '" + preset.Id + "' shadows an OptimizationPlan of the same name."
+            );
+        }
+    }
+
+    [Fact]
+    public void CreateDefault_KeepsVisualEffectsOutOfTheGamingPreset()
+    {
+        // It rewrites how Windows looks, which is not a side effect of clicking "gaming".
+        TweakCatalog catalog = TweakCatalog.CreateDefault(
+            new FakeCommandRunner(),
+            NewBackupManager()
+        );
+
+        Assert.NotNull(catalog.Find("system.visualEffects"));
+        Assert.DoesNotContain(
+            "system.visualEffects",
+            Assert.Single(catalog.Presets).TweakIds
+        );
+    }
+
+    [Fact]
+    public void CreateDefault_GivesEveryTweakADottedIdThatStartsWithItsCategory()
+    {
+        // The frontend translates a Tweak by its id — `optimize.tweak.<id>.title` — so the id is
+        // also an i18n path. A row whose id and category disagree would land its copy under the
+        // wrong parent and render the raw key.
+        TweakCatalog catalog = TweakCatalog.CreateDefault(
+            new FakeCommandRunner(),
+            NewBackupManager()
+        );
+
+        Assert.NotEmpty(catalog.Tweaks);
+        foreach (ITweak tweak in catalog.Tweaks)
+        {
+            Assert.StartsWith(tweak.Category + ".", tweak.Id);
+            Assert.Equal(2, tweak.Id.Split('.').Length);
+        }
     }
 
     [Fact]
@@ -181,7 +261,7 @@ public class TweakCatalogTests
     }
 
     [Fact]
-    public void CreateDefault_SeedsOneTweakPerRevertMechanism()
+    public void CreateDefault_CoversEveryRevertMechanism()
     {
         TweakCatalog catalog = TweakCatalog.CreateDefault(
             new FakeCommandRunner(),
@@ -189,9 +269,35 @@ public class TweakCatalogTests
         );
 
         Assert.Equal(
-            new[] { TweakKinds.Bcd, TweakKinds.Registry, TweakKinds.Service },
+            new[] { TweakKinds.Bcd, TweakKinds.Power, TweakKinds.Registry, TweakKinds.Service },
             catalog.Tweaks.Select(tweak => tweak.Kind).Distinct().OrderBy(kind => kind)
         );
+    }
+
+    [Fact]
+    public void CreateDefault_PutsTheMmcssValuesWhereWindowsActuallyKeepsThem()
+    {
+        // The source guides — and this epic's own ticket — place MMCSS under
+        // SYSTEM\CurrentControlSet\Control\Multimedia. That key does not exist on Windows 11
+        // (verified 2026-07-27), so writing there would have created a key nothing reads and every
+        // one of these Tweaks would have reported success while changing nothing.
+        var runner = new FakeCommandRunner();
+        TweakCatalog catalog = TweakCatalog.CreateDefault(runner, NewBackupManager());
+
+        foreach (string id in new[] { "cpu.systemResponsiveness", "network.throttlingIndex", "cpu.gamesTaskPriority" })
+        {
+            runner.Runs.Clear();
+            catalog.Find(id)!.Detect();
+
+            Assert.All(
+                runner.Runs,
+                run =>
+                    Assert.Contains(
+                        @"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile",
+                        run.Args
+                    )
+            );
+        }
     }
 
     private static RegistryBackupManager NewBackupManager()

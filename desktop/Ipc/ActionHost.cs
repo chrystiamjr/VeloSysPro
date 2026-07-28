@@ -58,7 +58,6 @@ namespace VeloSysPro
             {
                 SystemActions.RunQuickOptimization,
                 SystemActions.RunFullOptimization,
-                SystemActions.RunGamingMode,
                 SystemActions.RevertDefaults,
                 SystemActions.ClearUpdateCache,
                 SystemActions.CleanPrefetch,
@@ -115,7 +114,6 @@ namespace VeloSysPro
             {
                 [SystemActions.RunQuickOptimization] = _ => RunPlan(OptimizationPlan.Quick),
                 [SystemActions.RunFullOptimization] = _ => RunPlan(OptimizationPlan.Full),
-                [SystemActions.RunGamingMode] = _ => RunPlan(OptimizationPlan.Gaming),
                 [SystemActions.RevertDefaults] = _ => _optimizer.Execute(OptimizationPlan.Revert),
                 [SystemActions.ClearUpdateCache] = _ => _optimizer.ClearUpdateCache(),
                 [SystemActions.CleanPrefetch] = _ => _optimizer.CleanPrefetch(),

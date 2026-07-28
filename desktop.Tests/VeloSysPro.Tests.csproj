@@ -27,6 +27,7 @@
     <Compile Include="..\desktop\Features\Settings\SettingsManager.cs" />
     <Compile Include="..\desktop\Features\Tweaks\BcdTweak.cs" />
     <Compile Include="..\desktop\Features\Tweaks\ITweak.cs" />
+    <Compile Include="..\desktop\Features\Tweaks\PowerPlanTweak.cs" />
     <Compile Include="..\desktop\Features\Tweaks\RegistryTweak.cs" />
     <Compile Include="..\desktop\Features\Tweaks\ServiceTweak.cs" />
     <Compile Include="..\desktop\Features\Tweaks\TweakCaptureStore.cs" />

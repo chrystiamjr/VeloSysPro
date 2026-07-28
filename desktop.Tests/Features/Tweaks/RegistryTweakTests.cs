@@ -44,7 +44,7 @@ public class RegistryTweakTests
 
         var (exe, args) = Assert.Single(runner.Runs);
         Assert.Equal("reg.exe", exe);
-        Assert.Equal("query \"" + KeyPath + "\" /v Win32PrioritySeparation", args);
+        Assert.Equal("query \"" + KeyPath + "\" /v \"Win32PrioritySeparation\"", args);
     }
 
     [Fact]
@@ -100,6 +100,98 @@ public class RegistryTweakTests
     }
 
     [Fact]
+    public void Detect_QuotesAValueNameThatContainsSpaces()
+    {
+        // The MMCSS Games task spells its values "GPU Priority" and "Scheduling Category". Unquoted,
+        // reg.exe reads the second word as a separate argument and the query fails, which the Tweak
+        // would then report as "value absent" — and Revert would delete a value that was there.
+        using var temp = new TemporaryDirectory();
+        var runner = new FakeCommandRunner
+        {
+            CapturedOutput = QueryOutput("GPU Priority", "REG_DWORD", "0x8"),
+        };
+        var sink = new RecordingStatusSink();
+        var tweak = Tweak(
+            runner,
+            new RegistryBackupManager(temp.Path, runner, sink, temp.Path),
+            new RegistryValue("GPU Priority", "REG_DWORD", "8")
+        );
+
+        Assert.Equal(TweakState.Applied, tweak.Detect());
+
+        var (_, args) = Assert.Single(runner.Runs);
+        Assert.Equal("query \"" + KeyPath + "\" /v \"GPU Priority\"", args);
+    }
+
+    [Fact]
+    public void ApplyAndRevert_QuoteAValueNameThatContainsSpaces()
+    {
+        using var temp = new TemporaryDirectory();
+        var runner = new FakeCommandRunner();
+        var sink = new RecordingStatusSink();
+        var tweak = Tweak(
+            runner,
+            new RegistryBackupManager(temp.Path, runner, sink, temp.Path),
+            new RegistryValue("Scheduling Category", "REG_SZ", "High")
+        );
+
+        Assert.True(tweak.Apply(new TweakCapture(tweak.Id, TweakKinds.Registry, "", new CapturedValue[0])));
+        Assert.Equal(
+            "add \"" + KeyPath + "\" /v \"Scheduling Category\" /t REG_SZ /d \"High\" /f",
+            Assert.Single(runner.Runs).Args
+        );
+
+        runner.Runs.Clear();
+        Assert.True(
+            tweak.Revert(
+                new TweakCapture(
+                    tweak.Id,
+                    TweakKinds.Registry,
+                    "",
+                    new[] { new CapturedValue("Scheduling Category", "REG_SZ", "", false) }
+                )
+            )
+        );
+        Assert.Equal(
+            "delete \"" + KeyPath + "\" /v \"Scheduling Category\" /f",
+            Assert.Single(runner.Runs).Args
+        );
+    }
+
+    [Fact]
+    public void Revert_DoesNotLetATrailingBackslashEscapeTheClosingQuote()
+    {
+        // Windows argument parsing treats a backslash as an escape only right before a quote, so
+        // data ending in one would turn /d "C:\dir\" into an unterminated argument and let the rest
+        // of the command line be reinterpreted. Revert is where it matters: this data comes back
+        // off a capture file, not out of the catalog.
+        using var temp = new TemporaryDirectory();
+        var runner = new FakeCommandRunner();
+        var sink = new RecordingStatusSink();
+        var tweak = Tweak(
+            runner,
+            new RegistryBackupManager(temp.Path, runner, sink, temp.Path),
+            new RegistryValue("SomePath", "REG_SZ", "x")
+        );
+
+        Assert.True(
+            tweak.Revert(
+                new TweakCapture(
+                    tweak.Id,
+                    TweakKinds.Registry,
+                    "",
+                    new[] { new CapturedValue("SomePath", "REG_SZ", @"C:\dir\", true) }
+                )
+            )
+        );
+
+        Assert.Equal(
+            "add \"" + KeyPath + "\" /v \"SomePath\" /t REG_SZ /d \"C:\\dir\\\\\" /f",
+            Assert.Single(runner.Runs).Args
+        );
+    }
+
+    [Fact]
     public void Apply_WritesTheDesiredValue()
     {
         using var temp = new TemporaryDirectory();
@@ -112,7 +204,7 @@ public class RegistryTweakTests
         var (exe, args) = Assert.Single(runner.Runs);
         Assert.Equal("reg.exe", exe);
         Assert.Equal(
-            "add \"" + KeyPath + "\" /v Win32PrioritySeparation /t REG_DWORD /d \"38\" /f",
+            "add \"" + KeyPath + "\" /v \"Win32PrioritySeparation\" /t REG_DWORD /d \"38\" /f",
             args
         );
     }
@@ -214,7 +306,7 @@ public class RegistryTweakTests
         var (exe, args) = Assert.Single(runner.Runs);
         Assert.Equal("reg.exe", exe);
         Assert.Equal(
-            "add \"" + KeyPath + "\" /v Win32PrioritySeparation /t REG_DWORD /d \"0x2\" /f",
+            "add \"" + KeyPath + "\" /v \"Win32PrioritySeparation\" /t REG_DWORD /d \"0x2\" /f",
             args
         );
     }
@@ -237,7 +329,7 @@ public class RegistryTweakTests
 
         var (exe, args) = Assert.Single(runner.Runs);
         Assert.Equal("reg.exe", exe);
-        Assert.Equal("delete \"" + KeyPath + "\" /v Win32PrioritySeparation /f", args);
+        Assert.Equal("delete \"" + KeyPath + "\" /v \"Win32PrioritySeparation\" /f", args);
     }
 
     [Fact]

@@ -91,17 +91,27 @@ public class ServiceTweakTests
         Assert.Equal("config SysMain start= demand", Assert.Single(runner.Runs).Args);
     }
 
-    [Fact]
-    public void Apply_StillActsOnAServiceWhoseStartTypeCouldNotBeRead()
+    [Theory]
+    [InlineData(false)] // Get-Service never answered: no values at all
+    [InlineData(true)] // it answered with a start type ServiceTweak does not recognize
+    public void Apply_RefusesAServiceWhoseStartTypeCouldNotBeRead(bool hasUnreadValue)
     {
+        // Revert already refuses a capture with no readable start type, so acting here would
+        // reconfigure the service with nothing to put back. Apply used to go ahead and run
+        // `sc config` anyway, which left a service changed and un-revertable.
         var runner = new FakeCommandRunner();
         var tweak = Tweak(runner);
-
-        Assert.True(
-            tweak.Apply(new TweakCapture(tweak.Id, TweakKinds.Service, "", new CapturedValue[0]))
+        var capture = new TweakCapture(
+            tweak.Id,
+            TweakKinds.Service,
+            "",
+            hasUnreadValue
+                ? new[] { new CapturedValue("StartType", "", "Unknown", false) }
+                : new CapturedValue[0]
         );
 
-        Assert.Equal("config SysMain start= demand", Assert.Single(runner.Runs).Args);
+        Assert.False(tweak.Apply(capture));
+        Assert.Empty(runner.Runs);
     }
 
     [Fact]
@@ -144,8 +154,14 @@ public class ServiceTweakTests
     {
         var runner = new FakeCommandRunner();
         var tweak = Tweak(runner);
+        var capture = new TweakCapture(
+            tweak.Id,
+            TweakKinds.Service,
+            "",
+            new[] { new CapturedValue("StartType", "", "Automatic", true) }
+        );
 
-        Assert.True(tweak.Apply(new TweakCapture(tweak.Id, TweakKinds.Service, "", new CapturedValue[0])));
+        Assert.True(tweak.Apply(capture));
 
         var (exe, args) = Assert.Single(runner.Runs);
         Assert.Equal("sc.exe", exe);

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace VeloSysPro
@@ -18,7 +19,15 @@ namespace VeloSysPro
     /// </remarks>
     public sealed class RegistryTweak : ITweak
     {
-        /// <summary>Value names and data reach a command line, and Revert data comes off disk.</summary>
+        /// <summary>
+        /// Value names and data reach a command line, and Revert data comes off disk.
+        /// </summary>
+        /// <remarks>
+        /// Spaces are allowed because Windows itself uses them — the MMCSS Games task spells its
+        /// values <c>GPU Priority</c> and <c>Scheduling Category</c> — which is why every name is
+        /// quoted where it is interpolated. A quote character is rejected outright, so the quoting
+        /// cannot be escaped out of.
+        /// </remarks>
         private static readonly Regex SafeValueName = new(@"^[A-Za-z0-9_.\- ]+$", RegexOptions.Compiled);
 
         private static readonly HashSet<string> SafeValueTypes = new(StringComparer.OrdinalIgnoreCase)
@@ -30,7 +39,14 @@ namespace VeloSysPro
         private readonly IReadOnlyList<RegistryValue> _values;
         private readonly ICommandRunner _cmd;
         private readonly RegistryBackupManager _backup;
+        private readonly bool _requiresExistingValue;
 
+        /// <param name="requiresExistingValue">
+        /// When true, Apply refuses to create a value that is not already there. This is for the
+        /// settings Windows writes itself only where the hardware supports the feature — GPU
+        /// Hardware Scheduling being the one that ships: creating <c>HwSchMode</c> on a machine
+        /// where Windows never did would report a success the driver is going to ignore.
+        /// </param>
         public RegistryTweak(
             string id,
             string category,
@@ -38,21 +54,26 @@ namespace VeloSysPro
             string keyPath,
             IReadOnlyList<RegistryValue> values,
             ICommandRunner cmd,
-            RegistryBackupManager backup
+            RegistryBackupManager backup,
+            bool requiresReboot = false,
+            bool requiresExistingValue = false
         )
         {
             Id = id;
             Category = category;
             RiskTier = riskTier;
+            RequiresReboot = requiresReboot;
             _keyPath = keyPath;
             _values = values;
             _cmd = cmd;
             _backup = backup;
+            _requiresExistingValue = requiresExistingValue;
         }
 
         public string Id { get; }
         public string Category { get; }
         public RiskTier RiskTier { get; }
+        public bool RequiresReboot { get; }
         public string Kind => TweakKinds.Registry;
 
         public TweakState Detect()
@@ -91,10 +112,22 @@ namespace VeloSysPro
 
         public bool Apply(TweakCapture capture)
         {
+            // Read off the capture the engine took a moment ago rather than querying again, so the
+            // decision is made against the same state that Revert will restore.
+            if (_requiresExistingValue && !EveryValueExistsIn(capture)) return false;
+
             bool ok = true;
             foreach (RegistryValue value in _values) ok &= Write(value.Name, value.Type, value.Data);
             return ok;
         }
+
+        private bool EveryValueExistsIn(TweakCapture capture) =>
+            _values.All(value =>
+                capture.Values.Any(captured =>
+                    captured.Existed
+                    && string.Equals(captured.Name, value.Name, StringComparison.OrdinalIgnoreCase)
+                )
+            );
 
         public bool Revert(TweakCapture capture)
         {
@@ -121,7 +154,7 @@ namespace VeloSysPro
         {
             CaptureResult query = _cmd.RunCapture(
                 "reg.exe",
-                "query \"" + _keyPath + "\" /v " + value.Name
+                "query \"" + _keyPath + "\" /v \"" + value.Name + "\""
             );
             if (!query.Success) return new CapturedValue(value.Name, value.Type, "", false);
 
@@ -155,15 +188,34 @@ namespace VeloSysPro
             return _cmd
                 .Run(
                     "reg.exe",
-                    "add \"" + _keyPath + "\" /v " + name + " /t " + type + " /d \"" + data + "\" /f"
+                    "add \"" + _keyPath + "\" /v \"" + name + "\" /t " + type + " /d \""
+                        + EscapeTrailingBackslashes(data)
+                        + "\" /f"
                 )
                 .Success;
+        }
+
+        /// <summary>
+        /// Doubles a run of backslashes at the very end of the data, so the closing quote stays a
+        /// closing quote.
+        /// </summary>
+        /// <remarks>
+        /// Windows argument parsing only treats a backslash as an escape immediately before a
+        /// quote, so <c>/d "C:\dir\"</c> would hand reg.exe an unterminated argument and let the
+        /// rest of the command line be reinterpreted. Rejecting a literal quote is not enough on
+        /// its own. Revert is the path that matters: its data comes back off a capture file rather
+        /// than from the catalog.
+        /// </remarks>
+        private static string EscapeTrailingBackslashes(string data)
+        {
+            int trailing = data.Length - data.TrimEnd('\\').Length;
+            return trailing == 0 ? data : data + new string('\\', trailing);
         }
 
         private bool Delete(string name)
         {
             if (!SafeValueName.IsMatch(name)) return false;
-            return _cmd.Run("reg.exe", "delete \"" + _keyPath + "\" /v " + name + " /f").Success;
+            return _cmd.Run("reg.exe", "delete \"" + _keyPath + "\" /v \"" + name + "\" /f").Success;
         }
 
         /// <summary>

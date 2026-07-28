@@ -48,10 +48,28 @@ public class OptimizerTests
         );
     }
 
+    [Fact]
+    public void RunByName_NoLongerOwnsGaming()
+    {
+        // "gaming" is a Tweak Preset now, not an Optimization Plan: it used to write TCP globals
+        // through netsh with no capture and no undo. App.RunHeadless resolves Presets first, so
+        // --task=gaming keeps working; this guards the Optimizer from quietly claiming it back.
+        using var temp = new TemporaryDirectory();
+        var runner = new FakeCommandRunner();
+        var sink = new RecordingStatusSink();
+        var optimizer = new Optimizer(
+            runner,
+            new RegistryBackupManager(temp.Path, runner, sink),
+            sink
+        );
+
+        Assert.False(optimizer.RunByName("gaming"));
+        Assert.Empty(runner.Runs);
+    }
+
     [Theory]
     [InlineData("quick")]
     [InlineData("full")]
-    [InlineData("gaming")]
     [InlineData("revert")]
     public void RunByName_AcceptsEverySupportedHeadlessTask(string task)
     {

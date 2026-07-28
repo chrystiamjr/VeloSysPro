@@ -22,15 +22,21 @@ namespace VeloSysPro
         private static readonly Regex SafeToken = new(@"^[A-Za-z0-9_.\-]+$", RegexOptions.Compiled);
 
         private readonly string _element;
-        private readonly string _desiredValue;
+        private readonly string? _desiredValue;
         private readonly ICommandRunner _cmd;
 
+        /// <param name="desiredValue">
+        /// The value the element should carry, or <c>null</c> when the goal is for the element to be
+        /// <b>absent</b> — which is how the research catalog states the platform-clock optimization
+        /// ("remove <c>useplatformclock</c>"). Revert is unaffected either way: it restores whatever
+        /// was captured, deleting the element again if it was not there to begin with.
+        /// </param>
         public BcdTweak(
             string id,
             string category,
             RiskTier riskTier,
             string element,
-            string desiredValue,
+            string? desiredValue,
             ICommandRunner cmd
         )
         {
@@ -47,9 +53,14 @@ namespace VeloSysPro
         public RiskTier RiskTier { get; }
         public string Kind => TweakKinds.Bcd;
 
+        /// <summary>Always: the Boot Configuration Data store is only read while Windows boots.</summary>
+        public bool RequiresReboot => true;
+
         public TweakState Detect()
         {
             CapturedValue live = Read();
+            if (_desiredValue == null) return live.Existed ? TweakState.NotApplied : TweakState.Applied;
+
             return live.Existed && BcdBoolean.SameValue(live.Data, _desiredValue)
                 ? TweakState.Applied
                 : TweakState.NotApplied;
@@ -61,7 +72,15 @@ namespace VeloSysPro
         public TweakCapture Capture() =>
             new(Id, Kind, TweakClock.NowUtc(), ReadCurrentValues());
 
-        public bool Apply(TweakCapture capture) => Set(_element, _desiredValue);
+        public bool Apply(TweakCapture capture)
+        {
+            if (_desiredValue != null) return Set(_element, _desiredValue);
+
+            // Removing an element that is not there makes bcdedit exit non-zero, which the batch
+            // would read as a failed optimization. Already absent is already applied.
+            bool present = capture.Values.Count > 0 && capture.Values[0].Existed;
+            return !present || Delete(_element);
+        }
 
         public bool Revert(TweakCapture capture)
         {
@@ -79,10 +98,16 @@ namespace VeloSysPro
                 }
                 else
                 {
-                    ok &= _cmd.Run("bcdedit.exe", "/deletevalue {current} " + value.Name).Success;
+                    ok &= Delete(value.Name);
                 }
             }
             return ok;
+        }
+
+        private bool Delete(string element)
+        {
+            if (!SafeToken.IsMatch(element)) return false;
+            return _cmd.Run("bcdedit.exe", "/deletevalue {current} " + element).Success;
         }
 
         private bool Set(string element, string value)
