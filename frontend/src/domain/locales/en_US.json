@@ -321,9 +321,21 @@
         }
       },
       "services": {
+        "diagTrack": {
+          "desc": "Sets Windows telemetry to Manual start, cutting background collection and upload. Windows can still start it on demand.",
+          "title": "Telemetry (DiagTrack) on Manual start"
+        },
+        "doSvc": {
+          "desc": "Sets Delivery Optimization to Manual start, so the machine stops sharing updates over the network unprompted. Windows Update keeps working.",
+          "title": "Delivery Optimization on Manual start"
+        },
         "sysMain": {
           "desc": "Sets SysMain (Superfetch) to Manual start, cutting background disk activity.",
           "title": "SysMain on Manual start"
+        },
+        "wSearch": {
+          "desc": "Sets the Windows Search indexer to Manual start, cutting background disk activity. Search keeps working, but is slower across large folders.",
+          "title": "Windows Search on Manual start"
         }
       },
       "system": {

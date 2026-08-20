@@ -262,11 +262,42 @@ namespace VeloSysPro
                 cmd
             );
 
+            // The Safe service set: each one is told when it may start, never whether it may run.
+            // All four target Manual, and ServiceTweak compares by how early a start type lets the
+            // service run — so a machine that already has one Disabled is left alone rather than
+            // loosened to Manual and reported as an improvement.
             var sysMain = new ServiceTweak(
                 "services.sysMain",
                 TweakCategories.Services,
                 RiskTier.Safe,
                 "SysMain",
+                "Manual",
+                cmd
+            );
+
+            var diagTrack = new ServiceTweak(
+                "services.diagTrack",
+                TweakCategories.Services,
+                RiskTier.Safe,
+                "DiagTrack",
+                "Manual",
+                cmd
+            );
+
+            var wSearch = new ServiceTweak(
+                "services.wSearch",
+                TweakCategories.Services,
+                RiskTier.Safe,
+                "WSearch",
+                "Manual",
+                cmd
+            );
+
+            var doSvc = new ServiceTweak(
+                "services.doSvc",
+                TweakCategories.Services,
+                RiskTier.Safe,
+                "DoSvc",
                 "Manual",
                 cmd
             );
@@ -288,6 +319,9 @@ namespace VeloSysPro
                     platformTick,
                     platformClock,
                     sysMain,
+                    diagTrack,
+                    wSearch,
+                    doSvc,
                 },
                 new Dictionary<string, IReadOnlyList<string>>
                 {
@@ -313,6 +347,8 @@ namespace VeloSysPro
                         platformTick.Id,
                         platformClock.Id,
                         sysMain.Id,
+                        diagTrack.Id,
+                        doSvc.Id,
                     },
                 },
                 // One click for someone who will not read the list, so it holds only what suits any
@@ -327,6 +363,8 @@ namespace VeloSysPro
                     networkThrottling.Id,
                     gameMode.Id,
                     sysMain.Id,
+                    diagTrack.Id,
+                    doSvc.Id,
                 }
             );
         }

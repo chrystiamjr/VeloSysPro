@@ -111,7 +111,8 @@ public class RecoveryManagerTests
             entry => entry.Key == "log.restorePoint.done" && entry.Type == "success"
         );
         (string Exe, string Args) verification = Assert.Single(
-            runner.Runs.Where(run => run.Args.Contains("ExpandProperty Count"))
+            runner.Runs,
+            run => run.Args.Contains("ExpandProperty Count")
         );
         Assert.Equal("powershell.exe", verification.Exe);
     }

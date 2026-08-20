@@ -321,9 +321,21 @@
         }
       },
       "services": {
+        "diagTrack": {
+          "desc": "Coloca a telemetria do Windows em início Manual, reduzindo coleta e envio de dados em segundo plano. O Windows ainda pode iniciá-la sob demanda.",
+          "title": "Telemetria (DiagTrack) em início Manual"
+        },
+        "doSvc": {
+          "desc": "Coloca a Otimização de Entrega em início Manual, impedindo que a máquina compartilhe atualizações pela rede sem necessidade. O Windows Update continua funcionando.",
+          "title": "Otimização de Entrega em início Manual"
+        },
         "sysMain": {
           "desc": "Coloca o SysMain (Superfetch) em início Manual, reduzindo leitura de disco em segundo plano.",
           "title": "SysMain em início Manual"
+        },
+        "wSearch": {
+          "desc": "Coloca o indexador do Windows Search em início Manual, reduzindo uso de disco em segundo plano. A busca continua funcionando, porém mais lenta em pastas grandes.",
+          "title": "Windows Search em início Manual"
         }
       },
       "system": {

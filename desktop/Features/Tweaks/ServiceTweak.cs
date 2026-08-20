@@ -138,14 +138,34 @@ namespace VeloSysPro
             return _cmd.Run("sc.exe", "config " + _serviceName + " start= " + token).Success;
         }
 
+        /// <summary>
+        /// The live start type, with delayed auto-start told apart from plain automatic.
+        /// </summary>
+        /// <remarks>
+        /// <c>ServiceStartMode</c> has no delayed member — <c>[string]$_.StartType</c> prints
+        /// "Automatic" for a delayed-auto service, verified on a real machine. Reverting such a
+        /// service would then write <c>start= auto</c> and move it earlier in boot than Windows had
+        /// it, silently, with the capture claiming an exact restore. The delayed bit lives in the
+        /// service's own <c>DelayedAutostart</c> value; <c>sc qc</c> does print "(DELAYED)", but
+        /// behind a label translated to the display language, which is the whole reason this class
+        /// avoids it. Output is "&lt;StartType&gt;|&lt;0|1&gt;".
+        /// </remarks>
         private string ReadStartType()
         {
             if (!SafeServiceName.IsMatch(_serviceName)) return Unknown;
 
+            // Built entirely with single quotes inside: the whole script is already wrapped in the
+            // double quotes that carry it across the process boundary, and a nested double quote
+            // there has to survive both Windows' command-line escaping and PowerShell's own
+            // non-standard -Command parsing. Concatenating with '|' needs no inner quote at all.
             string ps =
-                "Get-Service -Name '"
+                "$s = Get-Service -Name '"
                 + _serviceName
-                + "' -ErrorAction SilentlyContinue | ForEach-Object { [string]$_.StartType }";
+                + "' -ErrorAction SilentlyContinue; if ($s) { $d = (Get-ItemProperty "
+                + "'HKLM:\\SYSTEM\\CurrentControlSet\\Services\\"
+                + _serviceName
+                + "' -Name DelayedAutostart -ErrorAction SilentlyContinue).DelayedAutostart; "
+                + "[string]$s.StartType + '|' + [int]$d }";
 
             CaptureResult query = _cmd.RunCapture(
                 "powershell.exe",
@@ -153,7 +173,18 @@ namespace VeloSysPro
             );
             if (!query.Success) return Unknown;
 
-            string startType = query.Output.Trim();
+            string[] parts = query.Output.Trim().Split('|');
+            string startType = parts[0].Trim();
+
+            // The flag only means anything for a service that starts on its own: Windows leaves it
+            // behind when one is moved to Manual, and honouring it there would invent a start type.
+            bool delayed =
+                parts.Length > 1
+                && parts[1].Trim() == "1"
+                && string.Equals(startType, "Automatic", StringComparison.OrdinalIgnoreCase);
+
+            if (delayed) return "AutomaticDelayedStart";
+
             return ScTokens.ContainsKey(startType) ? startType : Unknown;
         }
     }

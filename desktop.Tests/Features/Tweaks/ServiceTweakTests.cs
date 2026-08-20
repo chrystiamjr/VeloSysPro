@@ -19,8 +19,10 @@ public class ServiceTweakTests
         Assert.Equal("powershell.exe", exe);
         Assert.Contains("Get-Service -Name 'SysMain'", args);
         // Without the [string] cast PowerShell would render the enum in the display language.
-        Assert.Contains("[string]$_.StartType", args);
+        Assert.Contains("[string]$s.StartType", args);
         Assert.Contains("-ErrorAction SilentlyContinue", args);
+        // sc.exe would answer this too, but behind a label translated to the display language.
+        Assert.DoesNotContain("sc qc", args);
         Assert.Equal(0, args.Count(character => character == '"') % 2);
     }
 
@@ -168,8 +170,79 @@ public class ServiceTweakTests
         Assert.Equal("config SysMain start= demand", args);
     }
 
+    [Fact]
+    public void Capture_TellsDelayedAutoStartApartFromPlainAutomatic()
+    {
+        // Verified on a real machine (the Brave updater): [string]$_.StartType prints "Automatic"
+        // for a delayed-auto service, because ServiceStartMode has no delayed member at all. The
+        // delayed bit lives only in the service's own DelayedAutostart registry value — sc.exe
+        // does print "(DELAYED)", but behind a label translated to the display language, which is
+        // why this reads the registry instead.
+        var runner = new FakeCommandRunner { CapturedOutput = "Automatic|1\r\n" };
+
+        TweakCapture capture = Tweak(runner).Capture();
+
+        Assert.Equal("AutomaticDelayedStart", Assert.Single(capture.Values).Data);
+        Assert.Contains("DelayedAutostart", Assert.Single(runner.Runs).Args);
+    }
+
+    [Theory]
+    [InlineData("Automatic|0", "Automatic")]
+    [InlineData("Manual|0", "Manual")]
+    // The flag is meaningless unless the service starts automatically; Windows leaves it behind
+    // when a service is moved to Manual, and honouring it there would invent a start type.
+    [InlineData("Manual|1", "Manual")]
+    [InlineData("Disabled|0", "Disabled")]
+    public void Capture_ReadsTheStartTypeAlongsideTheDelayedFlag(string output, string expected)
+    {
+        var runner = new FakeCommandRunner { CapturedOutput = output + "\r\n" };
+
+        Assert.Equal(expected, Assert.Single(Tweak(runner).Capture().Values).Data);
+    }
+
+    [Fact]
+    public void Apply_ReportsFailureWhenTheServiceCannotBeReconfigured()
+    {
+        // sc.exe refuses with ERROR_ACCESS_DENIED for a protected service, and fails outright for
+        // one the Windows edition does not carry. Reporting success would badge the row Applied
+        // over a service nothing touched, and the snapshot diff would claim a change that is not
+        // on the machine. The command must still have been attempted, so this cannot pass by
+        // refusing earlier for some other reason.
+        var runner = new FakeCommandRunner { Result = new CommandResult(5, false) };
+        var tweak = Tweak(runner);
+        var capture = new TweakCapture(
+            tweak.Id,
+            TweakKinds.Service,
+            "2026-07-25T10:00:00.0000000Z",
+            new[] { new CapturedValue("StartType", "", "Automatic", true) }
+        );
+
+        Assert.False(tweak.Apply(capture));
+
+        Assert.Equal("config SysMain start= demand", Assert.Single(runner.Runs).Args);
+    }
+
+    [Fact]
+    public void Revert_ReportsFailureWhenTheServiceCannotBeReconfigured()
+    {
+        var runner = new FakeCommandRunner { Result = new CommandResult(5, false) };
+        var capture = new TweakCapture(
+            "services.sysMain",
+            TweakKinds.Service,
+            "2026-07-25T10:00:00.0000000Z",
+            new[] { new CapturedValue("StartType", "", "Automatic", true) }
+        );
+
+        Assert.False(Tweak(runner).Revert(capture));
+
+        Assert.Equal("config SysMain start= auto", Assert.Single(runner.Runs).Args);
+    }
+
     [Theory]
     [InlineData("Automatic", "auto")]
+    // Delayed start is its own start type, not a flavour of Automatic: restoring a delayed
+    // service as plain auto would put it back earlier in boot than Windows had it.
+    [InlineData("AutomaticDelayedStart", "delayed-auto")]
     [InlineData("Manual", "demand")]
     [InlineData("Disabled", "disabled")]
     [InlineData("Boot", "boot")]

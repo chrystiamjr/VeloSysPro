@@ -64,6 +64,35 @@ function hostEmittedKeys(): string[] {
     .sort();
 }
 
+const CATALOG_SOURCE = resolve('../desktop/Features/Tweaks/TweakCatalog.cs');
+
+/**
+ * Every Tweak the shipped catalog registers, read from the C# source: its id and its risk tier.
+ *
+ * Matched by the id literal sitting immediately before its `TweakCategories.` argument, which is
+ * the shape every Tweak constructor call takes — so the list follows the catalog rather than a
+ * copy of it that would drift. The id pattern is deliberately loose about segment contents
+ * (underscores, digits, a third segment) because a stricter one would silently skip an entry it
+ * did not anticipate, and skipping is exactly the failure this guard exists to prevent.
+ */
+function catalogTweaks(): { id: string; advanced: boolean }[] {
+  const source = readFileSync(CATALOG_SOURCE, 'utf8');
+  const seen = new Map<string, boolean>();
+
+  for (const match of source.matchAll(
+    /"([a-z][A-Za-z0-9_]*(?:\.[A-Za-z0-9_]+)+)"\s*,\s*TweakCategories\.\w+\s*,\s*RiskTier\.(\w+)/g
+  )) {
+    seen.set(match[1], match[2] === 'Advanced');
+  }
+
+  return [...seen].map(([id, advanced]) => ({ id, advanced })).sort((a, b) => a.id.localeCompare(b.id));
+}
+
+/** How many Tweaks the catalog constructs, counted independently of the id pattern. */
+function catalogTweakConstructorCount(): number {
+  return [...readFileSync(CATALOG_SOURCE, 'utf8').matchAll(/new \w+Tweak\(/g)].length;
+}
+
 function lookup(locale: Record<string, unknown>, key: string): unknown {
   return key.split('.').reduce<unknown>((node, part) => {
     if (node && typeof node === 'object') return (node as Record<string, unknown>)[part];
@@ -98,6 +127,53 @@ describe('i18n locales', () => {
     );
 
     expect(unresolved).toEqual([]);
+  });
+
+  const locales = [
+    ['pt_BR', pt_BR],
+    ['en_US', en_US],
+  ] as const;
+
+  /** Locale names missing `optimize.tweak.<id>.<leaf>`, reported as readable paths. */
+  const missingCopy = (id: string, leaf: string): string[] =>
+    locales
+      .filter(
+        ([, locale]) =>
+          typeof lookup(locale as Record<string, unknown>, `optimize.tweak.${id}.${leaf}`) !==
+          'string'
+      )
+      .map(([name]) => `${name}: optimize.tweak.${id}.${leaf}`);
+
+  it('reads every Tweak the catalog constructs', () => {
+    // The guards below are only worth their assertions if this list is complete. Counting the
+    // constructor calls independently of the id pattern is what turns "matched nothing new" from
+    // a silent pass into a failure — an id shape the pattern did not anticipate drops out
+    // otherwise, and every copy guard goes quiet about it.
+    expect(catalogTweaks()).toHaveLength(catalogTweakConstructorCount());
+  });
+
+  it('gives every catalog Tweak a title and description in both locales', () => {
+    // TweakRow builds its key as `optimize.tweak.${id}` from an id that crosses IPC, so no C#
+    // literal ties the two together and the host-emitted-key guard above cannot see them. A new
+    // catalog entry with no copy renders the raw key on screen while every other i18n guard
+    // stays green.
+    const missing = catalogTweaks().flatMap(({ id }) =>
+      ['title', 'desc'].flatMap((leaf) => missingCopy(id, leaf))
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it('spells out the risk of every Advanced Tweak in both locales', () => {
+    // OptimizePage renders `optimize.tweak.${id}.risk` as the detail line of the Advanced
+    // confirmation — the one gate standing between the user and a security-reducing change. An
+    // Advanced entry without that copy would show the raw key inside the dialog meant to explain
+    // the danger. No Advanced Tweak ships until E5, so this guards the moment one arrives.
+    const missing = catalogTweaks()
+      .filter(({ advanced }) => advanced)
+      .flatMap(({ id }) => missingCopy(id, 'risk'));
+
+    expect(missing).toEqual([]);
   });
 
   it('keeps interpolation placeholders identical across locales', () => {

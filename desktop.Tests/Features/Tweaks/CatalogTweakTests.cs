@@ -31,6 +31,18 @@ public class CatalogTweakTests
         public ITweak Find(string id) =>
             _catalog.Find(id) ?? throw new InvalidOperationException("No such Tweak: " + id);
 
+        // Exposed so a test that needs the whole catalog reuses this one rather than building a
+        // second alongside it — each extra CreateDefault brought its own undisposed temp directory.
+        public IReadOnlyList<ITweak> Tweaks => _catalog.Tweaks;
+
+        public IReadOnlyList<Preset> Presets => _catalog.Presets;
+
+        public IReadOnlyList<string> Recommended => _catalog.Recommended;
+
+        /// <summary>Every service Tweak the shipped catalog registers.</summary>
+        public IReadOnlyList<ITweak> ServiceTweaks =>
+            _catalog.Tweaks.Where(tweak => tweak.Kind == TweakKinds.Service).ToList();
+
         /// <summary>Answers the key-readable probe that precedes every capture.</summary>
         public void KeyReadsBack() => Runner.EnqueueCapture("HKEY_LOCAL_MACHINE\\SomeKey\r\n");
 
@@ -545,6 +557,188 @@ public class CatalogTweakTests
         Assert.Equal("/set {current} useplatformclock yes", Assert.Single(catalog.Args));
     }
 
+    // ---- E3-02 — Safe services catalog ---------------------------------------------------------
+
+    [Theory]
+    [InlineData("services.sysMain", "SysMain")]
+    [InlineData("services.diagTrack", "DiagTrack")]
+    [InlineData("services.wSearch", "WSearch")]
+    [InlineData("services.doSvc", "DoSvc")]
+    public void SafeServices_TargetManualUnderTheirExactWindowsServiceName(string id, string service)
+    {
+        // The service name reaches both Get-Service and sc.exe verbatim, so a typo here is a Tweak
+        // that silently never applies — Detect would read Unknown and report NotApplied forever.
+        using var catalog = new ShippedCatalog();
+        ITweak tweak = catalog.Find(id);
+        catalog.Runner.EnqueueCapture("Automatic\r\n");
+
+        Assert.Equal(TweakKinds.Service, tweak.Kind);
+        Assert.Equal(TweakCategories.Services, tweak.Category);
+        Assert.Equal(RiskTier.Safe, tweak.RiskTier);
+        // The start type governs the next start; nothing here waits for a restart.
+        Assert.False(tweak.RequiresReboot);
+
+        Assert.True(tweak.Apply(tweak.Capture()));
+
+        Assert.Contains("Get-Service -Name '" + service + "'", catalog.Args[0]);
+        Assert.Equal("config " + service + " start= demand", catalog.Args[1]);
+    }
+
+    [Fact]
+    public void SafeServices_ChangeWhenAServiceMayStartAndNothingElse()
+    {
+        // An allow-list, not a ban-list. Banning "stop " could never fail while ServiceTweak has a
+        // single command site; this fails the moment any service Tweak learns a second verb —
+        // stopping a service mid-session is a visible side effect Revert could not undo.
+        using var catalog = new ShippedCatalog();
+
+        foreach (ITweak tweak in catalog.ServiceTweaks)
+        {
+            catalog.Runner.EnqueueCapture("Automatic|0\r\n");
+            TweakCapture capture = tweak.Capture();
+            tweak.Apply(capture);
+            tweak.Revert(capture);
+        }
+
+        foreach ((string exe, string args) in catalog.Runner.Runs)
+        {
+            bool reads = exe == "powershell.exe" && args.Contains("Get-Service -Name");
+            bool setsStartType =
+                exe == "sc.exe"
+                && System.Text.RegularExpressions.Regex.IsMatch(
+                    args,
+                    @"^config [A-Za-z0-9_.\-]+ start= [a-z\-]+$"
+                );
+
+            Assert.True(reads || setsStartType, "unexpected command: " + exe + " " + args);
+        }
+    }
+
+    [Fact]
+    public void SafeServices_PullNothingForwardFromTheAdvancedTier()
+    {
+        // E3's own boundary, stated by its README: "Spooler and Xbox disables remain exclusively
+        // in E5." Those are security- or feature-reducing and belong behind the Advanced
+        // confirmation, which no Safe entry may bypass.
+        string[] reservedForE5 =
+        {
+            "Spooler",
+            "XblAuthManager",
+            "XblGameSave",
+            "XboxGipSvc",
+            "XboxNetApiSvc",
+        };
+
+        using var catalog = new ShippedCatalog();
+
+        foreach (ITweak tweak in catalog.ServiceTweaks)
+        {
+            Assert.Equal(RiskTier.Safe, tweak.RiskTier);
+
+            catalog.Runner.Runs.Clear();
+            catalog.Runner.EnqueueCapture("Automatic|0\r\n");
+            tweak.Capture();
+
+            string read = Assert.Single(catalog.Args);
+            foreach (string reserved in reservedForE5)
+                Assert.DoesNotContain("Get-Service -Name '" + reserved + "'", read);
+        }
+    }
+
+    [Fact]
+    public void WindowsSearch_IsSelectableButNeverChosenForTheUser()
+    {
+        // Same judgement that keeps Visual Effects out of the gaming Preset: turning the indexer
+        // down degrades Windows Search visibly, which is not a side effect of clicking a curated
+        // starting point. Its two siblings carry no such user-facing cost.
+        using var catalog = new ShippedCatalog();
+        IReadOnlyList<string> gaming = Assert.Single(catalog.Presets).TweakIds;
+
+        Assert.DoesNotContain("services.wSearch", gaming);
+        Assert.DoesNotContain("services.wSearch", catalog.Recommended);
+        Assert.NotNull(catalog.Find("services.wSearch"));
+
+        foreach (string id in new[] { "services.diagTrack", "services.doSvc" })
+        {
+            Assert.Contains(id, gaming);
+            Assert.Contains(id, catalog.Recommended);
+        }
+    }
+
+    // ---- E3-03 — the contract every service Tweak owes -----------------------------------------
+
+    /// <summary>Start types that let a service run earlier than Manual, with sc.exe's own token.</summary>
+    private static readonly (string StartType, string ScToken)[] NoisierThanManual =
+    {
+        ("Automatic", "auto"),
+        ("AutomaticDelayedStart", "delayed-auto"),
+        ("Boot", "boot"),
+        ("System", "system"),
+    };
+
+    [Fact]
+    public void EveryServiceTweak_RestoresTheStartTypeItFoundRatherThanItsOwnGoal()
+    {
+        // Driven by the catalog rather than a written list of the four services that exist today:
+        // a fifth registered later is covered the moment it is added, including the mistakes a
+        // hand-written list cannot see — a service name sc.exe would reject, or a target start
+        // type ScTokens has no token for, both of which turn into a Tweak that never applies.
+        using var catalog = new ShippedCatalog();
+
+        IReadOnlyList<ITweak> services = catalog.ServiceTweaks;
+        Assert.NotEmpty(services);
+
+        foreach (ITweak tweak in services)
+        {
+            foreach ((string startType, string scToken) in NoisierThanManual)
+            {
+                catalog.Runner.Runs.Clear();
+                catalog.Runner.EnqueueCapture(startType + "\r\n");
+
+                TweakCapture capture = tweak.Capture();
+                Assert.True(tweak.Apply(capture), tweak.Id + " could not be applied");
+                Assert.True(tweak.Revert(capture), tweak.Id + " could not be reverted");
+
+                string applied = catalog.Args[1];
+                string reverted = catalog.Args[2];
+
+                Assert.StartsWith("config ", applied);
+                Assert.EndsWith(" start= demand", applied);
+                // Same service, and the prior start type put back verbatim — not the goal again.
+                Assert.Equal(
+                    applied.Replace(" start= demand", " start= " + scToken),
+                    reverted
+                );
+            }
+        }
+    }
+
+    [Fact]
+    public void EveryServiceTweak_LeavesAServiceAlreadyQuietEnoughUntouched()
+    {
+        // The premise the SysMain finding established, owed by every service entry: a machine that
+        // already has the service at or below the goal must come out unchanged, not "optimized"
+        // from Disabled back up to Manual.
+        using var catalog = new ShippedCatalog();
+
+        foreach (ITweak tweak in catalog.Tweaks.Where(t => t.Kind == TweakKinds.Service))
+        {
+            foreach (string startType in new[] { "Manual", "Disabled" })
+            {
+                catalog.Runner.Runs.Clear();
+                catalog.Runner.EnqueueCapture(startType + "\r\n");
+
+                Assert.Equal(TweakState.Applied, tweak.Detect());
+
+                catalog.Runner.Runs.Clear();
+                catalog.Runner.EnqueueCapture(startType + "\r\n");
+
+                Assert.True(tweak.Apply(tweak.Capture()));
+                Assert.DoesNotContain(catalog.Args, arg => arg.StartsWith("config "));
+            }
+        }
+    }
+
     // ---- Cross-cutting -------------------------------------------------------------------------
 
     [Fact]
@@ -554,16 +748,12 @@ public class CatalogTweakTests
         // Hardware Scheduling refuses where Windows never exposed HwSchMode — the common case — so
         // including it would make every headless --task=gaming run report failure.
         using var catalog = new ShippedCatalog();
-        TweakCatalog shipped = TweakCatalog.CreateDefault(
-            catalog.Runner,
-            NewBackupManager(catalog.Runner)
-        );
 
         Assert.DoesNotContain(
             "graphics.hardwareScheduling",
-            Assert.Single(shipped.Presets).TweakIds
+            Assert.Single(catalog.Presets).TweakIds
         );
-        Assert.NotNull(shipped.Find("graphics.hardwareScheduling"));
+        Assert.NotNull(catalog.Find("graphics.hardwareScheduling"));
     }
 
     [Fact]
@@ -572,12 +762,8 @@ public class CatalogTweakTests
         // Detect runs on every catalog load, including the one the screen triggers on navigation.
         // A Tweak that mutated while reading would change the machine just by opening a tab.
         using var catalog = new ShippedCatalog();
-        TweakCatalog shipped = TweakCatalog.CreateDefault(
-            catalog.Runner,
-            NewBackupManager(catalog.Runner)
-        );
 
-        foreach (ITweak tweak in shipped.Tweaks) tweak.Detect();
+        foreach (ITweak tweak in catalog.Tweaks) tweak.Detect();
 
         Assert.DoesNotContain(catalog.Runner.Runs, run => run.Args.StartsWith("add "));
         Assert.DoesNotContain(catalog.Runner.Runs, run => run.Args.StartsWith("delete "));
