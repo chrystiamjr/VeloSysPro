@@ -493,6 +493,12 @@
     "title": "Log em Tempo Real",
     "waiting": "[SISTEMA] Aguardando logs de execução..."
   },
+  "toast": {
+    "dismiss": "Fechar aviso",
+    "fail": "Algo não deu certo",
+    "ok": "Concluído",
+    "viewLog": "Ver registro completo"
+  },
   "updateBanner": {
     "btn": "Baixar",
     "dismiss": "Dispensar",

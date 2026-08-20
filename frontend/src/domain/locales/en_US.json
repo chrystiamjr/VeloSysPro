@@ -493,6 +493,12 @@
     "title": "Live Real-Time Log",
     "waiting": "[SYSTEM] Awaiting execution logs..."
   },
+  "toast": {
+    "dismiss": "Dismiss notification",
+    "fail": "Something went wrong",
+    "ok": "Done",
+    "viewLog": "View full log"
+  },
   "updateBanner": {
     "btn": "Download",
     "dismiss": "Dismiss",

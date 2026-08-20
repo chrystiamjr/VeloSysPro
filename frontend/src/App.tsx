@@ -26,8 +26,10 @@ import {
 } from './infrastructure/bridge';
 import { formatDateTime } from './domain/formatters';
 import { useExecutionLifecycle } from './infrastructure/useExecutionLifecycle';
+import { useActionFeedback } from './infrastructure/useActionFeedback';
 import { useOsBackedLists } from './infrastructure/useOsBackedLists';
 import { usePreferences } from './infrastructure/usePreferences';
+import { ToastHost } from './components/organisms/ToastHost';
 
 const SCREEN_HEADERS: Record<AppScreen, { title: string; subtitle: string }> = {
   [AppScreen.Dashboard]: { title: 'header.dashboard.title', subtitle: 'header.dashboard.subtitle' },
@@ -54,8 +56,12 @@ function AppContent() {
   const [logs, setLogs] = useState<LogRecord[]>([{ key: 'log.appStarted', type: 'success' }]);
   const [consoleExpanded, setConsoleExpanded] = useState(false);
   const [snapshot, setSnapshot] = useState<SnapshotCapturedPayload | null>(null);
-  const { activeAction, progressPercent, executionHasError, runRead, runMutation } =
+  const { activeAction, progressPercent, executionHasError, lastOutcome, runRead, runMutation } =
     useExecutionLifecycle();
+  const { items: feedbackItems, dismiss: dismissFeedback } = useActionFeedback(
+    activeAction,
+    lastOutcome
+  );
   const {
     backups,
     tasks,
@@ -112,11 +118,20 @@ function AppContent() {
       ? { before: history[history.length - 2], after: history[history.length - 1], changes: [] }
       : null);
 
-  // Translate at render time so logs/status re-localize when the language changes.
+  // Translate at render time so logs/status re-localize when the language changes. A raw host
+  // line is already text and must not be looked up as a key.
+  const translateMessage = (message: LocalizedMessage): string =>
+    message.key === 'log.raw' ? String(message.args?.text ?? '') : t(message.key, message.args);
+
   const translatedLogs: LogEntryItem[] = logs.map((log) => ({
-    text: log.key === 'log.raw' ? String(log.args?.text ?? '') : t(log.key, log.args),
+    text: translateMessage(log),
     type: log.type,
   }));
+
+  const showLogTrail = () => {
+    setActiveScreen(AppScreen.Dashboard);
+    setConsoleExpanded(true);
+  };
   const statusMessage = t(status.key, status.args);
   const header = SCREEN_HEADERS[activeScreen];
   const displayHealth: SystemHealth = {
@@ -238,6 +253,13 @@ function AppContent() {
           onDownloadUpdate={(url) => runRead(SystemActions.OPEN_URL, url)}
         />
       )}
+
+      <ToastHost
+        items={feedbackItems}
+        detailFor={(item) => (item.detail ? translateMessage(item.detail) : undefined)}
+        onDismiss={dismissFeedback}
+        onViewLog={showLogTrail}
+      />
     </MainLayout>
   );
 }
