@@ -159,7 +159,8 @@
     "restorePoint": {
       "creating": "Criando Ponto de Restauração do Sistema...",
       "done": "Ponto de Restauração criado com sucesso.",
-      "failed": "Falha ao criar ponto de restauração: {{message}}"
+      "failed": "Falha ao criar ponto de restauração: {{message}}",
+      "unconfirmed": "O Windows não criou o Ponto de Restauração, apesar de não relatar erro. Nada foi alterado no sistema."
     },
     "restoreToPoint": {
       "done": "Restauração para o ponto {{sequence}} iniciada.",

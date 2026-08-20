@@ -83,20 +83,46 @@ namespace VeloSysPro
             if (!enable.Success)
                 throw new InvalidOperationException("Enabling System Protection failed.");
 
-            CommandResult frequency = _cmd.Run(
-                "reg.exe",
-                "add \"" + SystemRestoreKey + "\" /v SystemRestorePointCreationFrequency /t REG_DWORD /d 0 /f"
-            );
-            if (!frequency.Success)
+            if (!LiftCreationFrequencyCap())
                 throw new InvalidOperationException("Clearing the restore point frequency cap failed.");
 
             _sink.Log("log.protection.enabled", "success");
         }
 
+        /// <summary>Clears Windows' default cap of one restore point per 24 hours.</summary>
+        /// <remarks>
+        /// This app's promise is a Safety Checkpoint per batch, not per day, so both paths that
+        /// need one clear the cap: switching System Protection on, and every checkpoint. The
+        /// second matters because a machine whose protection was already on never passes through
+        /// <see cref="EnableProtection"/> and would otherwise keep the cap. Failure is not fatal
+        /// here — the checkpoint may well be due anyway — because the read-back in
+        /// <see cref="CreateRestorePoint"/> is what decides whether one really exists.
+        /// </remarks>
+        private bool LiftCreationFrequencyCap() =>
+            _cmd.Run(
+                "reg.exe",
+                "add \"" + SystemRestoreKey + "\" /v SystemRestorePointCreationFrequency /t REG_DWORD /d 0 /f"
+            ).Success;
+
+        /// <summary>
+        /// Creates the Safety Checkpoint that precedes every batch, and proves it exists before
+        /// reporting success.
+        /// </summary>
+        /// <remarks>
+        /// A zero exit code is not evidence here. <c>Checkpoint-Computer</c> does not fail when
+        /// the once-per-day cap denies it: it writes a warning and exits 0, which
+        /// <see cref="CommandRunner"/> then logs as ordinary info. Trusting the exit code let a
+        /// whole batch change the system with no restore point while
+        /// <see cref="TweakEngine"/> logged a checkpoint as created — the one guarantee this app
+        /// cannot get wrong. So the cap is lifted first and the checkpoint is read back by name.
+        /// </remarks>
         public void CreateRestorePoint()
         {
             _sink.Status("status.restorePoint.creating", 20);
             _sink.Log("log.restorePoint.creating", "info");
+
+            LiftCreationFrequencyCap();
+
             string description = "VeloSysPro_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
             CommandResult result = _cmd.Run(
                 "powershell.exe",
@@ -105,8 +131,41 @@ namespace VeloSysPro
                     + "' -RestorePointType 'MODIFY_SETTINGS'\""
             );
             if (!result.Success) throw new InvalidOperationException("Restore point creation failed.");
+
+            if (!RestorePointExists(description))
+            {
+                _sink.Log("log.restorePoint.unconfirmed", "error");
+                throw new InvalidOperationException(
+                    "Windows exited 0 but no restore point named '" + description + "' exists."
+                );
+            }
+
             _sink.Status("status.restorePoint.done", 100);
             _sink.Log("log.restorePoint.done", "success");
+        }
+
+        /// <summary>Whether a restore point with this exact description is present on the machine.</summary>
+        /// <remarks>
+        /// The description carries a timestamp down to the second, so a match identifies the
+        /// checkpoint this call just asked for rather than any earlier one. An unreadable list
+        /// counts as absent: unconfirmed and missing are the same thing to a safety net.
+        /// </remarks>
+        private bool RestorePointExists(string description)
+        {
+            CaptureResult query = _cmd.RunCapture(
+                "powershell.exe",
+                "-ExecutionPolicy Bypass -Command \"Get-ComputerRestorePoint | Where-Object { "
+                    + "$_.Description -eq '" + description + "' } | Measure-Object | "
+                    + "Select-Object -ExpandProperty Count\""
+            );
+            if (!query.Success) return false;
+
+            return int.TryParse(
+                query.Output.Trim(),
+                NumberStyles.Integer,
+                CultureInfo.InvariantCulture,
+                out int count
+            ) && count > 0;
         }
 
         public string GetRestorePointsJson()

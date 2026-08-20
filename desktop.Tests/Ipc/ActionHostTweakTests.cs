@@ -29,6 +29,10 @@ public class ActionHostTweakTests
                 ("RPSessionInterval", "    RPSessionInterval    REG_DWORD    0x1\r\n")
             );
 
+            // ...and one where the Safety Checkpoint really lands. SystemRestoreManager reads the
+            // restore point back by name rather than trusting Checkpoint-Computer's exit code.
+            Runner.CapturedOutputsByArgs.Add(("ExpandProperty Count", "1"));
+
             // A readable start type for services.sysMain, the Tweak these tests dispatch. Without
             // it the capture records "unknown", which ServiceTweak.Apply now refuses rather than
             // reconfiguring a service it could not read and could not put back.

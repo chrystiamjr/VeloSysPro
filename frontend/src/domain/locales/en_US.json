@@ -159,7 +159,8 @@
     "restorePoint": {
       "creating": "Creating System Restore Point...",
       "done": "Restore Point created successfully.",
-      "failed": "Failed to create restore point: {{message}}"
+      "failed": "Failed to create restore point: {{message}}",
+      "unconfirmed": "Windows did not create the Restore Point, despite reporting no error. Nothing on the system was changed."
     },
     "restoreToPoint": {
       "done": "Restore to point {{sequence}} initiated.",

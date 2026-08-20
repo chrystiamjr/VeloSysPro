@@ -103,6 +103,11 @@ public class TweakEngineTests
                 ("RPSessionInterval", "    RPSessionInterval    REG_DWORD    0x1\r\n")
             );
 
+            // ...and a checkpoint Windows really creates. SystemRestoreManager reads the restore
+            // point back by name instead of trusting Checkpoint-Computer's exit code, so without
+            // this the baseline machine would be one where every batch aborts.
+            Runner.CapturedOutputsByArgs.Add(("ExpandProperty Count", "1"));
+
             Engine = new TweakEngine(
                 new TweakCatalog(tweaks, presets),
                 Captures,
