@@ -1,3 +1,9 @@
+## [0.3.0](https://github.com/chrystiamjr/VeloSysPro/compare/v0.2.0...v0.3.0) (2026-08-21)
+
+### Features
+
+* **arch:** deepen IPC, recovery checkpoints, and state hooks ([#46](https://github.com/chrystiamjr/VeloSysPro/issues/46)) ([f5271a1](https://github.com/chrystiamjr/VeloSysPro/commit/f5271a17de6e2d173005188ffc75a31dd95fbe0c))
+
 ## [0.2.0](https://github.com/chrystiamjr/VeloSysPro/compare/v0.1.6...v0.2.0) (2026-08-21)
 
 ### Features
