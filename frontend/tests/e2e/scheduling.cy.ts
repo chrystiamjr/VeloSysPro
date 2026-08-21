@@ -35,10 +35,7 @@ describe('scheduled optimizations', () => {
         cy.getByCy('task-frequency').select(frequency);
         cy.getByCy('task-time').clear().type('04:45');
         cy.getByCy('task-create').click();
-        cy.expectIpc(
-          'createTask',
-          { type, frequency, time: '04:45', day: defaultDay[frequency] }
-        );
+        cy.expectIpc('createTask', { type, frequency, time: '04:45', day: defaultDay[frequency] });
       });
     }
   }
@@ -51,10 +48,7 @@ describe('scheduled optimizations', () => {
 
     cy.getByCy('task-weekday').select('FRI');
     cy.getByCy('task-create').click();
-    cy.expectIpc(
-      'createTask',
-      { type: 'quick', frequency: 'WEEKLY', time: '03:00', day: 'FRI' }
-    );
+    cy.expectIpc('createTask', { type: 'quick', frequency: 'WEEKLY', time: '03:00', day: 'FRI' });
   });
 
   it('reveals a day-of-month grid only for monthly schedules', () => {
@@ -65,10 +59,7 @@ describe('scheduled optimizations', () => {
 
     cy.getByCy('task-monthday-15').click().should('have.attr', 'aria-checked', 'true');
     cy.getByCy('task-create').click();
-    cy.expectIpc(
-      'createTask',
-      { type: 'quick', frequency: 'MONTHLY', time: '03:00', day: '15' }
-    );
+    cy.expectIpc('createTask', { type: 'quick', frequency: 'MONTHLY', time: '03:00', day: '15' });
   });
 
   it('re-queries the host when refresh is clicked', () => {

@@ -27,9 +27,9 @@ describe('structured schedule display (pt_BR)', () => {
 
   it('labels a task from structured host fields', () => {
     expect(taskDisplayName(task(), t)).toBe('Diária - Limpeza Rápida');
-    expect(
-      taskDisplayName(task({ Type: 'gaming', Frequency: 'WEEKLY' }), t)
-    ).toBe('Semanal - Predefinição Gaming');
+    expect(taskDisplayName(task({ Type: 'gaming', Frequency: 'WEEKLY' }), t)).toBe(
+      'Semanal - Predefinição Gaming'
+    );
   });
 
   it('falls back safely for a legacy record', () => {
@@ -44,18 +44,12 @@ describe('structured schedule display (pt_BR)', () => {
 
   it('describes daily, weekly and monthly cadences', () => {
     expect(describeSchedule(task(), t)).toBe('Todos os dias às 03:00');
-    expect(
-      describeSchedule(
-        task({ Frequency: 'WEEKLY', Day: 'MON', Time: '04:30' }),
-        t
-      )
-    ).toBe('Toda segunda-feira às 04:30');
-    expect(
-      describeSchedule(
-        task({ Frequency: 'MONTHLY', Day: '15', Time: '02:00' }),
-        t
-      )
-    ).toBe('Todo dia 15 às 02:00');
+    expect(describeSchedule(task({ Frequency: 'WEEKLY', Day: 'MON', Time: '04:30' }), t)).toBe(
+      'Toda segunda-feira às 04:30'
+    );
+    expect(describeSchedule(task({ Frequency: 'MONTHLY', Day: '15', Time: '02:00' }), t)).toBe(
+      'Todo dia 15 às 02:00'
+    );
   });
 });
 

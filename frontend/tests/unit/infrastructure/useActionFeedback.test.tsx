@@ -58,9 +58,7 @@ describe('useActionFeedback', () => {
 
     // A second run that fails without saying anything must not inherit the first one's reason.
     act(() => result.current.lifecycle.runMutation('createRestorePoint'));
-    act(() =>
-      emitHostEventForTest('actionFinished', { action: 'createRestorePoint', ok: false })
-    );
+    act(() => emitHostEventForTest('actionFinished', { action: 'createRestorePoint', ok: false }));
 
     expect(result.current.feedback.items).toHaveLength(2);
     expect(result.current.feedback.items[1].detail).toBeNull();
@@ -71,9 +69,7 @@ describe('useActionFeedback', () => {
 
     for (let run = 0; run < 2; run += 1) {
       act(() => result.current.lifecycle.runMutation('createManualBackup'));
-      act(() =>
-        emitHostEventForTest('actionFinished', { action: 'createManualBackup', ok: true })
-      );
+      act(() => emitHostEventForTest('actionFinished', { action: 'createManualBackup', ok: true }));
     }
 
     expect(result.current.feedback.items).toHaveLength(2);

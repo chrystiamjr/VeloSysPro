@@ -32,14 +32,10 @@ describe('useExecutionLifecycle', () => {
     act(() => emitHostEventForTest('progressUpdated', 100));
     expect(result.current.activeAction).toBe('createTask');
 
-    act(() =>
-      emitHostEventForTest('actionFinished', { action: 'deleteTask', ok: true })
-    );
+    act(() => emitHostEventForTest('actionFinished', { action: 'deleteTask', ok: true }));
     expect(result.current.activeAction).toBe('createTask');
 
-    act(() =>
-      emitHostEventForTest('actionFinished', { action: 'createTask', ok: true })
-    );
+    act(() => emitHostEventForTest('actionFinished', { action: 'createTask', ok: true }));
     expect(result.current.activeAction).toBeNull();
   });
 

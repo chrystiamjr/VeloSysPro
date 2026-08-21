@@ -35,9 +35,7 @@ describe('PresetCard', () => {
   it('lists the parts of the system it touches', () => {
     renderCard();
 
-    expect(
-      screen.getByText('Processador e prioridades · Serviços do Windows')
-    ).toBeInTheDocument();
+    expect(screen.getByText('Processador e prioridades · Serviços do Windows')).toBeInTheDocument();
   });
 
   it('omits the category line when there is nothing to list', () => {

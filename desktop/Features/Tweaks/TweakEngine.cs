@@ -59,12 +59,36 @@ namespace VeloSysPro
         private readonly TweakCatalog _catalog;
         private readonly ITweakCaptureStore _captures;
         private readonly SystemRestoreManager _systemRestore;
+        private readonly SafetyCheckpoint _safety;
         private readonly SnapshotManager _snapshots;
         private readonly ISnapshotStore _history;
         private readonly IStatusSink _sink;
 
         /// <summary>Mirrors <see cref="Optimizer.CreateSafetyBackupEnabled"/>: the same preference.</summary>
-        public bool CreateSafetyBackupEnabled { get; set; } = true;
+        public bool CreateSafetyBackupEnabled
+        {
+            get => _safety.Enabled;
+            set => _safety.Enabled = value;
+        }
+
+        public TweakEngine(
+            TweakCatalog catalog,
+            ITweakCaptureStore captures,
+            SystemRestoreManager systemRestore,
+            SafetyCheckpoint safety,
+            SnapshotManager snapshots,
+            ISnapshotStore history,
+            IStatusSink sink
+        )
+        {
+            _catalog = catalog;
+            _captures = captures;
+            _systemRestore = systemRestore;
+            _safety = safety;
+            _snapshots = snapshots;
+            _history = history;
+            _sink = sink;
+        }
 
         public TweakEngine(
             TweakCatalog catalog,
@@ -74,13 +98,16 @@ namespace VeloSysPro
             ISnapshotStore history,
             IStatusSink sink
         )
+            : this(
+                catalog,
+                captures,
+                systemRestore,
+                new SafetyCheckpoint(systemRestore, new RegistryBackupManager(AppPaths.Backups, new CommandRunner(sink), sink), sink),
+                snapshots,
+                history,
+                sink
+            )
         {
-            _catalog = catalog;
-            _captures = captures;
-            _systemRestore = systemRestore;
-            _snapshots = snapshots;
-            _history = history;
-            _sink = sink;
         }
 
         /// <summary>
@@ -91,15 +118,19 @@ namespace VeloSysPro
             RegistryBackupManager backup,
             SystemRestoreManager systemRestore,
             IStatusSink sink
-        ) =>
-            new(
+        )
+        {
+            var safety = new SafetyCheckpoint(systemRestore, backup, sink);
+            return new TweakEngine(
                 TweakCatalog.CreateDefault(cmd, backup),
                 new JsonTweakCaptureStore(),
                 systemRestore,
+                safety,
                 new SnapshotManager(cmd, sink),
                 new JsonlSnapshotStore(),
                 sink
             );
+        }
 
         /// <summary>
         /// True when the catalog defines a Preset with this id.
@@ -381,31 +412,7 @@ namespace VeloSysPro
         /// </summary>
         private bool BuildCheckpoint()
         {
-            if (!CreateSafetyBackupEnabled)
-            {
-                _sink.Log("log.tweaks.checkpointSkipped", "info");
-                return true;
-            }
-
-            // Checked before attempting the checkpoint so the user gets the one message they can
-            // act on — "turn System Protection on" — instead of a restore-point failure.
-            if (!_systemRestore.IsProtectionEnabled())
-            {
-                _sink.Log("log.tweaks.protectionDisabled", "error");
-                return false;
-            }
-
-            try
-            {
-                _systemRestore.CreateRestorePoint();
-                _sink.Log("log.tweaks.checkpointCreated", "success");
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _sink.Log("log.tweaks.checkpointFailed", "error", new { message = ex.Message });
-                return false;
-            }
+            return _safety.ExecuteTweakCheckpoint();
         }
     }
 }

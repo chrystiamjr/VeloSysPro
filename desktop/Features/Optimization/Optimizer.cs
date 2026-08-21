@@ -22,26 +22,31 @@ namespace VeloSysPro
     public class Optimizer
     {
         private readonly ICommandRunner _cmd;
-        private readonly RegistryBackupManager _backup;
+        private readonly SafetyCheckpoint _safety;
         private readonly IStatusSink _sink;
-        private readonly Action? _onBackupsChanged;
 
         /// <summary>When true, a registry safety backup is taken before an optimization.</summary>
-        public bool CreateSafetyBackupEnabled { get; set; } = true;
+        public bool CreateSafetyBackupEnabled
+        {
+            get => _safety.Enabled;
+            set => _safety.Enabled = value;
+        }
 
-        public Optimizer(ICommandRunner cmd, RegistryBackupManager backup, IStatusSink sink, Action? onBackupsChanged = null)
+        public Optimizer(ICommandRunner cmd, SafetyCheckpoint safety, IStatusSink sink)
         {
             _cmd = cmd;
-            _backup = backup;
+            _safety = safety;
             _sink = sink;
-            _onBackupsChanged = onBackupsChanged;
+        }
+
+        public Optimizer(ICommandRunner cmd, RegistryBackupManager backup, IStatusSink sink, Action? onBackupsChanged = null)
+            : this(cmd, new SafetyCheckpoint(new SystemRestoreManager(cmd, sink), backup, sink, onBackupsChanged), sink)
+        {
         }
 
         private void CreateSafetyBackup()
         {
-            if (!CreateSafetyBackupEnabled) return;
-            _backup.CreateBackup();
-            _onBackupsChanged?.Invoke();
+            _safety.ExecuteMaintenanceBackup();
         }
 
         /// <summary>Emits the final log: the op's "done" key on success, or a shared error key.</summary>

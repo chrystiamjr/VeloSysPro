@@ -7,7 +7,17 @@
         Width="1240"
         WindowStartupLocation="CenterScreen"
         Background="#12141c">
-    <Grid>
+    <Grid Name="MainGrid">
         <wv2:WebView2 Name="webView" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+        <Border Name="fallbackOverlay" Visibility="Collapsed" Background="#12141c" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="⚠️ Microsoft Edge WebView2 Runtime Não Encontrado" Foreground="#f87171" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                <TextBlock Name="fallbackErrorMessage" Text="O VeloSys Pro requer o Microsoft Edge WebView2 Runtime instalado para exibir a interface." Foreground="#94a3b8" FontSize="14" HorizontalAlignment="Center" TextWrapping="Wrap" MaxWidth="600" TextAlignment="Center" Margin="0,0,0,24"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button Content="Instalar WebView2 Runtime" Click="InstallWebView2_Click" Width="200" Height="40" Background="#10b981" Foreground="White" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" Margin="0,0,12,0"/>
+                    <Button Content="Tentar Novamente" Click="RetryWebView2_Click" Width="160" Height="40" Background="#3b82f6" Foreground="White" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>

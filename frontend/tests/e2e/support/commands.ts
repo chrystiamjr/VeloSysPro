@@ -44,17 +44,13 @@ Cypress.Commands.add('emitHost', (event: IpcEventName, payload: unknown) => {
   return cy
     .window()
     .should((win) => {
-      const addEventListener = win.chrome?.webview?.addEventListener as
-        | Sinon.SinonStub
-        | undefined;
+      const addEventListener = win.chrome?.webview?.addEventListener as Sinon.SinonStub | undefined;
       const listener = addEventListener?.getCalls().find((call) => call.args[0] === 'message')
         ?.args[1];
       expect(listener, `${event} listener`).to.be.a('function');
     })
     .then((win) => {
-      const addEventListener = win.chrome?.webview?.addEventListener as
-        | Sinon.SinonStub
-        | undefined;
+      const addEventListener = win.chrome?.webview?.addEventListener as Sinon.SinonStub | undefined;
       const listener = addEventListener?.getCalls().find((call) => call.args[0] === 'message')
         ?.args[1] as ((message: { data: unknown }) => void) | undefined;
       expect(listener, `${event} listener`).to.be.a('function');

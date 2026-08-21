@@ -10,14 +10,22 @@ describe('Button Atom Component (Tailwind Design System)', () => {
 
   it('triggers onClick handler when clicked', () => {
     const handleClick = vi.fn();
-    render(<Button onClick={handleClick} variant="success">Executar</Button>);
+    render(
+      <Button onClick={handleClick} variant="success">
+        Executar
+      </Button>
+    );
     fireEvent.click(screen.getByText('Executar'));
     expect(handleClick).toHaveBeenCalledTimes(1);
   });
 
   it('does not trigger onClick when disabled', () => {
     const handleClick = vi.fn();
-    render(<Button disabled onClick={handleClick} variant="danger">Desabilitado</Button>);
+    render(
+      <Button disabled onClick={handleClick} variant="danger">
+        Desabilitado
+      </Button>
+    );
     fireEvent.click(screen.getByText('Desabilitado'));
     expect(handleClick).not.toHaveBeenCalled();
   });

@@ -6,6 +6,8 @@ import { BackupItem } from '../../domain/types';
 import { formatBytes, formatDateTime, timestampValue } from '../../domain/formatters';
 import { useTranslation } from '../../infrastructure/i18nContext';
 
+import { useManagementAction } from '../../infrastructure/useManagementAction';
+
 export interface BackupPageProps {
   backups: BackupItem[];
   onCreateBackup: () => void;
@@ -28,11 +30,10 @@ export const BackupPage: React.FC<BackupPageProps> = ({
   disabled = false,
 }) => {
   const { t, lang } = useTranslation();
+  const { confirmAction } = useManagementAction();
 
   const handleRestore = (name: string) => {
-    if (window.confirm(t('backup.restoreConfirm'))) {
-      onRestoreBackup(name);
-    }
+    confirmAction('backup.restoreConfirm', () => onRestoreBackup(name));
   };
 
   const columns: DataTableColumn<BackupItem>[] = [

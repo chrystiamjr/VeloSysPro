@@ -4,7 +4,8 @@
   "version": "0.2.0",
   "type": "module",
   "workspaces": [
-    "frontend"
+    "frontend",
+    "website"
   ],
   "scripts": {
     "dev": "npm run dev --workspace frontend",
@@ -20,6 +21,7 @@
     "format": "npm run format --workspace frontend",
     "format:check": "npm run format:check --workspace frontend",
     "validate": "npm run validate --workspace frontend",
+    "build:docs": "npm run build --workspace website",
     "precommit": "npm run validate && dotnet build desktop/VeloSysPro.csproj",
     "setup-hooks": "powershell -ExecutionPolicy Bypass -File ./scripts/setup-hooks.ps1",
     "release": "semantic-release"

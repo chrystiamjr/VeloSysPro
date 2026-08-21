@@ -59,24 +59,14 @@ namespace VeloSysPro
                 using JsonDocument doc = JsonDocument.Parse(payloadJson);
                 JsonElement root = doc.RootElement;
 
-                // Every part below is whitelisted before reaching the command line, because both
-                // the arguments and the derived task name are interpolated into it.
                 ScheduleSpec schedule = SchedulePolicy.Normalize(
                     GetString(root, "type", "quick"),
                     GetString(root, "frequency", "DAILY"),
                     GetString(root, "day", ""),
                     GetString(root, "time", "03:00")
                 );
-                string dayArgument =
-                    schedule.Day.Length == 0 ? "" : " /d " + schedule.Day;
-                string taskName = SchedulePolicy.EncodeName(schedule);
-                string tr = "\\\"" + _exePath + "\\\" --task=" + schedule.Type;
 
-                _cmd.Run(
-                    "schtasks.exe",
-                    $"/create /tn \"{taskName}\" /tr \"{tr}\" /sc {schedule.Frequency}{dayArgument} /st {schedule.Time} /rl HIGHEST /f"
-                );
-                _sink.Log("log.task.created", "success", new { name = taskName });
+                CreateTask(schedule);
             }
             catch (Exception ex)
             {
@@ -196,13 +186,9 @@ namespace VeloSysPro
 
         public void CreateTask(ScheduleSpec schedule)
         {
-            string dayArgument = schedule.Day.Length == 0 ? "" : " /d " + schedule.Day;
             string taskName = SchedulePolicy.EncodeName(schedule);
-            string tr = "\\\"" + _exePath + "\\\" --task=" + schedule.Type;
-            CommandResult result = _cmd.Run(
-                "schtasks.exe",
-                $"/create /tn \"{taskName}\" /tr \"{tr}\" /sc {schedule.Frequency}{dayArgument} /st {schedule.Time} /rl HIGHEST /f"
-            );
+            string args = SchedulePolicy.BuildSchtasksCreateArgs(schedule, _exePath);
+            CommandResult result = _cmd.Run("schtasks.exe", args);
             if (!result.Success) throw new InvalidOperationException("Task creation failed.");
             _sink.Log("log.task.created", "success", new { name = taskName });
         }

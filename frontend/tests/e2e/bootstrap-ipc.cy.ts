@@ -7,9 +7,9 @@ describe('bootstrap and IPC contracts', () => {
       cy.expectIpc(action);
     }
     cy.get<Sinon.SinonStub>('@ipcStub').should((stub) => {
-      expect(
-        stub.getCalls().some((call) => call.args[0]?.action === 'getRestorePoints')
-      ).to.equal(false);
+      expect(stub.getCalls().some((call) => call.args[0]?.action === 'getRestorePoints')).to.equal(
+        false
+      );
     });
   });
 
