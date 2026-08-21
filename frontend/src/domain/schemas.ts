@@ -128,7 +128,7 @@ export const LogTypeSchema = z.enum(['info', 'error', 'success']);
 
 export const LocalizedMessageSchema = z.object({
   key: z.string(),
-  args: z.record(z.string(), z.unknown()).optional(),
+  args: z.record(z.string(), z.unknown()).nullish(),
 });
 
 export const IpcEventNameSchema = z.enum([

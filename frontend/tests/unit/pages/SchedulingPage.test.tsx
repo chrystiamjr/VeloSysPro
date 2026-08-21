@@ -31,8 +31,7 @@ const renderPage = (props: Partial<React.ComponentProps<typeof SchedulingPage>> 
   return merged;
 };
 
-const lastPayload = (fn: unknown) =>
-  (fn as ReturnType<typeof vi.fn>).mock.calls[0][0];
+const lastPayload = (fn: unknown) => (fn as ReturnType<typeof vi.fn>).mock.calls[0][0];
 
 describe('SchedulingPage (functional scheduler)', () => {
   afterEach(() => {
@@ -177,10 +176,7 @@ describe('SchedulingPage (functional scheduler)', () => {
     expect(within(grid).getAllByRole('radio')).toHaveLength(31);
 
     fireEvent.click(within(grid).getByRole('radio', { name: '15' }));
-    expect(within(grid).getByRole('radio', { name: '15' })).toHaveAttribute(
-      'aria-checked',
-      'true'
-    );
+    expect(within(grid).getByRole('radio', { name: '15' })).toHaveAttribute('aria-checked', 'true');
 
     fireEvent.click(screen.getByRole('button', { name: /Agendar/i }));
     expect(lastPayload(props.onCreateTask)).toMatchObject({ frequency: 'MONTHLY', day: '15' });

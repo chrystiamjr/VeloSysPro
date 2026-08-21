@@ -22,6 +22,7 @@
     <Compile Include="..\desktop\Features\Optimization\Optimizer.cs" />
     <Compile Include="..\desktop\Features\Recovery\RegistryBackupManager.cs" />
     <Compile Include="..\desktop\Features\Recovery\SystemRestoreManager.cs" />
+    <Compile Include="..\desktop\Features\Recovery\SafetyCheckpoint.cs" />
     <Compile Include="..\desktop\Features\Scheduling\SchedulerManager.cs" />
     <Compile Include="..\desktop\Features\Scheduling\SchedulePolicy.cs" />
     <Compile Include="..\desktop\Features\Settings\SettingsManager.cs" />
@@ -33,13 +34,18 @@
     <Compile Include="..\desktop\Features\Tweaks\TweakCaptureStore.cs" />
     <Compile Include="..\desktop\Features\Tweaks\TweakCatalog.cs" />
     <Compile Include="..\desktop\Features\Tweaks\TweakEngine.cs" />
+    <Compile Include="..\desktop\Infrastructure\Commands\CommandRunner.cs" />
     <Compile Include="..\desktop\Infrastructure\Commands\ICommandRunner.cs" />
     <Compile Include="..\desktop\Infrastructure\Commands\NativeConsoleEncoding.cs" />
+    <Compile Include="..\desktop\Infrastructure\Storage\AppEnvironment.cs" />
     <Compile Include="..\desktop\Infrastructure\Storage\AppPaths.cs" />
+    <Compile Include="..\desktop\Infrastructure\Storage\IAppEnvironment.cs" />
     <Compile Include="..\desktop\Infrastructure\Storage\ISnapshotStore.cs" />
     <Compile Include="..\desktop\Infrastructure\Storage\JsonlSnapshotStore.cs" />
+    <Compile Include="..\desktop\Infrastructure\Storage\SemanticVersion.cs" />
     <Compile Include="..\desktop\Infrastructure\Status\IStatusSink.cs" />
     <Compile Include="..\desktop\Ipc\ActionHost.cs" />
+    <Compile Include="..\desktop\Ipc\ActionRegistry.cs" />
     <Compile Include="..\desktop\Ipc\IpcEventEmitter.cs" />
     <Compile Include="..\desktop\Ipc\IpcEvents.cs" />
     <Compile Include="..\desktop\Ipc\IpcHandler.cs" />

@@ -38,4 +38,17 @@ public class SchedulePolicyTests
     {
         Assert.Null(SchedulePolicy.DecodeName(name));
     }
+
+    [Fact]
+    public void BuildSchtasksCreateArgs_GeneratesSafeArgumentString()
+    {
+        ScheduleSpec schedule = new("quick", "DAILY", "", "03:00");
+        string args = SchedulePolicy.BuildSchtasksCreateArgs(schedule, @"C:\App\VeloSysPro.exe");
+
+        Assert.Contains("/create /tn \"VeloSysPro_Quick_Daily_0300\"", args);
+        Assert.Contains("/sc DAILY", args);
+        Assert.Contains("/st 03:00", args);
+        Assert.Contains("/rl HIGHEST", args);
+        Assert.Contains("--task=quick", args);
+    }
 }

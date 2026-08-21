@@ -16,6 +16,7 @@ import {
   taskDisplayName,
 } from '../../domain/scheduling';
 import { useTranslation } from '../../infrastructure/i18nContext';
+import { useManagementAction } from '../../infrastructure/useManagementAction';
 
 export interface SchedulingPageProps {
   tasks: ScheduledTaskItem[];
@@ -33,6 +34,7 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
   disabled = false,
 }) => {
   const { t } = useTranslation();
+  const { confirmAction } = useManagementAction();
   const [type, setType] = useState<string>('quick');
   const [frequency, setFrequency] = useState<string>('DAILY');
   const [time, setTime] = useState<string>('03:00');
@@ -48,9 +50,7 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
   };
 
   const handleDelete = (name: string) => {
-    if (window.confirm(t('scheduling.deleteConfirm'))) {
-      onDeleteTask(name);
-    }
+    confirmAction('scheduling.deleteConfirm', () => onDeleteTask(name));
   };
 
   const columns: DataTableColumn<ScheduledTaskItem>[] = [

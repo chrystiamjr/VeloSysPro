@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Windows;
 
 namespace VeloSysPro
@@ -9,6 +10,25 @@ namespace VeloSysPro
     {
         protected override void OnStartup(StartupEventArgs e)
         {
+            if (e.Args.Any(a => a.Equals("--version", StringComparison.OrdinalIgnoreCase) || a.Equals("-v", StringComparison.OrdinalIgnoreCase)))
+            {
+                Console.WriteLine($"VeloSysPro {GetAppVersion()}");
+                Shutdown(0);
+                return;
+            }
+
+            if (e.Args.Any(a => a.Equals("--help", StringComparison.OrdinalIgnoreCase) || a.Equals("-h", StringComparison.OrdinalIgnoreCase)))
+            {
+                Console.WriteLine("VeloSysPro - High Performance Windows Optimizer");
+                Console.WriteLine("Usage: VeloSysPro.exe [options]");
+                Console.WriteLine("Options:");
+                Console.WriteLine("  --version, -v           Show version information");
+                Console.WriteLine("  --help, -h              Show help information");
+                Console.WriteLine("  --task=<task_name>      Run scheduled optimization task in headless mode");
+                Shutdown(0);
+                return;
+            }
+
             // Headless CLI mode for scheduled tasks: VeloSysPro.exe --task=<quick|full|gaming|revert>
             // where "gaming" is a Tweak Preset and the rest are maintenance Optimization Plans.
             string? task = e.Args
@@ -66,5 +86,8 @@ namespace VeloSysPro
             if (!ok) sink.LogRaw($"Task '{task}' is unknown or did not complete", "error");
             sink.LogRaw($"=== Headless task '{task}' finished ===", "info");
         }
+
+        private static string GetAppVersion() =>
+            SemanticVersion.FromAssembly(typeof(App).Assembly).ToString();
     }
 }

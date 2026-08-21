@@ -11,25 +11,20 @@ import {
   AppScreen,
   SystemHealth,
   LogEntryItem,
-  LogRecord,
   LocalizedMessage,
   SnapshotCapturedPayload,
   UpdateInfo,
   SystemActions,
 } from './domain/types';
 import { useTranslation, LanguageProvider } from './infrastructure/i18nContext';
-import {
-  subscribeLogs,
-  subscribeSnapshot,
-  subscribeStatus,
-  subscribeUpdate,
-} from './infrastructure/bridge';
+import { subscribeSnapshot, subscribeStatus, subscribeUpdate } from './infrastructure/bridge';
 import { formatDateTime } from './domain/formatters';
-import { useExecutionLifecycle } from './infrastructure/useExecutionLifecycle';
-import { useActionFeedback } from './infrastructure/useActionFeedback';
+import { useHostMutation } from './infrastructure/useHostMutation';
 import { useOsBackedLists } from './infrastructure/useOsBackedLists';
 import { usePreferences } from './infrastructure/usePreferences';
 import { ToastHost } from './components/organisms/ToastHost';
+
+import { useLogBuffer } from './infrastructure/useLogBuffer';
 
 const SCREEN_HEADERS: Record<AppScreen, { title: string; subtitle: string }> = {
   [AppScreen.Dashboard]: { title: 'header.dashboard.title', subtitle: 'header.dashboard.subtitle' },
@@ -53,15 +48,17 @@ function AppContent() {
   const [update, setUpdate] = useState<UpdateInfo | null>(null);
   // Dismissing only hides the banner; Settings keeps the release reachable without a restart.
   const [updateDismissed, setUpdateDismissed] = useState(false);
-  const [logs, setLogs] = useState<LogRecord[]>([{ key: 'log.appStarted', type: 'success' }]);
-  const [consoleExpanded, setConsoleExpanded] = useState(false);
+  const { logs, consoleExpanded, setConsoleExpanded, clearLogs } = useLogBuffer();
   const [snapshot, setSnapshot] = useState<SnapshotCapturedPayload | null>(null);
-  const { activeAction, progressPercent, executionHasError, lastOutcome, runRead, runMutation } =
-    useExecutionLifecycle();
-  const { items: feedbackItems, dismiss: dismissFeedback } = useActionFeedback(
+  const {
     activeAction,
-    lastOutcome
-  );
+    progressPercent,
+    executionHasError,
+    feedbackItems,
+    runRead,
+    runMutation,
+    dismissFeedback,
+  } = useHostMutation();
   const {
     backups,
     tasks,
@@ -79,13 +76,6 @@ function AppContent() {
 
   useEffect(() => {
     const unsubscribers = [
-      subscribeLogs((msg, type) => {
-        setLogs((prev) => [...prev, { key: msg.key, args: msg.args, type }]);
-        if (type === 'error') {
-          setConsoleExpanded(true);
-        }
-      }),
-
       subscribeStatus((msg) => {
         setStatus(msg);
       }),
@@ -105,7 +95,7 @@ function AppContent() {
   }, [setLang]);
 
   const handleClearLogs = () => {
-    setLogs([]);
+    clearLogs();
   };
 
   // The live measurement wins while the app is open; otherwise fall back to the last pair on disk,
@@ -121,7 +111,9 @@ function AppContent() {
   // Translate at render time so logs/status re-localize when the language changes. A raw host
   // line is already text and must not be looked up as a key.
   const translateMessage = (message: LocalizedMessage): string =>
-    message.key === 'log.raw' ? String(message.args?.text ?? '') : t(message.key, message.args);
+    message.key === 'log.raw'
+      ? String(message.args?.text ?? '')
+      : t(message.key, message.args ?? undefined);
 
   const translatedLogs: LogEntryItem[] = logs.map((log) => ({
     text: translateMessage(log),
@@ -132,7 +124,7 @@ function AppContent() {
     setActiveScreen(AppScreen.Dashboard);
     setConsoleExpanded(true);
   };
-  const statusMessage = t(status.key, status.args);
+  const statusMessage = t(status.key, status.args ?? undefined);
   const header = SCREEN_HEADERS[activeScreen];
   const displayHealth: SystemHealth = {
     admin: 'Sim',

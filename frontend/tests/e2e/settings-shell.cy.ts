@@ -27,10 +27,7 @@ describe('settings and application shell', () => {
     cy.visitApp();
     cy.getByCy('nav-Settings').click();
     cy.getByCy('safety-backup-toggle').uncheck();
-    cy.expectIpc(
-      'saveSettings',
-      { ...defaultSettings, createBackupBeforeOptimize: false }
-    );
+    cy.expectIpc('saveSettings', { ...defaultSettings, createBackupBeforeOptimize: false });
     cy.getByCy('safety-backup-toggle').check();
     cy.expectIpc('saveSettings', defaultSettings);
   });

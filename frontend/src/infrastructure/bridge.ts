@@ -30,6 +30,7 @@ import {
   type TweakCatalog,
   type UpdateInfo,
 } from '../domain/schemas';
+import type { SystemActionPayloads, SystemActionType } from '../domain/types';
 
 interface WebViewMessageEvent extends Event {
   data: unknown;
@@ -121,7 +122,15 @@ function subscribe(event: IpcEventName, listener: EventListener): Unsubscribe {
   };
 }
 
-export function sendAction(action: string, payload: unknown = null): void {
+export function sendAction<A extends string>(
+  action: A,
+  ...args: A extends SystemActionType
+    ? SystemActionPayloads[A] extends void | null
+      ? [payload?: SystemActionPayloads[A]]
+      : [payload: SystemActionPayloads[A]]
+    : [payload?: unknown]
+): void {
+  const payload = args[0] ?? null;
   try {
     const webview = window.chrome?.webview;
     if (webview) {

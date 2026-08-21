@@ -8,7 +8,9 @@ import en_US from '../../../src/domain/locales/en_US.json';
 function verifyAlphabeticalOrder(obj: Record<string, unknown>, path = ''): void {
   const keys = Object.keys(obj);
   const sortedKeys = [...keys].sort();
-  expect(keys, `Keys at path "${path || 'root'}" are not alphabetically sorted`).toEqual(sortedKeys);
+  expect(keys, `Keys at path "${path || 'root'}" are not alphabetically sorted`).toEqual(
+    sortedKeys
+  );
 
   for (const key of keys) {
     const value = obj[key];
@@ -57,11 +59,13 @@ function hostEmittedKeys(): string[] {
     .map((file) => readFileSync(file, 'utf8'))
     .join('\n');
 
-  return [...new Set([...source.matchAll(/"((?:log|status)\.[A-Za-z][A-Za-z0-9.]*)"/g)])]
-    .map((match) => match[1])
-    // A file name, not a message; it is the one literal of this shape that is not a key.
-    .filter((key) => key !== 'log.txt')
-    .sort();
+  return (
+    [...new Set([...source.matchAll(/"((?:log|status)\.[A-Za-z][A-Za-z0-9.]*)"/g)])]
+      .map((match) => match[1])
+      // A file name, not a message; it is the one literal of this shape that is not a key.
+      .filter((key) => key !== 'log.txt')
+      .sort()
+  );
 }
 
 const CATALOG_SOURCE = resolve('../desktop/Features/Tweaks/TweakCatalog.cs');
@@ -85,7 +89,9 @@ function catalogTweaks(): { id: string; advanced: boolean }[] {
     seen.set(match[1], match[2] === 'Advanced');
   }
 
-  return [...seen].map(([id, advanced]) => ({ id, advanced })).sort((a, b) => a.id.localeCompare(b.id));
+  return [...seen]
+    .map(([id, advanced]) => ({ id, advanced }))
+    .sort((a, b) => a.id.localeCompare(b.id));
 }
 
 /** How many Tweaks the catalog constructs, counted independently of the id pattern. */

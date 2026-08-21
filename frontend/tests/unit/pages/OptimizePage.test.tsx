@@ -176,11 +176,7 @@ describe('OptimizePage (desired-state selection screen)', () => {
 
     expect(onApply).toHaveBeenCalledWith({
       tweakIds: [],
-      revertIds: [
-        'cpu.win32PrioritySeparation',
-        'boot.disableDynamicTick',
-        'services.sysMain',
-      ],
+      revertIds: ['cpu.win32PrioritySeparation', 'boot.disableDynamicTick', 'services.sysMain'],
     });
   });
 
@@ -378,9 +374,9 @@ describe('OptimizePage (desired-state selection screen)', () => {
 
     expect(onApply).not.toHaveBeenCalled();
     expect(screen.getByText(/reduzem sua segurança/i)).toBeInTheDocument();
-    expect(
-      container.querySelector('[data-cy="revert-confirm-items"]')
-    ).toHaveTextContent('advanced.memoryIntegrity');
+    expect(container.querySelector('[data-cy="revert-confirm-items"]')).toHaveTextContent(
+      'advanced.memoryIntegrity'
+    );
 
     click(container, 'revert-confirm-confirm');
     expect(onApply).toHaveBeenCalledWith({

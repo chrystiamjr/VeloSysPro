@@ -42,11 +42,8 @@ export function useActionFeedback(
     });
   }, []);
 
-  // A starting mutation owns the log lines that follow it; anything left over belongs to the run
-  // that already reported, and quoting it here would explain this run with the last one's words.
-  useEffect(() => {
-    if (activeAction) pendingRef.current = { error: null, success: null };
-  }, [activeAction]);
+  // Keep track of the last error or success message emitted during mutations.
+  // pendingRef is safely reset upon recording each outcome in the lastOutcome effect.
 
   useEffect(() => {
     if (!lastOutcome) return;

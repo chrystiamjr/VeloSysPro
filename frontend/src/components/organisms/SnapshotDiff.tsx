@@ -1,41 +1,17 @@
-import React from 'react';
-import type { OptimizationSnapshot, SnapshotCapturedPayload } from '../../domain/types';
-import { formatBytes, formatDateTime, formatDuration } from '../../domain/formatters';
+import type { SnapshotCapturedPayload } from '../../domain/types';
+import { formatDateTime } from '../../domain/formatters';
+import {
+  IMMEDIATE_METRICS,
+  NEXT_BOOT_METRICS,
+  MetricDefinition,
+  formatMetricValue,
+  isSameBootSession,
+} from '../../domain/metricDeltas';
 import { useTranslation } from '../../infrastructure/i18nContext';
 
 export interface SnapshotDiffProps {
   snapshot: SnapshotCapturedPayload | null;
 }
-
-type MetricFormat = 'bytes' | 'duration' | 'count' | 'boolean';
-
-interface MetricRow {
-  key: string;
-  format: MetricFormat;
-  read: (snapshot: OptimizationSnapshot) => number | boolean;
-}
-
-/**
- * Metrics that can move within the session the batch runs in, so a before/after pair is
- * meaningful. Free memory and free disk are deliberately absent: they drift on their own between
- * the two measurements and none of the Tweaks touch them, so showing them as a "gain" would put
- * noise where the user expects an effect.
- */
-const IMMEDIATE_METRICS: MetricRow[] = [
-  { key: 'automaticServices', format: 'count', read: (s) => s.automaticServices },
-  { key: 'runningServices', format: 'count', read: (s) => s.runningServices },
-  { key: 'startupApps', format: 'count', read: (s) => s.startupApps },
-];
-
-/**
- * Metrics whose value cannot change until Windows restarts. Boot duration is read from the event
- * log for the *last* boot, so measuring it either side of a batch necessarily reports the same
- * number — presenting that as "no gain" was the misleading part of the first version.
- */
-const NEXT_BOOT_METRICS: MetricRow[] = [
-  { key: 'bootDuration', format: 'duration', read: (s) => s.bootDurationMs },
-  { key: 'pendingReboot', format: 'boolean', read: (s) => s.pendingReboot },
-];
 
 /**
  * What a batch did, in two honestly separated halves: the settings it actually moved (read back
@@ -46,34 +22,15 @@ const NEXT_BOOT_METRICS: MetricRow[] = [
 export const SnapshotDiff: React.FC<SnapshotDiffProps> = ({ snapshot }) => {
   const { t, lang } = useTranslation();
 
-  const render = (metric: MetricRow, source: OptimizationSnapshot | null): string => {
-    if (!source) return t('snapshot.notMeasured');
+  const sameBootSession = isSameBootSession(snapshot);
 
-    const value = metric.read(source);
-    if (typeof value === 'boolean') return value ? t('health.yes') : t('health.no');
-    if (metric.format === 'bytes') return formatBytes(value, lang);
-    // A boot duration of zero means the Diagnostics-Performance log had nothing to report,
-    // which is "not measured", not "instant".
-    if (metric.format === 'duration') {
-      return value === 0 ? t('snapshot.notMeasured') : formatDuration(value, lang);
-    }
-    return String(value);
-  };
-
-  // A Snapshot pair from one session shares its boot identity, so the boot figure is the same
-  // reading twice over. Say "restart to measure" instead of implying nothing improved.
-  const sameBootSession =
-    !!snapshot &&
-    snapshot.before !== null &&
-    snapshot.before.lastBootUpTime === snapshot.after.lastBootUpTime;
-
-  const renderAfter = (metric: MetricRow): string => {
+  const renderAfter = (metric: MetricDefinition): string => {
     if (!snapshot) return t('snapshot.notMeasured');
     if (metric.key === 'bootDuration' && sameBootSession) return t('snapshot.restartToMeasure');
-    return render(metric, snapshot.after);
+    return formatMetricValue(metric, snapshot.after, lang, t).formatted;
   };
 
-  const metricRows = (rows: MetricRow[], groupKey: string) => (
+  const metricRows = (rows: readonly MetricDefinition[], groupKey: string) => (
     <>
       <tr className="border-b border-borderColor/50 bg-bgMain/40">
         <th
@@ -91,7 +48,7 @@ export const SnapshotDiff: React.FC<SnapshotDiffProps> = ({ snapshot }) => {
         >
           <td className="px-5 py-3 text-textMuted">{t(`snapshot.metric.${metric.key}`)}</td>
           <td className="px-5 py-3 text-right text-textMuted">
-            {render(metric, snapshot?.before ?? null)}
+            {formatMetricValue(metric, snapshot?.before ?? null, lang, t).formatted}
           </td>
           <td className="px-5 py-3 text-right font-semibold text-textMain">
             {renderAfter(metric)}
