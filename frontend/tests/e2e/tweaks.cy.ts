@@ -2,6 +2,7 @@ import {
   appliedTweakCatalog,
   mixedTweakCatalog,
   snapshotAfter,
+  snapshotAfterReboot,
   snapshotBefore,
   tweakCatalog,
 } from './support/fixtures';
@@ -196,6 +197,28 @@ describe('à-la-carte optimizations', () => {
     });
 
     cy.getByCy('snapshot-metric-bootDuration').should('contain', 'reinicie para medir');
+  });
+
+  it('asks the host to measure on launch, so a post-restart figure can ever exist', () => {
+    // Without this the hint above is permanent: nothing else ever produces a measurement from a
+    // later boot, so the batch's own pair is reloaded from disk unchanged, forever.
+    cy.expectIpc('captureSnapshot');
+  });
+
+  it('resolves the restart hint once a measurement from a later boot arrives', () => {
+    cy.emitHost('tweaksLoaded', tweakCatalog);
+    cy.emitHost('snapshotCaptured', { before: snapshotBefore, after: snapshotAfter, changes: [] });
+    cy.getByCy('snapshot-metric-bootDuration').should('contain', 'reinicie para medir');
+
+    // The machine restarted and the launch measurement landed in the series.
+    cy.emitHost('historyLoaded', [snapshotBefore, snapshotAfter, snapshotAfterReboot]);
+
+    cy.getByCy('snapshot-metric-bootDuration')
+      .should('not.contain', 'reinicie para medir')
+      // Anchored to the state before the change (32,0 s), not to the post-batch reading that
+      // carries the same old boot.
+      .and('contain', '32,0 s')
+      .and('contain', '18,2 s');
   });
 
   it('warns and offers a fix when System Protection is off', () => {

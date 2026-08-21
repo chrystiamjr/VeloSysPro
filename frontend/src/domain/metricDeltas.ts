@@ -56,3 +56,33 @@ export function isSameBootSession(snapshot: SnapshotCapturedPayload | null): boo
     snapshot.before.lastBootUpTime === snapshot.after.lastBootUpTime
   );
 }
+
+/**
+ * The comparison for metrics that cannot move until the machine reboots.
+ *
+ * A batch measures itself twice, seconds apart, in one boot session — so boot duration is
+ * identical on both sides by construction, and the panel says "restart to measure". That hint only
+ * resolves if something measures again *after* the reboot, against the state from before the
+ * change.
+ *
+ * The `after` side is therefore the newest measurement on record, accepted only when it comes from
+ * a different boot session than the batch. The `before` side stays anchored to the batch's own
+ * before: pairing the last two rows instead would, one reboot later, compare two post-change boots
+ * against each other and call the noise a result.
+ *
+ * A missing boot identity (rows written before `lastBootUpTime` existed carry `""`) is not
+ * evidence either way, so it yields no comparison rather than a guess.
+ */
+export function resolveNextBootComparison(
+  batch: SnapshotCapturedPayload | null,
+  history: readonly OptimizationSnapshot[]
+): SnapshotCapturedPayload | null {
+  if (!batch?.before || history.length === 0) return null;
+
+  const batchSession = batch.before.lastBootUpTime;
+  const newest = history[history.length - 1];
+  if (batchSession === '' || newest.lastBootUpTime === '') return null;
+  if (newest.lastBootUpTime === batchSession) return null;
+
+  return { before: batch.before, after: newest, changes: [] };
+}

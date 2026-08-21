@@ -193,6 +193,17 @@ export const snapshotAfter: OptimizationSnapshot = {
   runningServices: 71,
 };
 
+/**
+ * The first measurement taken after the machine restarted. Its boot identity differs, which is the
+ * only thing that makes a reboot-dependent metric comparable at all.
+ */
+export const snapshotAfterReboot: OptimizationSnapshot = {
+  ...snapshotBefore,
+  capturedAt: '2026-07-26T09:05:00.000Z',
+  bootDurationMs: 18200,
+  lastBootUpTime: '2026-07-26T09:00:00.000Z',
+};
+
 export const updateInfo: UpdateInfo = {
   version: '0.9.0',
   url: 'https://github.com/chrystiamjr/VeloSysPro/releases/tag/v0.9.0',
