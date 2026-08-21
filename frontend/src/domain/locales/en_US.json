@@ -79,6 +79,115 @@
       "title": "Tools"
     }
   },
+  "debloat": {
+    "caveat": {
+      "oneDrive": "Comes back by downloading OneDrive from Microsoft again.",
+      "store": "Comes back by reinstalling it from the Microsoft Store."
+    },
+    "clearBtn": "Clear selection",
+    "confirmBody": "You are about to uninstall {{count}} app(s). VeloSys Pro cannot put them back — each one has to be reinstalled by you, from the source below. A restore point is created first.",
+    "confirmBtn": "Uninstall permanently",
+    "confirmTitle": "These apps will be uninstalled",
+    "empty": "No removable apps found. Use Refresh to query the system again.",
+    "group": {
+      "optional": "Optional (you may be using these)",
+      "optionalDesc": "Real apps, not advertising. Never ticked for you — read each one before selecting it.",
+      "safe": "Safe to remove"
+    },
+    "loading": "Querying the system...",
+    "noneSelected": "No app selected. Tick the ones you want removed.",
+    "package": {
+      "alarms": {
+        "desc": "Windows alarms, timers and world clock.",
+        "title": "Alarms & Clock"
+      },
+      "bingSearch": {
+        "desc": "Sends what you type into the Start menu to Bing on the web.",
+        "title": "Bing Search"
+      },
+      "camera": {
+        "desc": "The built-in app for taking photos and video with a webcam.",
+        "title": "Camera"
+      },
+      "clipchamp": {
+        "desc": "The preinstalled Microsoft video editor.",
+        "title": "Clipchamp"
+      },
+      "copilot": {
+        "desc": "The Microsoft assistant pinned to the taskbar.",
+        "title": "Copilot"
+      },
+      "family": {
+        "desc": "Parental controls and family screen-time reports.",
+        "title": "Microsoft Family"
+      },
+      "feedbackHub": {
+        "desc": "The app for sending feedback and diagnostics to Microsoft.",
+        "title": "Feedback Hub"
+      },
+      "news": {
+        "desc": "The news feed behind the taskbar widgets.",
+        "title": "Bing News"
+      },
+      "officeHub": {
+        "desc": "The Office launcher shortcut, not Office itself.",
+        "title": "Microsoft 365 (Office Hub)"
+      },
+      "oneDrive": {
+        "desc": "The Microsoft cloud sync client. Files already in the cloud stay there.",
+        "title": "OneDrive"
+      },
+      "outlook": {
+        "desc": "The new preinstalled mail client, not classic Outlook.",
+        "title": "Outlook for Windows"
+      },
+      "powerAutomate": {
+        "desc": "Desktop task automation. Remove it only if you build no flows.",
+        "title": "Power Automate Desktop"
+      },
+      "quickAssist": {
+        "desc": "Lets someone else take remote control of this machine.",
+        "title": "Quick Assist"
+      },
+      "screenSketch": {
+        "desc": "Screenshots and screen recording, bound to Win+Shift+S.",
+        "title": "Snipping Tool"
+      },
+      "solitaire": {
+        "desc": "The preinstalled card games, with adverts.",
+        "title": "Solitaire Collection"
+      },
+      "soundRecorder": {
+        "desc": "The built-in voice recorder.",
+        "title": "Sound Recorder"
+      },
+      "weather": {
+        "desc": "The weather app behind the taskbar widgets.",
+        "title": "Weather"
+      },
+      "xbox": {
+        "desc": "The Xbox app and its in-game overlay. Game Pass needs these.",
+        "title": "Xbox"
+      }
+    },
+    "refreshBtn": "Refresh",
+    "removeBtn": "Uninstall selected",
+    "result": {
+      "failed": "Still installed",
+      "removed": "Removed"
+    },
+    "sectionCount": "{{selected}} of {{total}} selected",
+    "sectionDesc": "Only apps on this curated list can be removed. Anything already gone from your machine cannot be selected.",
+    "sectionTitle": "Removable apps",
+    "selected": "{{count}} app(s) selected for removal",
+    "staleRead": "The system answered with something unreadable; showing the previous list.",
+    "state": {
+      "absent": "Not installed",
+      "installed": "Installed"
+    },
+    "warningBody": "Removing an app is not an optimization you can undo here. VeloSys Pro creates a restore point before it starts, but putting an app back afterwards means reinstalling it yourself.",
+    "warningTitle": "Removals cannot be undone from this app"
+  },
   "dialog": {
     "cancel": "Cancel"
   },
@@ -90,6 +199,10 @@
     "dashboard": {
       "subtitle": "Windows maintenance, network acceleration, and recovery",
       "title": "Optimization Dashboard"
+    },
+    "debloat": {
+      "subtitle": "Uninstall the preinstalled apps you do not use",
+      "title": "Preinstalled Apps"
     },
     "optimize": {
       "subtitle": "Pick, apply, and revert optimizations one by one",
@@ -129,7 +242,22 @@
       "restoreFailed": "Failed to restore backup: {{message}}",
       "restored": "Backup restored: {{name}}"
     },
+    "checkpoint": {
+      "created": "Safety Checkpoint created before any change.",
+      "failed": "Failed to create the Safety Checkpoint: {{message}}. Nothing was changed.",
+      "protectionDisabled": "Windows System Protection is turned off, so no restore point can be created. Nothing was changed.",
+      "skipped": "Safety Checkpoint turned off in preferences; proceeding without a safety net."
+    },
     "cmdError": "Error running {{exe}}: {{message}}",
+    "debloat": {
+      "done": "Selected apps removed successfully.",
+      "enumerateFailed": "Could not read the list of installed apps.",
+      "noUninstaller": "No uninstaller found for {{id}}; nothing was removed.",
+      "noneSelected": "Select at least one app before removing.",
+      "removeFailed": "The app is still installed: {{id}}",
+      "removed": "App removed: {{id}}",
+      "unknown": "This app is not on the removal list: {{id}}"
+    },
     "diskHealth": {
       "done": "Disk health report completed.",
       "start": "Generating disk health report..."
@@ -182,13 +310,9 @@
     "tweaks": {
       "applied": "Optimization applied: {{id}}",
       "applyFailed": "Failed to apply the optimization: {{id}}",
-      "checkpointCreated": "Safety Checkpoint created before any change.",
-      "checkpointFailed": "Failed to create the Safety Checkpoint: {{message}}. Nothing was changed.",
-      "checkpointSkipped": "Safety Checkpoint turned off in preferences; proceeding without a safety net.",
       "done": "Selected optimizations applied successfully.",
       "noCapture": "No prior state stored for {{id}}; revert cancelled.",
       "noneSelected": "Select at least one optimization before applying.",
-      "protectionDisabled": "Windows System Protection is turned off, so no restore point can be created. Nothing was changed.",
       "revertFailed": "Failed to revert the optimization: {{id}}",
       "reverted": "Optimization reverted: {{id}}",
       "unknown": "Unknown optimization: {{id}}",
@@ -203,6 +327,7 @@
     "backup": "Backup & Restore",
     "collapse": "Collapse menu",
     "dashboard": "Dashboard",
+    "debloat": "Remove Apps",
     "expand": "Expand menu",
     "logsFolder": "Logs Folder",
     "optimize": "Optimizations",
@@ -447,6 +572,11 @@
     "sectionTitle": "What changed on the system"
   },
   "status": {
+    "debloat": {
+      "done": "Removal finished!",
+      "removing": "Removing {{id}}...",
+      "verifying": "Checking what was really removed..."
+    },
     "diskHealth": {
       "done": "Disk report generated!",
       "start": "Analyzing disk health..."

@@ -79,6 +79,115 @@
       "title": "Ferramentas"
     }
   },
+  "debloat": {
+    "caveat": {
+      "oneDrive": "Volta baixando o OneDrive da Microsoft novamente.",
+      "store": "Volta reinstalando pela Microsoft Store."
+    },
+    "clearBtn": "Limpar seleção",
+    "confirmBody": "Você vai desinstalar {{count}} aplicativo(s). O VeloSys Pro não consegue trazê-los de volta — cada um precisa ser reinstalado por você, na origem indicada abaixo. Um ponto de restauração é criado antes.",
+    "confirmBtn": "Desinstalar definitivamente",
+    "confirmTitle": "Estes aplicativos serão desinstalados",
+    "empty": "Nenhum aplicativo removível encontrado. Use Atualizar para consultar o sistema novamente.",
+    "group": {
+      "optional": "Opcionais (você pode estar usando)",
+      "optionalDesc": "Aplicativos de verdade, não propaganda. Nunca marcados por você — leia cada um antes de selecionar.",
+      "safe": "Seguros para remover"
+    },
+    "loading": "Consultando o sistema...",
+    "noneSelected": "Nenhum aplicativo selecionado. Marque os que deseja remover.",
+    "package": {
+      "alarms": {
+        "desc": "Alarmes, timers e relógio mundial do Windows.",
+        "title": "Alarmes e Relógio"
+      },
+      "bingSearch": {
+        "desc": "Envia o que você digita no menu Iniciar para o Bing na web.",
+        "title": "Bing Search"
+      },
+      "camera": {
+        "desc": "Aplicativo nativo para tirar fotos e gravar vídeo pela webcam.",
+        "title": "Câmera"
+      },
+      "clipchamp": {
+        "desc": "Editor de vídeo pré-instalado da Microsoft.",
+        "title": "Clipchamp"
+      },
+      "copilot": {
+        "desc": "Assistente da Microsoft fixado na barra de tarefas.",
+        "title": "Copilot"
+      },
+      "family": {
+        "desc": "Controles parentais e relatórios de tempo de tela.",
+        "title": "Microsoft Family"
+      },
+      "feedbackHub": {
+        "desc": "Aplicativo de envio de feedback e diagnósticos à Microsoft.",
+        "title": "Hub de Comentários"
+      },
+      "news": {
+        "desc": "Feed de notícias por trás dos widgets da barra de tarefas.",
+        "title": "Bing Notícias"
+      },
+      "officeHub": {
+        "desc": "Atalho inicializador do Office, não o Office em si.",
+        "title": "Microsoft 365 (Office Hub)"
+      },
+      "oneDrive": {
+        "desc": "Cliente de sincronização em nuvem da Microsoft. Arquivos já na nuvem permanecem lá.",
+        "title": "OneDrive"
+      },
+      "outlook": {
+        "desc": "Novo cliente de e-mail pré-instalado, não o Outlook clássico.",
+        "title": "Outlook para Windows"
+      },
+      "powerAutomate": {
+        "desc": "Automação de tarefas no desktop. Remova apenas se não criar fluxos.",
+        "title": "Power Automate Desktop"
+      },
+      "quickAssist": {
+        "desc": "Permite que outra pessoa controle esta máquina remotamente.",
+        "title": "Assistência Rápida"
+      },
+      "screenSketch": {
+        "desc": "Capturas e gravação de tela, atalho Win+Shift+S.",
+        "title": "Ferramenta de Captura"
+      },
+      "solitaire": {
+        "desc": "Jogos de cartas pré-instalados, com anúncios.",
+        "title": "Coleção Solitaire"
+      },
+      "soundRecorder": {
+        "desc": "Gravador de voz nativo do Windows.",
+        "title": "Gravador de Som"
+      },
+      "weather": {
+        "desc": "Aplicativo de clima por trás dos widgets da barra de tarefas.",
+        "title": "Clima"
+      },
+      "xbox": {
+        "desc": "Aplicativo Xbox e sua sobreposição no jogo. O Game Pass depende deles.",
+        "title": "Xbox"
+      }
+    },
+    "refreshBtn": "Atualizar",
+    "removeBtn": "Desinstalar selecionados",
+    "result": {
+      "failed": "Ainda instalado",
+      "removed": "Removido"
+    },
+    "sectionCount": "{{selected}} de {{total}} selecionados",
+    "sectionDesc": "Só é possível remover aplicativos desta lista curada. O que já não está na sua máquina não pode ser selecionado.",
+    "sectionTitle": "Aplicativos removíveis",
+    "selected": "{{count}} aplicativo(s) selecionado(s) para remoção",
+    "staleRead": "O sistema respondeu algo ilegível; exibindo a lista anterior.",
+    "state": {
+      "absent": "Não instalado",
+      "installed": "Instalado"
+    },
+    "warningBody": "Remover um aplicativo não é uma otimização que você possa desfazer aqui. O VeloSys Pro cria um ponto de restauração antes de começar, mas recolocar um aplicativo depois significa reinstalá-lo por conta própria.",
+    "warningTitle": "Remoções não podem ser desfeitas por este aplicativo"
+  },
   "dialog": {
     "cancel": "Cancelar"
   },
@@ -90,6 +199,10 @@
     "dashboard": {
       "subtitle": "Manutenção, aceleração de rede e recuperação do Windows",
       "title": "Painel de Otimização"
+    },
+    "debloat": {
+      "subtitle": "Desinstale os aplicativos pré-instalados que você não usa",
+      "title": "Aplicativos Pré-instalados"
     },
     "optimize": {
       "subtitle": "Escolha, aplique e reverta otimizações individualmente",
@@ -129,7 +242,22 @@
       "restoreFailed": "Falha ao restaurar backup: {{message}}",
       "restored": "Backup restaurado: {{name}}"
     },
+    "checkpoint": {
+      "created": "Ponto de Segurança criado antes das alterações.",
+      "failed": "Falha ao criar o Ponto de Segurança: {{message}}. Nada foi alterado.",
+      "protectionDisabled": "A Proteção do Sistema do Windows está desativada, então nenhum ponto de restauração pode ser criado. Nada foi alterado.",
+      "skipped": "Ponto de Segurança desativado nas preferências; seguindo sem rede de proteção."
+    },
     "cmdError": "Erro executando {{exe}}: {{message}}",
+    "debloat": {
+      "done": "Aplicativos selecionados removidos com sucesso.",
+      "enumerateFailed": "Não foi possível ler a lista de aplicativos instalados.",
+      "noUninstaller": "Nenhum desinstalador encontrado para {{id}}; nada foi removido.",
+      "noneSelected": "Selecione ao menos um aplicativo antes de remover.",
+      "removeFailed": "O aplicativo continua instalado: {{id}}",
+      "removed": "Aplicativo removido: {{id}}",
+      "unknown": "Este aplicativo não está na lista de remoção: {{id}}"
+    },
     "diskHealth": {
       "done": "Relatório de saúde do disco concluído.",
       "start": "Gerando relatório de saúde do disco..."
@@ -182,13 +310,9 @@
     "tweaks": {
       "applied": "Otimização aplicada: {{id}}",
       "applyFailed": "Falha ao aplicar a otimização: {{id}}",
-      "checkpointCreated": "Ponto de Segurança criado antes das alterações.",
-      "checkpointFailed": "Falha ao criar o Ponto de Segurança: {{message}}. Nada foi alterado.",
-      "checkpointSkipped": "Ponto de Segurança desativado nas preferências; seguindo sem rede de proteção.",
       "done": "Otimizações selecionadas aplicadas com sucesso.",
       "noCapture": "Sem estado anterior guardado para {{id}}; reversão cancelada.",
       "noneSelected": "Selecione ao menos uma otimização antes de aplicar.",
-      "protectionDisabled": "A Proteção do Sistema do Windows está desativada, então nenhum ponto de restauração pode ser criado. Nada foi alterado.",
       "revertFailed": "Falha ao reverter a otimização: {{id}}",
       "reverted": "Otimização revertida: {{id}}",
       "unknown": "Otimização desconhecida: {{id}}",
@@ -203,6 +327,7 @@
     "backup": "Backup & Restauração",
     "collapse": "Recolher menu",
     "dashboard": "Painel Inicial",
+    "debloat": "Remover Apps",
     "expand": "Expandir menu",
     "logsFolder": "Pasta de Logs",
     "optimize": "Otimizações",
@@ -447,6 +572,11 @@
     "sectionTitle": "O que mudou no sistema"
   },
   "status": {
+    "debloat": {
+      "done": "Remoção concluída!",
+      "removing": "Removendo {{id}}...",
+      "verifying": "Verificando o que foi realmente removido..."
+    },
     "diskHealth": {
       "done": "Relatório de disco gerado!",
       "start": "Analisando saúde do disco..."

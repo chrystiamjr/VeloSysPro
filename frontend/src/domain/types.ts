@@ -9,6 +9,11 @@
 export type {
   AppSettings,
   BackupItem,
+  DebloatCaveat,
+  DebloatCatalog,
+  DebloatGroup,
+  DebloatPackage,
+  DebloatResult,
   LocalizedMessage,
   LogType,
   OptimizationSnapshot,
@@ -53,6 +58,8 @@ export const SystemActions = {
   CAPTURE_SNAPSHOT: 'captureSnapshot',
   LOAD_HISTORY: 'loadHistory',
   ENABLE_SYSTEM_PROTECTION: 'enableSystemProtection',
+  LOAD_DEBLOAT: 'loadDebloat',
+  RUN_DEBLOAT: 'runDebloat',
 } as const;
 
 export type SystemActionType = (typeof SystemActions)[keyof typeof SystemActions];
@@ -60,6 +67,7 @@ export type SystemActionType = (typeof SystemActions)[keyof typeof SystemActions
 export enum AppScreen {
   Dashboard = 'Dashboard',
   Optimize = 'Optimize',
+  Debloat = 'Debloat',
   Scheduling = 'Scheduling',
   Backup = 'Backup',
   RestorePoints = 'RestorePoints',

@@ -1,6 +1,7 @@
 import type {
   AppSettings,
   BackupItem,
+  DebloatCatalog,
   OptimizationSnapshot,
   RestorePointItem,
   ScheduledTaskItem,
@@ -151,6 +152,21 @@ export const mixedTweakCatalog: TweakCatalog = {
       recommended: false,
       requiresReboot: false,
     },
+  ],
+};
+
+/**
+ * A cross-section of DebloatCatalog.CreateDefault: both groups, both reinstall caveats, and one
+ * entry the machine no longer has. Deliberately not all eighteen — these specs are about the
+ * screen, and pinning the whole allow-list here would make every catalog change edit this file.
+ */
+export const debloatCatalog: DebloatCatalog = {
+  packages: [
+    { id: 'weather', group: 'Safe', caveat: 'store', installed: true },
+    { id: 'news', group: 'Safe', caveat: 'store', installed: true },
+    { id: 'solitaire', group: 'Safe', caveat: 'store', installed: false },
+    { id: 'camera', group: 'Optional', caveat: 'store', installed: true },
+    { id: 'oneDrive', group: 'Optional', caveat: 'oneDrive', installed: true },
   ],
 };
 

@@ -59,17 +59,16 @@ namespace VeloSysPro
         private readonly TweakCatalog _catalog;
         private readonly ITweakCaptureStore _captures;
         private readonly SystemRestoreManager _systemRestore;
+        private readonly SafetyCheckpoint _checkpoint;
         private readonly SnapshotManager _snapshots;
         private readonly ISnapshotStore _history;
         private readonly IStatusSink _sink;
-
-        /// <summary>Mirrors <see cref="Optimizer.CreateSafetyBackupEnabled"/>: the same preference.</summary>
-        public bool CreateSafetyBackupEnabled { get; set; } = true;
 
         public TweakEngine(
             TweakCatalog catalog,
             ITweakCaptureStore captures,
             SystemRestoreManager systemRestore,
+            SafetyCheckpoint checkpoint,
             SnapshotManager snapshots,
             ISnapshotStore history,
             IStatusSink sink
@@ -78,6 +77,7 @@ namespace VeloSysPro
             _catalog = catalog;
             _captures = captures;
             _systemRestore = systemRestore;
+            _checkpoint = checkpoint;
             _snapshots = snapshots;
             _history = history;
             _sink = sink;
@@ -90,12 +90,14 @@ namespace VeloSysPro
             ICommandRunner cmd,
             RegistryBackupManager backup,
             SystemRestoreManager systemRestore,
+            SafetyCheckpoint checkpoint,
             IStatusSink sink
         ) =>
             new(
                 TweakCatalog.CreateDefault(cmd, backup),
                 new JsonTweakCaptureStore(),
                 systemRestore,
+                checkpoint,
                 new SnapshotManager(cmd, sink),
                 new JsonlSnapshotStore(),
                 sink
@@ -222,7 +224,7 @@ namespace VeloSysPro
             _sink.Status("status.tweaks.measuring", 10);
             OptimizationSnapshot before = CaptureSnapshot();
 
-            if (!BuildCheckpoint()) return new TweakBatchResult(false, null, noChanges);
+            if (!_checkpoint.Build()) return new TweakBatchResult(false, null, noChanges);
 
             bool ok = true;
             var changes = new List<TweakChange>();
@@ -373,39 +375,5 @@ namespace VeloSysPro
         }
 
         public IReadOnlyList<OptimizationSnapshot> LoadHistory() => _history.ReadAll();
-
-        /// <summary>
-        /// The "big undo" half of a Safety Checkpoint. A failed restore point stops the batch: the
-        /// user asked for an optimization with a safety net, and proceeding without one silently
-        /// would not be the thing they asked for.
-        /// </summary>
-        private bool BuildCheckpoint()
-        {
-            if (!CreateSafetyBackupEnabled)
-            {
-                _sink.Log("log.tweaks.checkpointSkipped", "info");
-                return true;
-            }
-
-            // Checked before attempting the checkpoint so the user gets the one message they can
-            // act on — "turn System Protection on" — instead of a restore-point failure.
-            if (!_systemRestore.IsProtectionEnabled())
-            {
-                _sink.Log("log.tweaks.protectionDisabled", "error");
-                return false;
-            }
-
-            try
-            {
-                _systemRestore.CreateRestorePoint();
-                _sink.Log("log.tweaks.checkpointCreated", "success");
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _sink.Log("log.tweaks.checkpointFailed", "error", new { message = ex.Message });
-                return false;
-            }
-        }
     }
 }

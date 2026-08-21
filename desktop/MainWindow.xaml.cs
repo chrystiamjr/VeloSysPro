@@ -24,7 +24,9 @@ namespace VeloSysPro
         private readonly Optimizer _optimizer;
         private readonly SchedulerManager _scheduler;
         private readonly SettingsManager _settings;
+        private readonly SafetyCheckpoint _checkpoint;
         private readonly TweakEngine _tweaks;
+        private readonly DebloatManager _debloat;
         private readonly IpcEventEmitter _events;
         private readonly ActionHost _actionHost;
 
@@ -52,13 +54,15 @@ namespace VeloSysPro
             _scheduler = new SchedulerManager(_cmd, this);
             _settings = new SettingsManager();
             _events = new IpcEventEmitter(PostEventJson);
-            _tweaks = TweakEngine.CreateDefault(_cmd, _backup, _systemRestore, this);
+            _checkpoint = new SafetyCheckpoint(_systemRestore, this);
+            _tweaks = TweakEngine.CreateDefault(_cmd, _backup, _systemRestore, _checkpoint, this);
+            _debloat = new DebloatManager(DebloatCatalog.CreateDefault(), _cmd, _checkpoint, this);
             _optimizer.CreateSafetyBackupEnabled = _settings.Current.CreateBackupBeforeOptimize;
-            _tweaks.CreateSafetyBackupEnabled = _settings.Current.CreateBackupBeforeOptimize;
+            _checkpoint.Enabled = _settings.Current.CreateBackupBeforeOptimize;
 
             _actionHost = new ActionHost(
-                _optimizer, _backup, _systemRestore, _scheduler, _settings, _tweaks,
-                _events, this, _logsDir, _backupsDir
+                _optimizer, _backup, _systemRestore, _scheduler, _settings, _tweaks, _debloat,
+                _checkpoint, _events, this, _logsDir, _backupsDir
             );
 
             Loaded += MainWindow_Loaded;

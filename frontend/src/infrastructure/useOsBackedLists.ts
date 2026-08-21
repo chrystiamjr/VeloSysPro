@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { AppScreen, SystemActions } from '../domain/types';
 import type {
   BackupItem,
+  DebloatPackage,
   OptimizationSnapshot,
   RestorePointItem,
   ScheduledTaskItem,
@@ -10,6 +11,7 @@ import type {
 import {
   sendAction,
   subscribeBackups,
+  subscribeDebloat,
   subscribeHistory,
   subscribeRejections,
   subscribeRestorePoints,
@@ -21,6 +23,7 @@ const refreshActions: Record<AppScreen, readonly string[]> = {
   [AppScreen.Dashboard]: [SystemActions.GET_BACKUPS, SystemActions.GET_TASKS],
   // History too: the last comparison lives on disk, so it survives closing the app.
   [AppScreen.Optimize]: [SystemActions.LOAD_TWEAKS, SystemActions.LOAD_HISTORY],
+  [AppScreen.Debloat]: [SystemActions.LOAD_DEBLOAT],
   [AppScreen.Scheduling]: [SystemActions.GET_TASKS],
   [AppScreen.Backup]: [SystemActions.GET_BACKUPS],
   [AppScreen.RestorePoints]: [SystemActions.GET_RESTORE_POINTS],
@@ -41,10 +44,16 @@ export interface OsBackedLists {
   /** True when the host's last catalog was refused, so the screen can say it is showing older data. */
   tweakCatalogStale: boolean;
   history: OptimizationSnapshot[];
+  debloatPackages: DebloatPackage[];
+  /** False until the host has answered once, so "querying" is distinguishable from "nothing left". */
+  debloatLoaded: boolean;
+  /** True when the host's last list was refused, so the screen can say it is showing older data. */
+  debloatStale: boolean;
   refreshBackups: () => void;
   refreshTasks: () => void;
   refreshRestorePoints: () => void;
   refreshTweaks: () => void;
+  refreshDebloat: () => void;
 }
 
 export function useOsBackedLists(activeScreen: AppScreen): OsBackedLists {
@@ -55,6 +64,9 @@ export function useOsBackedLists(activeScreen: AppScreen): OsBackedLists {
   const [tweakCatalogLoaded, setTweakCatalogLoaded] = useState(false);
   const [tweakCatalogStale, setTweakCatalogStale] = useState(false);
   const [history, setHistory] = useState<OptimizationSnapshot[]>([]);
+  const [debloatPackages, setDebloatPackages] = useState<DebloatPackage[]>([]);
+  const [debloatLoaded, setDebloatLoaded] = useState(false);
+  const [debloatStale, setDebloatStale] = useState(false);
 
   useEffect(() => {
     const unsubscribers = [
@@ -68,8 +80,14 @@ export function useOsBackedLists(activeScreen: AppScreen): OsBackedLists {
         setTweakCatalogStale(false);
       }),
       subscribeHistory(setHistory),
+      subscribeDebloat((catalog) => {
+        setDebloatPackages(catalog.packages);
+        setDebloatLoaded(true);
+        setDebloatStale(false);
+      }),
       subscribeRejections((channel) => {
         if (channel === 'tweaksLoaded') setTweakCatalogStale(true);
+        if (channel === 'debloatLoaded') setDebloatStale(true);
       }),
     ];
     return () => {
@@ -85,6 +103,7 @@ export function useOsBackedLists(activeScreen: AppScreen): OsBackedLists {
   const refreshTasks = useCallback(() => sendAction(SystemActions.GET_TASKS), []);
   const refreshRestorePoints = useCallback(() => sendAction(SystemActions.GET_RESTORE_POINTS), []);
   const refreshTweaks = useCallback(() => sendAction(SystemActions.LOAD_TWEAKS), []);
+  const refreshDebloat = useCallback(() => sendAction(SystemActions.LOAD_DEBLOAT), []);
 
   return {
     backups,
@@ -94,9 +113,13 @@ export function useOsBackedLists(activeScreen: AppScreen): OsBackedLists {
     tweakCatalogLoaded,
     tweakCatalogStale,
     history,
+    debloatPackages,
+    debloatLoaded,
+    debloatStale,
     refreshBackups,
     refreshTasks,
     refreshRestorePoints,
     refreshTweaks,
+    refreshDebloat,
   };
 }
