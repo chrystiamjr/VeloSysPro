@@ -91,6 +91,8 @@ All components in `frontend/src/components/` MUST strictly follow this hierarchy
 | **Theming Native Form Controls in WebView2** | [webview2-native-control-theming.md](file:///C:/Users/chrys/OneDrive/Desktop/Windows%20Optimizer/.agents/rules/webview2-native-control-theming.md) | `color-scheme, WebView2, select, appearance-none, dark theme, pickers` |
 | **Detect a Tweak's Intent, Never Literal Equality** | [detect-intent-not-equality.md](file:///C:/Users/chrys/OneDrive/Desktop/Windows%20Optimizer/.agents/rules/detect-intent-not-equality.md) | `ITweak, Detect, Apply, ServiceTweak, StartType, hardened system, no-op` |
 | **Report an Outcome Where the Action Was Taken** | [report-outcomes-where-acted.md](file:///C:/Users/chrys/OneDrive/Desktop/Windows%20Optimizer/.agents/rules/report-outcomes-where-acted.md) | `actionFinished, toast, log panel, mutation filter, outcome, screen` |
+| **Bounded Streaming Buffers & IPC Event Windows** | [bounded-streaming-buffers.md](file:///C:/Users/chrys/OneDrive/Desktop/Windows%20Optimizer/.agents/rules/bounded-streaming-buffers.md) | `IPC, ring buffer, useLogBuffer, streaming, logs, stdout, memory safety` |
+| **Semantic Version Resolution across Boundaries** | [semver-boundary-resolution.md](file:///C:/Users/chrys/OneDrive/Desktop/Windows%20Optimizer/.agents/rules/semver-boundary-resolution.md) | `SemanticVersion, SemVer, GitHub Releases, AssemblyInformationalVersionAttribute` |
 | **Absence of an Error Is Not Success** (global) | [absence-of-error-is-not-success.md](file:///C:/Users/chrys/.agents/rules/absence-of-error-is-not-success.md) | `exit code, warning, silent refusal, UAC, elevation, read-back, verify the artifact` |
 
 ---
