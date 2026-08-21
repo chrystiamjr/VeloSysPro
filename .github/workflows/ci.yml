@@ -71,6 +71,8 @@ jobs:
           }
       - name: Validate (type-check + Prettier + ESLint + Vitest unit)
         run: npm run validate
+      - name: Build documentation website (Docusaurus)
+        run: npm run build:docs
       - name: E2E (Cypress against Vite dev server)
         uses: cypress-io/github-action@v7
         env:
@@ -107,8 +109,15 @@ jobs:
         run: npm run build
       - name: Build desktop host
         run: dotnet build desktop/VeloSysPro.csproj -c Release
-      - name: Test desktop (xUnit)
-        run: dotnet test desktop.Tests/VeloSysPro.Tests.csproj -c Release
+      - name: Package standalone executable
+        run: dotnet publish desktop/VeloSysPro.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o desktop/bin/Release/standalone
+      - name: Test desktop unit (xUnit)
+        run: dotnet test desktop.Tests/VeloSysPro.Tests.csproj -c Release --filter "Category!=Integration"
+      - name: Test desktop native Windows OS integration (xUnit)
+        run: dotnet test desktop.Tests/VeloSysPro.Tests.csproj -c Release --filter "Category=Integration"
+      - name: Smoke test executable CLI boundary
+        run: |
+          & "./desktop/bin/Release/standalone/VeloSysPro.exe" --version
 
   release:
     name: Release (semantic-release)

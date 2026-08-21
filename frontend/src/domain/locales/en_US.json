@@ -242,12 +242,6 @@
       "restoreFailed": "Failed to restore backup: {{message}}",
       "restored": "Backup restored: {{name}}"
     },
-    "checkpoint": {
-      "created": "Safety Checkpoint created before any change.",
-      "failed": "Failed to create the Safety Checkpoint: {{message}}. Nothing was changed.",
-      "protectionDisabled": "Windows System Protection is turned off, so no restore point can be created. Nothing was changed.",
-      "skipped": "Safety Checkpoint turned off in preferences; proceeding without a safety net."
-    },
     "cmdError": "Error running {{exe}}: {{message}}",
     "debloat": {
       "done": "Selected apps removed successfully.",
@@ -311,9 +305,13 @@
     "tweaks": {
       "applied": "Optimization applied: {{id}}",
       "applyFailed": "Failed to apply the optimization: {{id}}",
+      "checkpointCreated": "Safety Checkpoint created before any change.",
+      "checkpointFailed": "Failed to create the Safety Checkpoint: {{message}}. Nothing was changed.",
+      "checkpointSkipped": "Safety Checkpoint turned off in preferences; proceeding without a safety net.",
       "done": "Selected optimizations applied successfully.",
       "noCapture": "No prior state stored for {{id}}; revert cancelled.",
       "noneSelected": "Select at least one optimization before applying.",
+      "protectionDisabled": "Windows System Protection is turned off, so no restore point can be created. Nothing was changed.",
       "revertFailed": "Failed to revert the optimization: {{id}}",
       "reverted": "Optimization reverted: {{id}}",
       "unknown": "Unknown optimization: {{id}}",

@@ -1,6 +1,5 @@
 using System;
 using System.Net.Http;
-using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -39,12 +38,13 @@ namespace VeloSysPro
                 string tag = root.TryGetProperty("tag_name", out JsonElement t) ? t.GetString() ?? "" : "";
                 string htmlUrl = root.TryGetProperty("html_url", out JsonElement h) ? h.GetString() ?? "" : "";
 
-                Version? latest = ParseVersion(tag);
-                Version current = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(1, 0, 0, 0);
-
-                if (latest != null && latest > current)
+                if (SemanticVersion.TryParse(tag, out SemanticVersion? latest))
                 {
-                    return new UpdateInfo(tag, htmlUrl);
+                    SemanticVersion current = SemanticVersion.FromAssembly();
+                    if (latest! > current)
+                    {
+                        return new UpdateInfo(tag, htmlUrl);
+                    }
                 }
                 return null;
             }
@@ -52,12 +52,6 @@ namespace VeloSysPro
             {
                 return null;
             }
-        }
-
-        private static Version? ParseVersion(string tag)
-        {
-            string cleaned = tag.TrimStart('v', 'V');
-            return Version.TryParse(cleaned, out Version? v) ? v : null;
         }
     }
 }

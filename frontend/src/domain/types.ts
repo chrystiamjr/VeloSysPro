@@ -29,7 +29,7 @@ export type {
   UpdateInfo,
 } from './schemas';
 
-import type { LogType } from './schemas';
+import type { AppSettings, LogType } from './schemas';
 
 export const SystemActions = {
   RUN_QUICK_OPTIMIZATION: 'runQuickOptimization',
@@ -64,6 +64,38 @@ export const SystemActions = {
 
 export type SystemActionType = (typeof SystemActions)[keyof typeof SystemActions];
 
+export interface SystemActionPayloads {
+  [SystemActions.RUN_QUICK_OPTIMIZATION]: void | null;
+  [SystemActions.RUN_FULL_OPTIMIZATION]: void | null;
+  [SystemActions.REVERT_DEFAULTS]: void | null;
+  [SystemActions.CLEAR_UPDATE_CACHE]: void | null;
+  [SystemActions.CLEAN_PREFETCH]: void | null;
+  [SystemActions.DISK_HEALTH]: void | null;
+  [SystemActions.CREATE_MANUAL_BACKUP]: void | null;
+  [SystemActions.RESTORE_BACKUP]: string;
+  [SystemActions.CREATE_RESTORE_POINT]: void | null;
+  [SystemActions.OPEN_LOGS]: void | null;
+  [SystemActions.OPEN_URL]: string;
+  [SystemActions.OPEN_BACKUPS]: void | null;
+  [SystemActions.GET_BACKUPS]: void | null;
+  [SystemActions.GET_TASKS]: void | null;
+  [SystemActions.CREATE_TASK]: { type: string; frequency: string; day?: string; time: string };
+  [SystemActions.DELETE_TASK]: string;
+  [SystemActions.GET_RESTORE_POINTS]: void | null;
+  [SystemActions.RESTORE_TO_POINT]: number;
+  [SystemActions.GET_SETTINGS]: void | null;
+  [SystemActions.SAVE_SETTINGS]: AppSettings;
+  [SystemActions.LOAD_TWEAKS]: void | null;
+  [SystemActions.APPLY_TWEAKS]: { tweakIds?: string[]; revertIds?: string[] };
+  [SystemActions.REVERT_TWEAK]: string;
+  [SystemActions.CAPTURE_SNAPSHOT]: void | null;
+  [SystemActions.LOAD_HISTORY]: void | null;
+  [SystemActions.ENABLE_SYSTEM_PROTECTION]: void | null;
+  [SystemActions.LOAD_DEBLOAT]: void | null;
+  /** Catalog ids, never Appx family names — the host owns the package names. */
+  [SystemActions.RUN_DEBLOAT]: { packageIds: string[] };
+}
+
 export enum AppScreen {
   Dashboard = 'Dashboard',
   Optimize = 'Optimize',
@@ -92,6 +124,6 @@ export interface LogEntryItem {
 /** Log entry stored in state as an i18n key, translated at render time so it follows language switches. */
 export interface LogRecord {
   key: string;
-  args?: Record<string, unknown>;
+  args?: Record<string, unknown> | null;
   type: LogType;
 }

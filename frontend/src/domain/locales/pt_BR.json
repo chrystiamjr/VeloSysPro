@@ -242,12 +242,6 @@
       "restoreFailed": "Falha ao restaurar backup: {{message}}",
       "restored": "Backup restaurado: {{name}}"
     },
-    "checkpoint": {
-      "created": "Ponto de Segurança criado antes das alterações.",
-      "failed": "Falha ao criar o Ponto de Segurança: {{message}}. Nada foi alterado.",
-      "protectionDisabled": "A Proteção do Sistema do Windows está desativada, então nenhum ponto de restauração pode ser criado. Nada foi alterado.",
-      "skipped": "Ponto de Segurança desativado nas preferências; seguindo sem rede de proteção."
-    },
     "cmdError": "Erro executando {{exe}}: {{message}}",
     "debloat": {
       "done": "Aplicativos selecionados removidos com sucesso.",
@@ -311,9 +305,13 @@
     "tweaks": {
       "applied": "Otimização aplicada: {{id}}",
       "applyFailed": "Falha ao aplicar a otimização: {{id}}",
+      "checkpointCreated": "Ponto de Segurança criado antes das alterações.",
+      "checkpointFailed": "Falha ao criar o Ponto de Segurança: {{message}}. Nada foi alterado.",
+      "checkpointSkipped": "Ponto de Segurança desativado nas preferências; seguindo sem rede de proteção.",
       "done": "Otimizações selecionadas aplicadas com sucesso.",
       "noCapture": "Sem estado anterior guardado para {{id}}; reversão cancelada.",
       "noneSelected": "Selecione ao menos uma otimização antes de aplicar.",
+      "protectionDisabled": "A Proteção do Sistema do Windows está desativada, então nenhum ponto de restauração pode ser criado. Nada foi alterado.",
       "revertFailed": "Falha ao reverter a otimização: {{id}}",
       "reverted": "Otimização revertida: {{id}}",
       "unknown": "Otimização desconhecida: {{id}}",

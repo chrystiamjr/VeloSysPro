@@ -57,7 +57,10 @@ describe('ConfirmDialog', () => {
   });
 
   it.each([
-    ['the cancel button', (c: HTMLElement) => c.querySelector('[data-cy="confirm-dialog-cancel"]')!],
+    [
+      'the cancel button',
+      (c: HTMLElement) => c.querySelector('[data-cy="confirm-dialog-cancel"]')!,
+    ],
     ['the backdrop', (c: HTMLElement) => c.querySelector('[data-cy="confirm-dialog-backdrop"]')!],
   ])('treats %s as backing out', (_label, target) => {
     const { container, onCancel, onConfirm } = renderDialog();

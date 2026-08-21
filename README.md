@@ -81,10 +81,28 @@ npm run setup-hooks   # installs the pre-commit (validate + build) and commit-ms
 ```
 
 - **Run the UI in a browser** (IPC mocked): `npm run dev` → http://localhost:5173
-- **Validate**: `npm run validate` (type-check + Prettier + ESLint + Vitest)
-- **Browser E2E**: `npm run cypress:run` (64 isolated scenarios using a typed WebView2 IPC harness)
+- **Validate frontend**: `npm run validate` (type-check + Prettier + ESLint + Vitest)
+- **Browser E2E**: `npm run cypress:run` (isolated scenarios using a typed WebView2 IPC harness)
+- **C# Unit & Native Integration Tests**: `dotnet test desktop.Tests/VeloSysPro.Tests.csproj -c Release`
+  - Unit tests only: `dotnet test desktop.Tests/ -c Release --filter "Category!=Integration"`
+  - Live native OS integration tests: `dotnet test desktop.Tests/ -c Release --filter "Category=Integration"`
+- **Windows Sandbox Automated VM Test**: `powershell -ExecutionPolicy Bypass -File ./scripts/test-sandbox.ps1` (zero host pollution)
 - **Build the executable + installer**: `powershell -ExecutionPolicy Bypass -File .\build.ps1`
-- **C# tests**: `dotnet test desktop.Tests/VeloSysPro.Tests.csproj` (native commands are replaced by in-memory fakes)
+- **Build documentation site**: `npm run build:docs`
+
+### CLI Usage
+
+```powershell
+# Check version or print usage headlessly
+./desktop/bin/Release/standalone/VeloSysPro.exe --version
+./desktop/bin/Release/standalone/VeloSysPro.exe --help
+
+# Execute scheduled optimization plans or presets headlessly
+./desktop/bin/Release/standalone/VeloSysPro.exe --task=quick
+./desktop/bin/Release/standalone/VeloSysPro.exe --task=full
+./desktop/bin/Release/standalone/VeloSysPro.exe --task=gaming
+./desktop/bin/Release/standalone/VeloSysPro.exe --task=revert
+```
 
 ---
 

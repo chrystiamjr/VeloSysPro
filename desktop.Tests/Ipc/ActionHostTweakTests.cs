@@ -51,7 +51,7 @@ public class ActionHostTweakTests
             });
 
             var backup = new RegistryBackupManager(_temp.Path, Runner, Sink, _temp.Path);
-            Checkpoint = new SafetyCheckpoint(new SystemRestoreManager(Runner, Sink), Sink);
+            Checkpoint = new SafetyCheckpoint(new SystemRestoreManager(Runner, Sink), backup, Sink);
             var engine = new TweakEngine(
                 TweakCatalog.CreateDefault(Runner, backup),
                 new JsonTweakCaptureStore(_temp.Path),
@@ -70,7 +70,6 @@ public class ActionHostTweakTests
                 new SettingsManager(System.IO.Path.Combine(_temp.Path, "settings.json")),
                 engine,
                 new DebloatManager(DebloatCatalog.CreateDefault(), Runner, Checkpoint, Sink),
-                Checkpoint,
                 emitter,
                 Sink,
                 _temp.Path,

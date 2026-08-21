@@ -133,6 +133,12 @@ WebView2 and that tests capture directly.
   it writes to a file. Preset ids and Optimization Plan names share that one `--task=` namespace:
   `gaming` resolves to the **Preset**, the rest to Plans, and a test forbids a Preset from
   shadowing a Plan.
+- **CLI Boundary & Headless Flags** — `VeloSysPro.exe --version` (`-v`) and `--help` (`-h`) print
+  version/usage information to stdout and exit headlessly with code 0 without initializing the WPF
+  window or WebView2.
+- **WebView2 Auto-Detection & Fallback Overlay** — If the Microsoft Edge WebView2 runtime is absent
+  or broken, the WPF shell catches `WebView2NotInstalledException`, suppresses black screens, and
+  displays a fallback overlay offering automatic, silent installation of `MicrosoftEdgeWebview2Setup.exe`.
 - `ManagedStream` + `MainWindow` — serve the embedded `ui/` bundle from memory via WebView2
   `WebResourceRequested` under `https://velosys.app/`, so the release needs no `ui/` folder on disk.
 - `AppPaths` — centralizes all mutable runtime data under `%LOCALAPPDATA%\VeloSysPro`: preferences,
@@ -185,18 +191,21 @@ React state is split into three focused owners instead of one mega-component:
 
 ---
 
-## 5. Packaging & delivery
+## 5. Packaging, Testing & Delivery
 
 - **Single executable** — `build.ps1` builds the Vite bundle into `frontend/ui/`, embeds it as assembly resources, and
   publishes a self-contained, single-file `VeloSysPro.exe` (native WebView2 loader self-extracts).
 - **Installer** — `installer/VeloSysPro.iss` (Inno Setup) installs the exe, adds shortcuts, and
   bootstraps the Evergreen **WebView2 Runtime** when missing.
+- **3-Tier Testing Pyramid**:
+  1. *Unit & Mock Level*: Vitest component tests and xUnit backend tests using in-memory `ICommandRunner` and `ITweakCaptureStore` fakes.
+  2. *Live Native OS Integration*: xUnit tests under `desktop.Tests/Integration` testing real process boundaries, temporary registry keys under `HKCU\Software\VeloSysProTestSandboxTemp`, and OEM console encoding.
+  3. *Zero-Pollution Windows Sandbox VM*: `scripts/test-sandbox.ps1` publishes a standalone executable, stages it to `$env:TEMP`, and runs it inside a disposable Hyper-V container.
 - **Releases** — Conventional Commits (`type(scope): …`, enforced by commitlint) drive
   **semantic-release** on every push to `main`: it derives the version, runs `sync-version.mjs`
   across all version files, builds the installer, updates `CHANGELOG.md`, and publishes a GitHub
   Release. Pre-1.0, breaking → minor, feat/fix → patch.
-- **CI** — GitHub Actions runs frontend validation + Cypress E2E and the .NET build + xUnit tests on
-  every PR; `main` is protected and PR-only.
+- **CI** — GitHub Actions runs frontend validation, Docusaurus website build, Cypress E2E, .NET unit tests, live Windows OS integration tests, and standalone single-file executable smoke tests on every PR.
 
 ---
 

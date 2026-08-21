@@ -27,7 +27,18 @@ public class DebloatManagerTests
             Runner.CapturedOutputsByArgs.Add(("ExpandProperty Count", "1"));
             Runner.CapturedOutputsByArgs.Add(("Get-AppxPackage |", installedJson));
 
-            Checkpoint = new SafetyCheckpoint(new SystemRestoreManager(Runner, Sink), Sink);
+            Checkpoint = new SafetyCheckpoint(
+                new SystemRestoreManager(Runner, Sink),
+                // Unused by ExecuteTweakCheckpoint, which only touches System Restore; the path is
+                // never written to because the fake command runner executes nothing.
+                new RegistryBackupManager(
+                    System.IO.Path.GetTempPath(),
+                    Runner,
+                    Sink,
+                    System.IO.Path.GetTempPath()
+                ),
+                Sink
+            );
             Manager = new DebloatManager(DebloatCatalog.CreateDefault(), Runner, Checkpoint, Sink);
         }
 
@@ -155,7 +166,7 @@ public class DebloatManagerTests
         Assert.False(result.Ok);
         Assert.Empty(result.Results);
         Assert.Empty(harness.RemovalCommands);
-        Assert.Contains(harness.Sink.Logs, log => log.Key == "log.checkpoint.protectionDisabled");
+        Assert.Contains(harness.Sink.Logs, log => log.Key == "log.tweaks.protectionDisabled");
     }
 
     [Fact]
@@ -366,6 +377,6 @@ public class DebloatManagerTests
             run => run.Args.Contains("Checkpoint-Computer", StringComparison.Ordinal)
         );
         Assert.NotEmpty(harness.RemovalCommands);
-        Assert.Contains(harness.Sink.Logs, log => log.Key == "log.checkpoint.skipped");
+        Assert.Contains(harness.Sink.Logs, log => log.Key == "log.tweaks.checkpointSkipped");
     }
 }

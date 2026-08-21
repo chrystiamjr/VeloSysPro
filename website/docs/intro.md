@@ -11,7 +11,8 @@ Welcome to **VeloSys Pro**, a high-performance Windows optimization, maintenance
 ## Key Features {#key-features}
 
 - 🚀 **Quick & Full Optimization**: Automated DNS flush, temp file cleanup, `sfc /scannow`, and DISM image repair.
-- 🎮 **Gaming Mode**: TCP stack tuning (RSS, Autotuning) for lower network latency and stable gaming performance.
+- 🎮 **À-la-carte Tweaks & Presets**: Individually selectable, reversible tweaks for processor, graphics, network, power, boot, and services.
+- 🛡️ **Safety Checkpoint & History**: Automatic restore point creation, per-tweak state capture, before/after snapshots, and trend analysis in the Optimization History.
 - 🧹 **System Maintenance**: Clear Windows Update cache, clean Prefetch, and inspect physical disk (SMART) health reports.
 - 💾 **Registry Backup & Restore**: Safe export and import of TCP/IP registry configurations with confirmation prompts.
 - 🛡️ **System Restore Points**: List, create, and restore Windows restore points.

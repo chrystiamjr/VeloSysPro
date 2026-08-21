@@ -146,7 +146,7 @@ describe('debloat (preinstalled app removal)', () => {
     cy.getByCy('debloat-confirm-confirm').click();
 
     cy.emitHost('logReceived', {
-      message: { key: 'log.checkpoint.protectionDisabled' },
+      message: { key: 'log.tweaks.protectionDisabled' },
       type: 'error',
     });
     cy.emitHost('actionFinished', { action: 'runDebloat', ok: false });

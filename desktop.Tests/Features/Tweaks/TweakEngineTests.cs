@@ -109,7 +109,18 @@ public class TweakEngineTests
             // this the baseline machine would be one where every batch aborts.
             Runner.CapturedOutputsByArgs.Add(("ExpandProperty Count", "1"));
 
-            Checkpoint = new SafetyCheckpoint(new SystemRestoreManager(Runner, Sink), Sink);
+            Checkpoint = new SafetyCheckpoint(
+                new SystemRestoreManager(Runner, Sink),
+                // Unused by ExecuteTweakCheckpoint, which only touches System Restore; the path is
+                // never written to because the fake command runner executes nothing.
+                new RegistryBackupManager(
+                    System.IO.Path.GetTempPath(),
+                    Runner,
+                    Sink,
+                    System.IO.Path.GetTempPath()
+                ),
+                Sink
+            );
             Engine = new TweakEngine(
                 new TweakCatalog(tweaks, presets),
                 Captures,
@@ -135,7 +146,7 @@ public class TweakEngineTests
         );
         Assert.True(restorePointIndex >= 0, "a Safety Checkpoint must be created");
         Assert.Equal(new[] { "capture", "apply", "read" }, tweak.Calls);
-        Assert.Contains(harness.Sink.Logs, log => log.Key == "log.checkpoint.created");
+        Assert.Contains(harness.Sink.Logs, log => log.Key == "log.tweaks.checkpointCreated");
     }
 
     [Fact]
@@ -163,7 +174,7 @@ public class TweakEngineTests
         Assert.False(harness.Engine.ApplyTweaks(new[] { "cpu.a" }).Ok);
 
         Assert.Empty(tweak.Calls);
-        Assert.Contains(harness.Sink.Logs, log => log.Key == "log.checkpoint.protectionDisabled");
+        Assert.Contains(harness.Sink.Logs, log => log.Key == "log.tweaks.protectionDisabled");
         Assert.DoesNotContain(harness.Runner.Runs, run => run.Args.Contains("Checkpoint-Computer"));
     }
 
@@ -220,7 +231,7 @@ public class TweakEngineTests
         Assert.True(harness.Engine.ApplyTweaks(new[] { "cpu.a" }).Ok);
 
         Assert.DoesNotContain(harness.Runner.Runs, run => run.Args.Contains("Checkpoint-Computer"));
-        Assert.Contains(harness.Sink.Logs, log => log.Key == "log.checkpoint.skipped");
+        Assert.Contains(harness.Sink.Logs, log => log.Key == "log.tweaks.checkpointSkipped");
     }
 
     [Fact]
@@ -233,7 +244,7 @@ public class TweakEngineTests
         Assert.False(harness.Engine.ApplyTweaks(new[] { "cpu.a" }).Ok);
 
         Assert.Empty(tweak.Calls);
-        Assert.Contains(harness.Sink.Logs, log => log.Key == "log.checkpoint.failed" && log.Type == "error");
+        Assert.Contains(harness.Sink.Logs, log => log.Key == "log.tweaks.checkpointFailed" && log.Type == "error");
     }
 
     [Fact]

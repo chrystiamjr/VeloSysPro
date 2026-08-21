@@ -86,11 +86,13 @@ describe('useOsBackedLists', () => {
     act(() => emitHostEventForTest('tweaksLoaded', catalog));
     expect(result.current.tweakCatalog).toEqual(catalog);
 
-    act(() => emitHostEventForTest('tweaksLoaded', {
+    act(() =>
+      emitHostEventForTest('tweaksLoaded', {
         tweaks: [{ id: 'broken' }],
         presets: [],
         systemProtectionEnabled: true,
-      }));
+      })
+    );
     expect(result.current.tweakCatalog).toEqual(catalog);
 
     vi.clearAllMocks();

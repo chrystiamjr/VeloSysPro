@@ -6,6 +6,8 @@ import { RestorePointItem } from '../../domain/types';
 import { formatDateTime, timestampValue } from '../../domain/formatters';
 import { useTranslation } from '../../infrastructure/i18nContext';
 
+import { useManagementAction } from '../../infrastructure/useManagementAction';
+
 export interface RestorePointsPageProps {
   points: RestorePointItem[];
   onCreatePoint: () => void;
@@ -26,11 +28,10 @@ export const RestorePointsPage: React.FC<RestorePointsPageProps> = ({
   disabled = false,
 }) => {
   const { t, lang } = useTranslation();
+  const { confirmAction } = useManagementAction();
 
   const handleRestore = (sequence: number) => {
-    if (window.confirm(t('rp.restoreConfirm1')) && window.confirm(t('rp.restoreConfirm2'))) {
-      onRestore(sequence);
-    }
+    confirmAction(['rp.restoreConfirm1', 'rp.restoreConfirm2'], () => onRestore(sequence));
   };
 
   const columns: DataTableColumn<RestorePointItem>[] = [

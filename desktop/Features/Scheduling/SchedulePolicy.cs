@@ -73,6 +73,14 @@ namespace VeloSysPro
             return EncodeName(normalized) == name ? normalized : null;
         }
 
+        public static string BuildSchtasksCreateArgs(ScheduleSpec schedule, string exePath)
+        {
+            string taskName = EncodeName(schedule);
+            string dayArgument = schedule.Day.Length == 0 ? "" : " /d " + schedule.Day;
+            string tr = "\\\"" + exePath + "\\\" --task=" + schedule.Type;
+            return $"/create /tn \"{taskName}\" /tr \"{tr}\" /sc {schedule.Frequency}{dayArgument} /st {schedule.Time} /rl HIGHEST /f";
+        }
+
         private static string NormalizeDay(string day, string frequency)
         {
             if (frequency == "WEEKLY")

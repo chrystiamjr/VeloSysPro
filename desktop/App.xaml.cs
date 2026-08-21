@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Windows;
 
 namespace VeloSysPro
@@ -9,6 +10,25 @@ namespace VeloSysPro
     {
         protected override void OnStartup(StartupEventArgs e)
         {
+            if (e.Args.Any(a => a.Equals("--version", StringComparison.OrdinalIgnoreCase) || a.Equals("-v", StringComparison.OrdinalIgnoreCase)))
+            {
+                Console.WriteLine($"VeloSysPro {GetAppVersion()}");
+                Shutdown(0);
+                return;
+            }
+
+            if (e.Args.Any(a => a.Equals("--help", StringComparison.OrdinalIgnoreCase) || a.Equals("-h", StringComparison.OrdinalIgnoreCase)))
+            {
+                Console.WriteLine("VeloSysPro - High Performance Windows Optimizer");
+                Console.WriteLine("Usage: VeloSysPro.exe [options]");
+                Console.WriteLine("Options:");
+                Console.WriteLine("  --version, -v           Show version information");
+                Console.WriteLine("  --help, -h              Show help information");
+                Console.WriteLine("  --task=<task_name>      Run scheduled optimization task in headless mode");
+                Shutdown(0);
+                return;
+            }
+
             // Headless CLI mode for scheduled tasks: VeloSysPro.exe --task=<quick|full|gaming|revert>
             // where "gaming" is a Tweak Preset and the rest are maintenance Optimization Plans.
             string? task = e.Args
@@ -46,28 +66,27 @@ namespace VeloSysPro
             sink.LogRaw($"=== Headless task '{task}' started ===", "info");
 
             var systemRestore = new SystemRestoreManager(cmd, sink);
-            var checkpoint = new SafetyCheckpoint(systemRestore, sink)
-            {
-                // The same preference the window applies. A user who turned the safety backup off
-                // did so to opt out of the Safety Checkpoint; ignoring that here would make every
-                // scheduled run abort on a machine with System Protection disabled.
-                Enabled = new SettingsManager().Current.CreateBackupBeforeOptimize,
-            };
+            var safety = new SafetyCheckpoint(systemRestore, backup, sink);
 
-            TweakEngine tweaks = TweakEngine.CreateDefault(
-                cmd,
-                backup,
-                systemRestore,
-                checkpoint,
-                sink
-            );
+            TweakEngine tweaks = TweakEngine.CreateDefault(cmd, backup, systemRestore, sink);
+
+            // The same preference the window applies. A user who turned the safety backup off did
+            // so to opt out of the Safety Checkpoint; ignoring that here would make every scheduled
+            // run abort on a machine with System Protection disabled. Set on both, because
+            // CreateDefault builds the engine its own checkpoint.
+            bool safetyEnabled = new SettingsManager().Current.CreateBackupBeforeOptimize;
+            safety.Enabled = safetyEnabled;
+            tweaks.CreateSafetyBackupEnabled = safetyEnabled;
 
             bool ok = tweaks.HasPreset(task)
                 ? tweaks.ApplyPreset(task)
-                : new Optimizer(cmd, backup, sink).RunByName(task);
+                : new Optimizer(cmd, safety, sink).RunByName(task);
 
             if (!ok) sink.LogRaw($"Task '{task}' is unknown or did not complete", "error");
             sink.LogRaw($"=== Headless task '{task}' finished ===", "info");
         }
+
+        private static string GetAppVersion() =>
+            SemanticVersion.FromAssembly(typeof(App).Assembly).ToString();
     }
 }

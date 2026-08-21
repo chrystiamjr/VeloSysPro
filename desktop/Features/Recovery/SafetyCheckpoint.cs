@@ -3,65 +3,80 @@ using System;
 namespace VeloSysPro
 {
     /// <summary>
-    /// The restore point every batch of system changes runs behind, and the single place that
-    /// decides whether the batch is allowed to proceed without one.
+    /// Deep module encapsulating the Safety Checkpoint seam: pre-flight protection verification,
+    /// System Restore point creation, TCP/IP registry backup, and safety preference enforcement.
     /// </summary>
-    /// <remarks>
-    /// This lives on its own because two different features now depend on it — a Tweak batch and a
-    /// Debloat removal — and a safety net that exists on only one of the paths that needs it is a
-    /// failure this project has already had once (`.agents/rules/absence-of-error-is-not-success.md`).
-    /// Debloat needs it more than Tweaks do: an uninstalled app cannot be reverted in-app at all,
-    /// so the restore point is the only way back.
-    /// </remarks>
     public sealed class SafetyCheckpoint
     {
         private readonly SystemRestoreManager _systemRestore;
+        private readonly RegistryBackupManager _registryBackup;
         private readonly IStatusSink _sink;
-
-        public SafetyCheckpoint(SystemRestoreManager systemRestore, IStatusSink sink)
-        {
-            _systemRestore = systemRestore;
-            _sink = sink;
-        }
+        private readonly Action? _onBackupCreated;
 
         /// <summary>
-        /// Whether a checkpoint is required before a batch. Mirrors the user's
-        /// "create a safety backup before optimizing" preference.
+        /// When true, system restore points and registry backups are enforced before mutations.
         /// </summary>
         public bool Enabled { get; set; } = true;
 
+        public SafetyCheckpoint(
+            SystemRestoreManager systemRestore,
+            RegistryBackupManager registryBackup,
+            IStatusSink sink,
+            Action? onBackupCreated = null
+        )
+        {
+            _systemRestore = systemRestore;
+            _registryBackup = registryBackup;
+            _sink = sink;
+            _onBackupCreated = onBackupCreated;
+        }
+
         /// <summary>
-        /// Builds the checkpoint, or reports why the batch must not run.
+        /// Creates a Registry Backup before a maintenance plan (e.g. Quick/Full Optimization).
         /// </summary>
-        /// <remarks>
-        /// A failed restore point stops the batch: the user asked for a change with a safety net,
-        /// and proceeding without one silently would not be the thing they asked for.
-        /// </remarks>
-        public bool Build()
+        public bool ExecuteMaintenanceBackup()
+        {
+            if (!Enabled) return true;
+            try
+            {
+                _registryBackup.CreateBackup();
+                _onBackupCreated?.Invoke();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _sink.Log("log.backup.failed", "error", new { message = ex.Message });
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Verifies Windows System Protection and creates a System Restore Point before an
+        /// à-la-carte Tweak batch.
+        /// </summary>
+        public bool ExecuteTweakCheckpoint()
         {
             if (!Enabled)
             {
-                _sink.Log("log.checkpoint.skipped", "info");
+                _sink.Log("log.tweaks.checkpointSkipped", "info");
                 return true;
             }
 
-            // Checked before attempting the checkpoint so the user gets the one message they can
-            // act on — "turn System Protection on" — instead of a restore-point failure.
             if (!_systemRestore.IsProtectionEnabled())
             {
-                _sink.Log("log.checkpoint.protectionDisabled", "error");
+                _sink.Log("log.tweaks.protectionDisabled", "error");
                 return false;
             }
 
             try
             {
                 _systemRestore.CreateRestorePoint();
-                _sink.Log("log.checkpoint.created", "success");
+                _sink.Log("log.tweaks.checkpointCreated", "success");
                 return true;
             }
             catch (Exception ex)
             {
-                _sink.Log("log.checkpoint.failed", "error", new { message = ex.Message });
+                _sink.Log("log.tweaks.checkpointFailed", "error", new { message = ex.Message });
                 return false;
             }
         }

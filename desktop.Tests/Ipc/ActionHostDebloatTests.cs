@@ -41,7 +41,7 @@ public class ActionHostDebloatTests
             });
 
             var backup = new RegistryBackupManager(_temp.Path, Runner, Sink, _temp.Path);
-            var checkpoint = new SafetyCheckpoint(new SystemRestoreManager(Runner, Sink), Sink);
+            var checkpoint = new SafetyCheckpoint(new SystemRestoreManager(Runner, Sink), backup, Sink);
 
             Host = new ActionHost(
                 new Optimizer(Runner, backup, Sink),
@@ -59,7 +59,6 @@ public class ActionHostDebloatTests
                     Sink
                 ),
                 new DebloatManager(DebloatCatalog.CreateDefault(), Runner, checkpoint, Sink),
-                checkpoint,
                 emitter,
                 Sink,
                 _temp.Path,

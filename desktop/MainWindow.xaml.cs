@@ -1,13 +1,10 @@
 using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Reflection;
+using System.Net.Http;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
-using Microsoft.Web.WebView2.Core;
 
 namespace VeloSysPro
 {
@@ -21,17 +18,15 @@ namespace VeloSysPro
         private readonly CommandRunner _cmd;
         private readonly RegistryBackupManager _backup;
         private readonly SystemRestoreManager _systemRestore;
+        private readonly SafetyCheckpoint _safety;
         private readonly Optimizer _optimizer;
         private readonly SchedulerManager _scheduler;
         private readonly SettingsManager _settings;
-        private readonly SafetyCheckpoint _checkpoint;
         private readonly TweakEngine _tweaks;
         private readonly DebloatManager _debloat;
         private readonly IpcEventEmitter _events;
         private readonly ActionHost _actionHost;
-
-        // Maps normalized (forward-slash) embedded resource names to their real manifest names.
-        private Dictionary<string, string> _resourceMap = new();
+        private readonly WebViewHost _webViewHost;
 
         public MainWindow()
         {
@@ -46,32 +41,47 @@ namespace VeloSysPro
             Directory.CreateDirectory(_logsDir);
             Directory.CreateDirectory(_backupsDir);
 
-            // Wire up the service classes with this window as the status sink.
             _cmd = new CommandRunner(this);
             _backup = new RegistryBackupManager(_backupsDir, _cmd, this);
             _systemRestore = new SystemRestoreManager(_cmd, this);
-            _optimizer = new Optimizer(_cmd, _backup, this);
+            _safety = new SafetyCheckpoint(_systemRestore, _backup, this);
+            _optimizer = new Optimizer(_cmd, _safety, this);
             _scheduler = new SchedulerManager(_cmd, this);
             _settings = new SettingsManager();
-            _events = new IpcEventEmitter(PostEventJson);
-            _checkpoint = new SafetyCheckpoint(_systemRestore, this);
-            _tweaks = TweakEngine.CreateDefault(_cmd, _backup, _systemRestore, _checkpoint, this);
-            _debloat = new DebloatManager(DebloatCatalog.CreateDefault(), _cmd, _checkpoint, this);
-            _optimizer.CreateSafetyBackupEnabled = _settings.Current.CreateBackupBeforeOptimize;
-            _checkpoint.Enabled = _settings.Current.CreateBackupBeforeOptimize;
+            _events = new IpcEventEmitter(json => _webViewHost?.PostEventJson(json));
+            _tweaks = TweakEngine.CreateDefault(_cmd, _backup, _systemRestore, this);
+            // Shares the window's checkpoint with Optimizer, so the "create a safety backup"
+            // preference reaches Debloat through the same object SaveSettings already writes to.
+            _debloat = new DebloatManager(DebloatCatalog.CreateDefault(), _cmd, _safety, this);
+            _safety.Enabled = _settings.Current.CreateBackupBeforeOptimize;
 
             _actionHost = new ActionHost(
                 _optimizer, _backup, _systemRestore, _scheduler, _settings, _tweaks, _debloat,
-                _checkpoint, _events, this, _logsDir, _backupsDir
+                _events, this, _logsDir, _backupsDir
             );
+
+            _webViewHost = new WebViewHost(webView, _actionHost, this, Dispatcher);
 
             Loaded += MainWindow_Loaded;
         }
 
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            await InitializeWebView();
+            await TryInitializeWebViewAsync();
             _ = CheckForUpdatesAsync();
+        }
+
+        private async Task TryInitializeWebViewAsync()
+        {
+            try
+            {
+                await _webViewHost.InitializeAsync();
+            }
+            catch (Exception ex)
+            {
+                LogRaw("WebView2 init failed: " + ex.Message, "error");
+                ShowFallbackUI(ex.Message);
+            }
         }
 
         private async Task CheckForUpdatesAsync()
@@ -87,109 +97,74 @@ namespace VeloSysPro
             catch { }
         }
 
-        private async Task InitializeWebView()
+        private void ShowFallbackUI(string message)
         {
-            try
+            Dispatcher.Invoke(() =>
             {
-                // Build a lookup of the ui/ assets embedded into the single-file exe.
-                Assembly asm = Assembly.GetExecutingAssembly();
-                _resourceMap = asm
-                    .GetManifestResourceNames()
-                    .ToDictionary(n => n.Replace('\\', '/'), n => n);
-
-                var env = await CoreWebView2Environment.CreateAsync(null, AppPaths.WebViewData);
-                await webView.EnsureCoreWebView2Async(env);
-
-                // Serve the React bundle straight from embedded resources (no ui/ folder on disk).
-                webView.CoreWebView2.AddWebResourceRequestedFilter(
-                    "https://velosys.app/*",
-                    CoreWebView2WebResourceContext.All
-                );
-                webView.CoreWebView2.WebResourceRequested += CoreWebView2_WebResourceRequested;
-
-                webView.CoreWebView2.WebMessageReceived += CoreWebView2_WebMessageReceived;
-
-                webView.CoreWebView2.Navigate("https://velosys.app/index.html");
-
-                Log("log.hostReady", "success");
-            }
-            catch (Exception ex)
-            {
-                LogRaw("WebView2 init failed: " + ex.Message, "error");
-            }
-        }
-
-        private void CoreWebView2_WebResourceRequested(object? sender, CoreWebView2WebResourceRequestedEventArgs e)
-        {
-            try
-            {
-                var uri = new Uri(e.Request.Uri);
-                string path = uri.AbsolutePath.TrimStart('/');
-                if (string.IsNullOrEmpty(path)) path = "index.html";
-
-                string key = "ui/" + path;
-
-                if (_resourceMap.TryGetValue(key, out string? resourceName))
+                if (fallbackOverlay != null)
                 {
-                    Stream? stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
-                    if (stream != null)
+                    fallbackOverlay.Visibility = Visibility.Visible;
+                    if (fallbackErrorMessage != null)
                     {
-                        var managed = new ManagedStream(stream);
-                        string headers = "Content-Type: " + GetMimeType(path);
-                        e.Response = webView.CoreWebView2.Environment.CreateWebResourceResponse(
-                            managed, 200, "OK", headers);
-                        return;
+                        fallbackErrorMessage.Text = $"Falha ao inicializar o componente WebView2.\nDetalhe: {message}";
                     }
                 }
-
-                e.Response = webView.CoreWebView2.Environment.CreateWebResourceResponse(
-                    null, 404, "Not Found", "");
-            }
-            catch (Exception ex)
-            {
-                LogRaw("Failed to serve embedded resource: " + ex.Message, "error");
-                e.Response = webView.CoreWebView2.Environment.CreateWebResourceResponse(
-                    null, 404, "Not Found", "");
-            }
+            });
         }
 
-        private static string GetMimeType(string path)
-        {
-            string ext = Path.GetExtension(path).ToLowerInvariant();
-            return ext switch
-            {
-                ".html" => "text/html; charset=utf-8",
-                ".js" => "application/javascript; charset=utf-8",
-                ".mjs" => "application/javascript; charset=utf-8",
-                ".css" => "text/css; charset=utf-8",
-                ".json" => "application/json; charset=utf-8",
-                ".svg" => "image/svg+xml",
-                ".png" => "image/png",
-                ".jpg" or ".jpeg" => "image/jpeg",
-                ".gif" => "image/gif",
-                ".ico" => "image/x-icon",
-                ".woff" => "font/woff",
-                ".woff2" => "font/woff2",
-                ".ttf" => "font/ttf",
-                ".map" => "application/json; charset=utf-8",
-                _ => "application/octet-stream",
-            };
-        }
-
-        private void CoreWebView2_WebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
+        private async void InstallWebView2_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                IpcHandler.IpcMessage? msg = IpcHandler.Parse(e.WebMessageAsJson);
-                if (msg != null)
+                if (fallbackErrorMessage != null)
                 {
-                    _actionHost.Handle(msg);
+                    fallbackErrorMessage.Text = "Baixando e instalando o Microsoft Edge WebView2 Runtime... Aguarde alguns segundos.";
                 }
+
+                string setupPath = Path.Combine(Path.GetTempPath(), "MicrosoftEdgeWebview2Setup.exe");
+                if (!File.Exists(setupPath))
+                {
+                    using var client = new HttpClient();
+                    byte[] data = await client.GetByteArrayAsync("https://go.microsoft.com/fwlink/p/?LinkId=2124703");
+                    await File.WriteAllBytesAsync(setupPath, data);
+                }
+
+                var psi = new ProcessStartInfo
+                {
+                    FileName = setupPath,
+                    Arguments = "/silent /install",
+                    UseShellExecute = true
+                };
+
+                using var proc = Process.Start(psi);
+                if (proc != null)
+                {
+                    await proc.WaitForExitAsync();
+                }
+
+                if (fallbackOverlay != null)
+                {
+                    fallbackOverlay.Visibility = Visibility.Collapsed;
+                }
+
+                await TryInitializeWebViewAsync();
             }
             catch (Exception ex)
             {
-                LogRaw("IPC error: " + ex.Message, "error");
+                if (fallbackErrorMessage != null)
+                {
+                    fallbackErrorMessage.Text = "Erro ao instalar WebView2: " + ex.Message;
+                }
             }
+        }
+
+        private async void RetryWebView2_Click(object sender, RoutedEventArgs e)
+        {
+            if (fallbackOverlay != null)
+            {
+                fallbackOverlay.Visibility = Visibility.Collapsed;
+            }
+            await TryInitializeWebViewAsync();
         }
 
         // ---- IStatusSink implementation ----
@@ -221,21 +196,6 @@ namespace VeloSysPro
             {
                 string line = "[" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "] " + message;
                 File.AppendAllText(file, line + Environment.NewLine, Encoding.UTF8);
-            }
-            catch { }
-        }
-
-        private void PostEventJson(string json)
-        {
-            try
-            {
-                Dispatcher.Invoke(() =>
-                {
-                    if (webView != null && webView.CoreWebView2 != null)
-                    {
-                        webView.CoreWebView2.PostWebMessageAsJson(json);
-                    }
-                });
             }
             catch { }
         }

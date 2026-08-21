@@ -319,9 +319,7 @@ describe('IPC Event module', () => {
       changes: [validChange],
     });
 
-    expect(callback).toHaveBeenCalledWith(
-      expect.objectContaining({ changes: [validChange] })
-    );
+    expect(callback).toHaveBeenCalledWith(expect.objectContaining({ changes: [validChange] }));
     unsubscribe();
   });
 

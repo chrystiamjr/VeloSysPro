@@ -140,7 +140,7 @@ namespace VeloSysPro
                 entries.Add(entry);
             }
 
-            if (!_checkpoint.Build()) return new DebloatBatchResult(false, nothing);
+            if (!_checkpoint.ExecuteTweakCheckpoint()) return new DebloatBatchResult(false, nothing);
 
             int done = 0;
             var attempted = new HashSet<string>(StringComparer.Ordinal);
