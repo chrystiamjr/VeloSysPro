@@ -3,7 +3,7 @@
 ; Requires the published single-file exe at dist\VeloSysPro.exe (produced by build.ps1).
 
 #ifndef AppVersion
-  #define AppVersion "0.2.0"
+  #define AppVersion "0.3.0"
 #endif
 
 #define AppName "VeloSys Pro"
