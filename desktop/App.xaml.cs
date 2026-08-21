@@ -45,7 +45,8 @@ namespace VeloSysPro
 
             sink.LogRaw($"=== Headless task '{task}' started ===", "info");
 
-            var checkpoint = new SafetyCheckpoint(new SystemRestoreManager(cmd, sink), sink)
+            var systemRestore = new SystemRestoreManager(cmd, sink);
+            var checkpoint = new SafetyCheckpoint(systemRestore, sink)
             {
                 // The same preference the window applies. A user who turned the safety backup off
                 // did so to opt out of the Safety Checkpoint; ignoring that here would make every
@@ -56,7 +57,7 @@ namespace VeloSysPro
             TweakEngine tweaks = TweakEngine.CreateDefault(
                 cmd,
                 backup,
-                new SystemRestoreManager(cmd, sink),
+                systemRestore,
                 checkpoint,
                 sink
             );

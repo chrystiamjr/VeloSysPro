@@ -260,6 +260,56 @@ public class DebloatManagerTests
     }
 
     [Fact]
+    public void AnUnreadableVerificationReadReportsEveryPackageAsStillInstalled()
+    {
+        // The load path treats an unreadable query as "nothing is installed", which is the safe
+        // direction there: the UI then offers nothing to remove. On the read-back the very same
+        // answer means the opposite, and taking it at face value would report every selected app
+        // as removed on the strength of a query that never ran
+        // (.agents/rules/absence-of-error-is-not-success.md).
+        var harness = new Harness("[\"Microsoft.BingWeather\",\"Microsoft.BingNews\"]");
+        harness.Runner.FailingCapturesByArgs.Add("Get-AppxPackage |");
+
+        DebloatBatchResult result = harness.Manager.Remove(new[] { "weather", "news" });
+
+        Assert.False(result.Ok);
+        Assert.Equal(2, result.Results.Count);
+        Assert.All(result.Results, entry => Assert.False(entry.Ok));
+        Assert.Contains(harness.Sink.Logs, log => log.Key == "log.debloat.unverified");
+        // And it must not be reported as a success in the log trail either.
+        Assert.DoesNotContain(harness.Sink.Logs, log => log.Key == "log.debloat.removed");
+    }
+
+    [Fact]
+    public void AnUnverifiableReadStillLeavesTheRemovalCommandsIssued()
+    {
+        // The apps really may be gone; what is missing is the proof. The batch reports failure
+        // rather than pretending nothing was attempted, so the next refresh tells the truth.
+        var harness = new Harness("[\"Microsoft.BingWeather\"]");
+        harness.Runner.FailingCapturesByArgs.Add("Get-AppxPackage |");
+
+        harness.Manager.Remove(new[] { "weather" });
+
+        Assert.Single(harness.RemovalCommands);
+    }
+
+    [Fact]
+    public void OneDriveIsNeverReportedAsRemovedWhenNoUninstallerRan()
+    {
+        // The registry marker is gone — but nothing this app did removed it, because no uninstaller
+        // was ever found. Trusting the read-back alone here would report a removal that never
+        // happened, on a machine where OneDrive may simply never have been installed.
+        var harness = new Harness();
+        harness.Runner.CapturedOutputsByArgs.Add(("OneDriveSetup.exe", ""));
+
+        DebloatBatchResult result = harness.Manager.Remove(new[] { "oneDrive" });
+
+        Assert.False(result.Ok);
+        Assert.False(Assert.Single(result.Results).Ok);
+        Assert.Empty(harness.RemovalCommands);
+    }
+
+    [Fact]
     public void OneDriveIsRemovedThroughItsOwnUninstallerAndNotThroughAppx()
     {
         var harness = new Harness();

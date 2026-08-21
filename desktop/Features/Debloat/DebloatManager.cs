@@ -86,7 +86,10 @@ namespace VeloSysPro
         /// <summary>The allow-list with each entry's live installed state, as the debloatLoaded payload.</summary>
         public string GetPackagesJson()
         {
-            HashSet<string> installed = ReadInstalledPackageNames();
+            // The safe direction for a list the user picks from: an unreadable machine offers
+            // nothing to remove rather than offering to remove everything.
+            HashSet<string> installed =
+                ReadInstalledPackageNames() ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             bool oneDrive = IsOneDriveInstalled();
 
             var packages = new List<PackageInfo>(_catalog.Entries.Count);
@@ -140,6 +143,7 @@ namespace VeloSysPro
             if (!_checkpoint.Build()) return new DebloatBatchResult(false, nothing);
 
             int done = 0;
+            var attempted = new HashSet<string>(StringComparer.Ordinal);
             foreach (DebloatEntry entry in entries)
             {
                 _sink.Status(
@@ -147,28 +151,41 @@ namespace VeloSysPro
                     20 + (60 * done++ / entries.Count),
                     new { id = entry.Id }
                 );
-                Uninstall(entry);
+                if (Uninstall(entry)) attempted.Add(entry.Id);
             }
 
             _sink.Status("status.debloat.verifying", 90);
 
             // Read the machine back rather than trusting the exit codes: Remove-AppxPackage can
             // decline a package Windows considers in use and still leave a zero behind it.
-            HashSet<string> stillInstalled = ReadInstalledPackageNames();
+            HashSet<string>? stillInstalled = ReadInstalledPackageNames();
             bool oneDriveStillInstalled = IsOneDriveInstalled();
 
             var results = new List<DebloatPackageResult>(entries.Count);
             bool ok = true;
             foreach (DebloatEntry entry in entries)
             {
-                bool gone = !IsPresent(entry, stillInstalled, oneDriveStillInstalled);
+                // Three things have to be true before an app may be called removed: a removal was
+                // really issued for it, the verification read really answered, and the app is not
+                // in what it answered. An unreadable read is the dangerous direction here — an
+                // empty set would mark every selected app as gone on the strength of a query that
+                // never ran (.agents/rules/absence-of-error-is-not-success.md).
+                bool verified = stillInstalled != null;
+                if (!verified)
+                {
+                    _sink.Log("log.debloat.unverified", "error", new { id = entry.Id });
+                }
+
+                bool gone =
+                    attempted.Contains(entry.Id)
+                    && verified
+                    && !IsPresent(entry, stillInstalled!, oneDriveStillInstalled);
+
                 results.Add(new DebloatPackageResult(entry.Id, gone));
                 ok &= gone;
-                _sink.Log(
-                    gone ? "log.debloat.removed" : "log.debloat.removeFailed",
-                    gone ? "success" : "error",
-                    new { id = entry.Id }
-                );
+                if (gone) _sink.Log("log.debloat.removed", "success", new { id = entry.Id });
+                else if (verified)
+                    _sink.Log("log.debloat.removeFailed", "error", new { id = entry.Id });
             }
 
             _sink.Status("status.debloat.done", 100);
@@ -177,13 +194,15 @@ namespace VeloSysPro
             return new DebloatBatchResult(ok, results);
         }
 
-        private void Uninstall(DebloatEntry entry)
+        /// <summary>Runs the entry's removal, and reports whether one was actually issued.</summary>
+        /// <remarks>
+        /// The caller needs the difference. OneDrive's uninstaller may not be on the machine at
+        /// all, and its absence marker reads the same whether this app removed it or it was never
+        /// installed — so an entry nothing was issued for must never be reported as removed.
+        /// </remarks>
+        private bool Uninstall(DebloatEntry entry)
         {
-            if (entry.Removal == DebloatRemoval.OneDriveUninstaller)
-            {
-                UninstallOneDrive();
-                return;
-            }
+            if (entry.Removal == DebloatRemoval.OneDriveUninstaller) return UninstallOneDrive();
 
             foreach (string package in entry.Packages)
             {
@@ -196,9 +215,11 @@ namespace VeloSysPro
                         + "' | Remove-AppxPackage\""
                 );
             }
+
+            return true;
         }
 
-        private void UninstallOneDrive()
+        private bool UninstallOneDrive()
         {
             CaptureResult query = _cmd.RunCapture(
                 "powershell.exe",
@@ -208,13 +229,12 @@ namespace VeloSysPro
             string path = query.Success ? query.Output.Trim() : "";
             if (path.Length == 0)
             {
-                // Nothing to run, and nothing worth guessing at: the read-back below will report
-                // the entry as still installed, which is the truth.
                 _sink.Log("log.debloat.noUninstaller", "error", new { id = "oneDrive" });
-                return;
+                return false;
             }
 
             _cmd.Run(path, "/uninstall");
+            return true;
         }
 
         private static bool IsPresent(
@@ -233,24 +253,32 @@ namespace VeloSysPro
         }
 
         /// <summary>
-        /// The invariant names of every Appx package installed for the current user.
+        /// The invariant names of every Appx package installed for the current user, or
+        /// <c>null</c> when Windows could not be asked.
         /// </summary>
         /// <remarks>
-        /// An unreadable answer returns an empty set, which reports every entry as not installed.
-        /// That is the safe direction: the UI excludes what it cannot see from submission, so a
-        /// failed query offers nothing to remove instead of offering to remove everything.
+        /// Null and "empty" are different answers and the callers need them apart. On the load
+        /// path an unreadable query is treated as an empty machine, which is the safe direction
+        /// there — the UI excludes what it cannot see from submission, so a failed query offers
+        /// nothing to remove instead of offering to remove everything. On the read-back after a
+        /// removal the identical answer means the opposite, and collapsing the two would report
+        /// every selected app as gone on the strength of a query that never ran.
         /// </remarks>
-        private HashSet<string> ReadInstalledPackageNames()
+        private HashSet<string>? ReadInstalledPackageNames()
         {
-            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
             CaptureResult query = _cmd.RunCapture(
                 "powershell.exe",
                 "-ExecutionPolicy Bypass -Command \"" + EnumerateScript + "\""
             );
-            if (!query.Success) return names;
+            if (!query.Success)
+            {
+                _sink.Log("log.debloat.enumerateFailed", "error");
+                return null;
+            }
 
+            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             string raw = query.Output.Trim();
+            // A machine with none of these packages left really does answer with nothing.
             if (raw.Length == 0) return names;
 
             try
@@ -263,7 +291,11 @@ namespace VeloSysPro
                     return names;
                 }
 
-                if (document.RootElement.ValueKind != JsonValueKind.Array) return names;
+                if (document.RootElement.ValueKind != JsonValueKind.Array)
+                {
+                    _sink.Log("log.debloat.enumerateFailed", "error");
+                    return null;
+                }
 
                 foreach (JsonElement element in document.RootElement.EnumerateArray())
                 {
@@ -273,6 +305,7 @@ namespace VeloSysPro
             catch (JsonException)
             {
                 _sink.Log("log.debloat.enumerateFailed", "error");
+                return null;
             }
 
             return names;

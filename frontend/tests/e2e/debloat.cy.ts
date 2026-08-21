@@ -124,6 +124,38 @@ describe('debloat (preinstalled app removal)', () => {
     });
   });
 
+  it('submits the host id byte for byte, never a near-match of it', () => {
+    // The host matches ids ordinally and exactly, so anything the frontend normalises — case,
+    // trimming, a prefix — becomes an id the allow-list rejects, or worse, a different app's.
+    cy.emitHost('debloatLoaded', debloatCatalog);
+
+    cy.getByCy('debloat-select-oneDrive').click();
+    cy.getByCy('debloat-remove').click();
+    cy.getByCy('debloat-confirm-confirm').click();
+
+    cy.expectIpc('runDebloat', { packageIds: ['oneDrive'] });
+  });
+
+  it('claims nothing was removed when the host refuses the batch outright', () => {
+    // A Safety Checkpoint that could not be built means the host issued no removal command at all,
+    // and says so by finishing without a debloatCompleted. The screen must not fill that silence
+    // in — neither with results nor with a list that implies something happened.
+    cy.emitHost('debloatLoaded', debloatCatalog);
+    cy.getByCy('debloat-select-weather').click();
+    cy.getByCy('debloat-remove').click();
+    cy.getByCy('debloat-confirm-confirm').click();
+
+    cy.emitHost('logReceived', {
+      message: { key: 'log.checkpoint.protectionDisabled' },
+      type: 'error',
+    });
+    cy.emitHost('actionFinished', { action: 'runDebloat', ok: false });
+
+    cy.getByCy('debloat-result-weather').should('not.exist');
+    cy.getByCy('debloat-state-weather').should('contain', 'Instalado');
+    cy.getByCy('toast-host').should('contain', 'Proteção do Sistema do Windows está desativada');
+  });
+
   it('drops an app the host stopped reporting as installed before submitting', () => {
     cy.emitHost('debloatLoaded', debloatCatalog);
 

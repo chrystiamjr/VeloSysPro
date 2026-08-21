@@ -51,6 +51,9 @@ export default {
       },
       // Status glows, tokenized so no component hardcodes a hex shadow.
       boxShadow: {
+        // The lift a sticky action bar casts over the content scrolling beneath it. Upward, and
+        // deeper than a card's, because it has to read as the surface the screen sits on.
+        'action-bar': '0 -8px 24px rgba(0, 0, 0, 0.35)',
         'glow-success': '0 0 8px #00a86b',
         'glow-warning': '0 0 8px #e38b22',
         'glow-danger': '0 0 8px #d94343',

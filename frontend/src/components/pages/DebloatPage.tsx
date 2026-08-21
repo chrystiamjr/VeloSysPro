@@ -86,28 +86,29 @@ export const DebloatPage: React.FC<DebloatPageProps> = ({
         </div>
       </div>
 
+      {/* Heading, then description, then actions — the stacked shape every management card on
+          Backup, Restore Points and Optimize uses
+          (.agents/rules/responsive-management-layouts.md). */}
       <div className="rounded-xl border border-borderColor bg-bgCard p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-5">
           <div>
             <h3 className="text-lg font-bold text-white">{t('debloat.sectionTitle')}</h3>
             <p className="mt-1 text-xs text-textMuted">{t('debloat.sectionDesc')}</p>
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="grid gap-3 sm:grid-cols-2">
             <Button
               testId="debloat-clear"
               variant="info"
-              fullWidth={false}
-              className="px-4"
+              className="items-center gap-2 px-5"
               disabled={disabled || selectedIds.length === 0}
               onClick={clear}
             >
-              {t('debloat.clearBtn')}
+              <Icon name="x-circle" /> {t('debloat.clearBtn')}
             </Button>
             <Button
               testId="debloat-refresh"
               variant="primary"
-              fullWidth={false}
-              className="px-4"
+              className="items-center gap-2 px-5"
               disabled={disabled}
               onClick={onRefresh}
             >
@@ -129,7 +130,7 @@ export const DebloatPage: React.FC<DebloatPageProps> = ({
 
       <div
         data-cy="debloat-action-bar"
-        className="sticky bottom-0 z-20 -mx-4 mt-auto flex flex-col gap-3 border-t border-borderColor bg-bgSidebar/95 px-4 py-4 shadow-[0_-8px_24px_rgba(0,0,0,0.35)] backdrop-blur sm:-mx-6 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:-mx-8 lg:px-8"
+        className="sticky bottom-0 z-20 -mx-4 mt-auto flex flex-col gap-3 border-t border-borderColor bg-bgSidebar/95 px-4 py-4 shadow-action-bar backdrop-blur sm:-mx-6 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:-mx-8 lg:px-8"
       >
         <span data-cy="debloat-selection-summary" className="text-xs text-textMuted">
           {liveSelection.length > 0

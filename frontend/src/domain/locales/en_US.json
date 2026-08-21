@@ -256,7 +256,8 @@
       "noneSelected": "Select at least one app before removing.",
       "removeFailed": "The app is still installed: {{id}}",
       "removed": "App removed: {{id}}",
-      "unknown": "This app is not on the removal list: {{id}}"
+      "unknown": "This app is not on the removal list: {{id}}",
+      "unverified": "Could not verify whether {{id}} was removed; treating it as still installed."
     },
     "diskHealth": {
       "done": "Disk health report completed.",

@@ -211,5 +211,9 @@ React state is split into three focused owners instead of one mega-component:
   the UI.
 - **Locale-neutral boundary data.** Management Records cross IPC as ISO timestamps, byte counts, and
   structured schedule fields — never localized OS display strings.
-- **Refresh only after success.** OS-backed lists refresh on navigation and successful mutations, and
-  retain their last valid state when a read fails.
+- **Refresh after a mutation that ran, not only after one that succeeded.** OS-backed lists refresh
+  on navigation and after mutations, and retain their last valid state when a read fails. A batch
+  refused *before* it touched anything — an unknown id, a Safety Checkpoint that could not be built —
+  refreshes nothing, so a refused batch never looks like one that happened to change nothing. A
+  batch that ran and partly failed does refresh: a stale row claiming an app is still installed, or
+  a Tweak still unapplied, is worse than a partial truth.

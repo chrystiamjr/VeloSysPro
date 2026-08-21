@@ -256,7 +256,8 @@
       "noneSelected": "Selecione ao menos um aplicativo antes de remover.",
       "removeFailed": "O aplicativo continua instalado: {{id}}",
       "removed": "Aplicativo removido: {{id}}",
-      "unknown": "Este aplicativo não está na lista de remoção: {{id}}"
+      "unknown": "Este aplicativo não está na lista de remoção: {{id}}",
+      "unverified": "Não foi possível verificar se {{id}} foi removido; tratando como ainda instalado."
     },
     "diskHealth": {
       "done": "Relatório de saúde do disco concluído.",
