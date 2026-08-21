@@ -9,6 +9,8 @@ import {
   ActionFinishedPayloadSchema,
   AppSettingsSchema,
   BackupItemSchema,
+  DebloatCatalogSchema,
+  DebloatCompletedPayloadSchema,
   IpcEventEnvelopeSchema,
   LocalizedMessageSchema,
   LogReceivedPayloadSchema,
@@ -20,6 +22,8 @@ import {
   UpdateInfoSchema,
   type AppSettings,
   type BackupItem,
+  type DebloatCatalog,
+  type DebloatResult,
   type IpcEventName,
   type LocalizedMessage,
   type LogType,
@@ -191,6 +195,24 @@ export function subscribeRestorePoints(callback: (data: RestorePointItem[]) => v
 
 export function subscribeTweaks(callback: (data: TweakCatalog) => void): Unsubscribe {
   return subscribeCollection('tweaksLoaded', TweakCatalogSchema, callback);
+}
+
+export function subscribeDebloat(callback: (data: DebloatCatalog) => void): Unsubscribe {
+  return subscribeCollection('debloatLoaded', DebloatCatalogSchema, callback);
+}
+
+/**
+ * The per-entry outcome of one removal batch.
+ *
+ * Separate from the refreshed list because it answers a different question: the list says what is
+ * on the machine now, this says which of the things the user asked to remove actually went. A
+ * removal that silently failed reads identically to one never attempted in the list alone.
+ */
+export function subscribeDebloatResults(callback: (results: DebloatResult[]) => void): Unsubscribe {
+  return subscribe('debloatCompleted', (raw) => {
+    const payload = readPayload('debloatCompleted', DebloatCompletedPayloadSchema, raw);
+    if (payload) callback(payload.results);
+  });
 }
 
 export function subscribeSnapshot(

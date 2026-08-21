@@ -17,12 +17,14 @@
 
   <ItemGroup>
     <!-- Compile non-WPF domain/services directly; native process execution stays behind a fake. -->
+    <Compile Include="..\desktop\Features\Debloat\DebloatCatalog.cs" />
+    <Compile Include="..\desktop\Features\Debloat\DebloatManager.cs" />
     <Compile Include="..\desktop\Features\Metrics\OptimizationSnapshot.cs" />
     <Compile Include="..\desktop\Features\Metrics\SnapshotManager.cs" />
     <Compile Include="..\desktop\Features\Optimization\Optimizer.cs" />
     <Compile Include="..\desktop\Features\Recovery\RegistryBackupManager.cs" />
-    <Compile Include="..\desktop\Features\Recovery\SystemRestoreManager.cs" />
     <Compile Include="..\desktop\Features\Recovery\SafetyCheckpoint.cs" />
+    <Compile Include="..\desktop\Features\Recovery\SystemRestoreManager.cs" />
     <Compile Include="..\desktop\Features\Scheduling\SchedulerManager.cs" />
     <Compile Include="..\desktop\Features\Scheduling\SchedulePolicy.cs" />
     <Compile Include="..\desktop\Features\Settings\SettingsManager.cs" />

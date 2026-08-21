@@ -29,5 +29,7 @@ namespace VeloSysPro
         public const string CaptureSnapshot = "captureSnapshot";
         public const string LoadHistory = "loadHistory";
         public const string EnableSystemProtection = "enableSystemProtection";
+        public const string LoadDebloat = "loadDebloat";
+        public const string RunDebloat = "runDebloat";
     }
 }

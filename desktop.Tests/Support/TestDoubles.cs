@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace VeloSysPro.Tests;
 
@@ -24,18 +25,54 @@ internal sealed class FakeCommandRunner : ICommandRunner
     /// </summary>
     public List<(string ArgsContains, string Output)> CapturedOutputsByArgs { get; } = new();
 
+    /// <summary>
+    /// Substrings of a RunCapture whose query should *fail*, checked before every scripted output.
+    /// Without this a scripted answer is always a successful one, and "the machine said nothing"
+    /// cannot be told apart from "the query did not run" — which is exactly the distinction a
+    /// read-back has to get right.
+    /// </summary>
+    public List<string> FailingCapturesByArgs { get; } = new();
+
     public CommandResult Result { get; set; } = new(0, true);
     public int TempCleanCount { get; private set; }
+
+    /// <summary>
+    /// Substring of a command that should block until <see cref="ReleaseHeldCommand"/> is called.
+    /// Lets a test hold one Action mid-flight and observe what the host does to a second one —
+    /// the only way to prove the mutation lock without racing two real runs against each other.
+    /// </summary>
+    public string? HoldCommandsContaining { get; set; }
+
+    /// <summary>Signalled once a held command has actually been reached.</summary>
+    public ManualResetEventSlim HeldCommandReached { get; } = new();
+
+    private readonly ManualResetEventSlim _heldCommandRelease = new();
+
+    public void ReleaseHeldCommand() => _heldCommandRelease.Set();
 
     public CommandResult Run(string exe, string args)
     {
         Runs.Add((exe, args));
+
+        if (HoldCommandsContaining != null
+            && args.Contains(HoldCommandsContaining, StringComparison.OrdinalIgnoreCase))
+        {
+            HeldCommandReached.Set();
+            _heldCommandRelease.Wait(TimeSpan.FromSeconds(10));
+        }
+
         return Result;
     }
 
     public CaptureResult RunCapture(string exe, string args)
     {
         Runs.Add((exe, args));
+
+        foreach (string failing in FailingCapturesByArgs)
+        {
+            if (args.Contains(failing, StringComparison.OrdinalIgnoreCase))
+                return new CaptureResult("", 1, false);
+        }
 
         foreach ((string ArgsContains, string Output) scripted in CapturedOutputsByArgs)
         {

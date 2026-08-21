@@ -90,6 +90,7 @@ public class TweakEngineTests
         public RecordingStatusSink Sink { get; } = new();
         public RecordingCaptureStore Captures { get; } = new();
         public InMemorySnapshotStore History { get; } = new();
+        public SafetyCheckpoint Checkpoint { get; }
         public TweakEngine Engine { get; }
 
         public Harness(params ITweak[] tweaks)
@@ -108,10 +109,23 @@ public class TweakEngineTests
             // this the baseline machine would be one where every batch aborts.
             Runner.CapturedOutputsByArgs.Add(("ExpandProperty Count", "1"));
 
+            Checkpoint = new SafetyCheckpoint(
+                new SystemRestoreManager(Runner, Sink),
+                // Unused by ExecuteTweakCheckpoint, which only touches System Restore; the path is
+                // never written to because the fake command runner executes nothing.
+                new RegistryBackupManager(
+                    System.IO.Path.GetTempPath(),
+                    Runner,
+                    Sink,
+                    System.IO.Path.GetTempPath()
+                ),
+                Sink
+            );
             Engine = new TweakEngine(
                 new TweakCatalog(tweaks, presets),
                 Captures,
                 new SystemRestoreManager(Runner, Sink),
+                Checkpoint,
                 new SnapshotManager(Runner, Sink),
                 History,
                 Sink
@@ -212,7 +226,7 @@ public class TweakEngineTests
     public void ApplyTweaks_RespectsTheSafetyBackupPreference()
     {
         var harness = new Harness(new SpyTweak("cpu.a"));
-        harness.Engine.CreateSafetyBackupEnabled = false;
+        harness.Checkpoint.Enabled = false;
 
         Assert.True(harness.Engine.ApplyTweaks(new[] { "cpu.a" }).Ok);
 

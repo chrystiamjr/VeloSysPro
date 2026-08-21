@@ -20,6 +20,7 @@ public class ActionHostTweakTests
         public FakeCommandRunner Runner { get; } = new();
         public RecordingStatusSink Sink { get; } = new();
         public List<(string Event, JsonElement Payload)> Events { get; } = new();
+        public SafetyCheckpoint Checkpoint { get; }
         public ActionHost Host { get; }
 
         public Harness()
@@ -50,10 +51,12 @@ public class ActionHostTweakTests
             });
 
             var backup = new RegistryBackupManager(_temp.Path, Runner, Sink, _temp.Path);
+            Checkpoint = new SafetyCheckpoint(new SystemRestoreManager(Runner, Sink), backup, Sink);
             var engine = new TweakEngine(
                 TweakCatalog.CreateDefault(Runner, backup),
                 new JsonTweakCaptureStore(_temp.Path),
                 new SystemRestoreManager(Runner, Sink),
+                Checkpoint,
                 new SnapshotManager(Runner, Sink),
                 new JsonlSnapshotStore(System.IO.Path.Combine(_temp.Path, "history.jsonl")),
                 Sink
@@ -66,6 +69,7 @@ public class ActionHostTweakTests
                 new SchedulerManager(Runner, Sink, "VeloSysPro.exe"),
                 new SettingsManager(System.IO.Path.Combine(_temp.Path, "settings.json")),
                 engine,
+                new DebloatManager(DebloatCatalog.CreateDefault(), Runner, Checkpoint, Sink),
                 emitter,
                 Sink,
                 _temp.Path,

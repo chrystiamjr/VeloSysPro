@@ -23,6 +23,7 @@ namespace VeloSysPro
         private readonly SchedulerManager _scheduler;
         private readonly SettingsManager _settings;
         private readonly TweakEngine _tweaks;
+        private readonly DebloatManager _debloat;
         private readonly IpcEventEmitter _events;
         private readonly ActionHost _actionHost;
         private readonly WebViewHost _webViewHost;
@@ -49,10 +50,13 @@ namespace VeloSysPro
             _settings = new SettingsManager();
             _events = new IpcEventEmitter(json => _webViewHost?.PostEventJson(json));
             _tweaks = TweakEngine.CreateDefault(_cmd, _backup, _systemRestore, this);
+            // Shares the window's checkpoint with Optimizer, so the "create a safety backup"
+            // preference reaches Debloat through the same object SaveSettings already writes to.
+            _debloat = new DebloatManager(DebloatCatalog.CreateDefault(), _cmd, _safety, this);
             _safety.Enabled = _settings.Current.CreateBackupBeforeOptimize;
 
             _actionHost = new ActionHost(
-                _optimizer, _backup, _systemRestore, _scheduler, _settings, _tweaks,
+                _optimizer, _backup, _systemRestore, _scheduler, _settings, _tweaks, _debloat,
                 _events, this, _logsDir, _backupsDir
             );
 

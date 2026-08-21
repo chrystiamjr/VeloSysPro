@@ -9,6 +9,11 @@
 export type {
   AppSettings,
   BackupItem,
+  DebloatCaveat,
+  DebloatCatalog,
+  DebloatGroup,
+  DebloatPackage,
+  DebloatResult,
   LocalizedMessage,
   LogType,
   OptimizationSnapshot,
@@ -53,6 +58,8 @@ export const SystemActions = {
   CAPTURE_SNAPSHOT: 'captureSnapshot',
   LOAD_HISTORY: 'loadHistory',
   ENABLE_SYSTEM_PROTECTION: 'enableSystemProtection',
+  LOAD_DEBLOAT: 'loadDebloat',
+  RUN_DEBLOAT: 'runDebloat',
 } as const;
 
 export type SystemActionType = (typeof SystemActions)[keyof typeof SystemActions];
@@ -84,11 +91,15 @@ export interface SystemActionPayloads {
   [SystemActions.CAPTURE_SNAPSHOT]: void | null;
   [SystemActions.LOAD_HISTORY]: void | null;
   [SystemActions.ENABLE_SYSTEM_PROTECTION]: void | null;
+  [SystemActions.LOAD_DEBLOAT]: void | null;
+  /** Catalog ids, never Appx family names — the host owns the package names. */
+  [SystemActions.RUN_DEBLOAT]: { packageIds: string[] };
 }
 
 export enum AppScreen {
   Dashboard = 'Dashboard',
   Optimize = 'Optimize',
+  Debloat = 'Debloat',
   Scheduling = 'Scheduling',
   Backup = 'Backup',
   RestorePoints = 'RestorePoints',

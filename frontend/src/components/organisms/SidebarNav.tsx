@@ -22,6 +22,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { screen: AppScreen.Dashboard, icon: 'rocket', labelKey: 'nav.dashboard' },
   { screen: AppScreen.Optimize, icon: 'sliders', labelKey: 'nav.optimize' },
+  { screen: AppScreen.Debloat, icon: 'trash', labelKey: 'nav.debloat' },
   { screen: AppScreen.Scheduling, icon: 'calendar', labelKey: 'nav.scheduling' },
   { screen: AppScreen.Backup, icon: 'hard-drive', labelKey: 'nav.backup' },
   { screen: AppScreen.RestorePoints, icon: 'shield-check', labelKey: 'nav.restorePoints' },

@@ -1,4 +1,4 @@
-import { appliedTweakCatalog, tweakCatalog } from './support/fixtures';
+import { appliedTweakCatalog, debloatCatalog, tweakCatalog } from './support/fixtures';
 
 /**
  * The action bar has to reach the edges of the content panel.
@@ -9,9 +9,9 @@ import { appliedTweakCatalog, tweakCatalog } from './support/fixtures';
  * catalog shorter than the window the bar simply sat wherever the content happened to end.
  */
 describe('action bar sits flush with the content panel', () => {
-  const assertFlush = () =>
+  const assertFlush = (testId = 'tweak-action-bar') =>
     cy.getByCy('app-main').then(($main) => {
-      cy.getByCy('tweak-action-bar').then(($bar) => {
+      cy.getByCy(testId).then(($bar) => {
         const main = $main[0];
         const bar = $bar[0].getBoundingClientRect();
 
@@ -40,5 +40,27 @@ describe('action bar sits flush with the content panel', () => {
     cy.getByCy('app-main').scrollTo('bottom');
 
     assertFlush();
+  });
+
+  // Debloat has an action bar of its own, and a bar is only ever wrong in the browser: neither
+  // failure this guard exists for is visible in the markup, so the second one has to be measured
+  // too rather than assumed to inherit the first one's fix.
+  describe('on the Debloat screen', () => {
+    beforeEach(() => {
+      cy.getByCy('nav-Debloat').click();
+    });
+
+    it('reaches the bottom when the list is shorter than the window', () => {
+      cy.emitHost('debloatLoaded', { packages: [] });
+
+      assertFlush('debloat-action-bar');
+    });
+
+    it('stays at the bottom with a list that scrolls', () => {
+      cy.emitHost('debloatLoaded', debloatCatalog);
+      cy.getByCy('app-main').scrollTo('bottom');
+
+      assertFlush('debloat-action-bar');
+    });
   });
 });

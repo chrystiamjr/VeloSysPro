@@ -13,6 +13,7 @@ namespace VeloSysPro
     {
         private sealed record SchedulePayload(string Type, string Frequency, string Time, string Day);
         private sealed record ApplyTweaksPayload(string[]? TweakIds, string[]? RevertIds);
+        private sealed record RunDebloatPayload(string[]? PackageIds);
 
         private readonly Optimizer _optimizer;
         private readonly RegistryBackupManager _registryBackups;
@@ -20,6 +21,7 @@ namespace VeloSysPro
         private readonly SchedulerManager _scheduler;
         private readonly SettingsManager _settings;
         private readonly TweakEngine _tweaks;
+        private readonly DebloatManager _debloat;
         private readonly IpcEventEmitter _events;
         private readonly string _logsDir;
         private readonly string _backupsDir;
@@ -33,6 +35,7 @@ namespace VeloSysPro
             SchedulerManager scheduler,
             SettingsManager settings,
             TweakEngine tweaks,
+            DebloatManager debloat,
             IpcEventEmitter events,
             string logsDir,
             string backupsDir
@@ -44,6 +47,7 @@ namespace VeloSysPro
             _scheduler = scheduler;
             _settings = settings;
             _tweaks = tweaks;
+            _debloat = debloat;
             _events = events;
             _logsDir = logsDir;
             _backupsDir = backupsDir;
@@ -65,6 +69,7 @@ namespace VeloSysPro
                 SystemActions.ApplyTweaks,
                 SystemActions.RevertTweak,
                 SystemActions.EnableSystemProtection,
+                SystemActions.RunDebloat,
             };
 
             _handlers = CreateHandlers();
@@ -119,7 +124,36 @@ namespace VeloSysPro
                 [SystemActions.LoadHistory] = _ => Run(PushHistory),
                 [SystemActions.EnableSystemProtection] = _ =>
                     MutateAndRefresh(_tweaks.EnableSystemProtection, PushTweaks),
+                [SystemActions.LoadDebloat] = _ => Run(PushDebloat),
+                [SystemActions.RunDebloat] = payload => RunDebloat(payload),
             };
+
+        /// <summary>
+        /// Uninstalls the selected preinstalled apps and reports each one separately.
+        /// </summary>
+        /// <remarks>
+        /// An empty <c>Results</c> means the batch was refused before it touched anything — an id
+        /// outside the allow-list, or a Safety Checkpoint that could not be built. There is nothing
+        /// to report and nothing to refresh in that case, and re-reading the list would only make
+        /// it look as though something had been attempted.
+        /// </remarks>
+        private bool RunDebloat(JsonElement payload)
+        {
+            RunDebloatPayload parsed = ReadObject<RunDebloatPayload>(payload);
+            string[] ids = parsed.PackageIds ?? Array.Empty<string>();
+            if (ids.Length == 0)
+                throw new ArgumentException("runDebloat requires at least one package id.");
+
+            DebloatBatchResult result = _debloat.Remove(ids);
+
+            if (result.Results.Count > 0)
+            {
+                _events.Emit(IpcEvents.DebloatCompleted, new { results = result.Results });
+                PushDebloat();
+            }
+
+            return result.Ok;
+        }
 
         private bool ApplyTweaks(JsonElement payload)
         {
@@ -196,6 +230,9 @@ namespace VeloSysPro
             action();
             return true;
         }
+
+        public void PushDebloat() =>
+            _events.EmitJson(IpcEvents.DebloatLoaded, _debloat.GetPackagesJson());
 
         public void PushBackups() =>
             _events.EmitJson(IpcEvents.BackupsLoaded, _registryBackups.GetBackupsJson());
