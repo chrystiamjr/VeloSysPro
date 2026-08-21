@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MainLayout } from './components/templates/MainLayout';
 import { DashboardPage } from './components/pages/DashboardPage';
+import { OptimizePage } from './components/pages/OptimizePage';
 import { SchedulingPage } from './components/pages/SchedulingPage';
 import { BackupPage } from './components/pages/BackupPage';
 import { RestorePointsPage } from './components/pages/RestorePointsPage';
@@ -12,18 +13,27 @@ import {
   LogEntryItem,
   LogRecord,
   LocalizedMessage,
+  SnapshotCapturedPayload,
   UpdateInfo,
   SystemActions,
 } from './domain/types';
 import { useTranslation, LanguageProvider } from './infrastructure/i18nContext';
-import { subscribeLogs, subscribeStatus, subscribeUpdate } from './infrastructure/bridge';
+import {
+  subscribeLogs,
+  subscribeSnapshot,
+  subscribeStatus,
+  subscribeUpdate,
+} from './infrastructure/bridge';
 import { formatDateTime } from './domain/formatters';
 import { useExecutionLifecycle } from './infrastructure/useExecutionLifecycle';
+import { useActionFeedback } from './infrastructure/useActionFeedback';
 import { useOsBackedLists } from './infrastructure/useOsBackedLists';
 import { usePreferences } from './infrastructure/usePreferences';
+import { ToastHost } from './components/organisms/ToastHost';
 
 const SCREEN_HEADERS: Record<AppScreen, { title: string; subtitle: string }> = {
   [AppScreen.Dashboard]: { title: 'header.dashboard.title', subtitle: 'header.dashboard.subtitle' },
+  [AppScreen.Optimize]: { title: 'header.optimize.title', subtitle: 'header.optimize.subtitle' },
   [AppScreen.Scheduling]: {
     title: 'header.scheduling.title',
     subtitle: 'header.scheduling.subtitle',
@@ -45,10 +55,26 @@ function AppContent() {
   const [updateDismissed, setUpdateDismissed] = useState(false);
   const [logs, setLogs] = useState<LogRecord[]>([{ key: 'log.appStarted', type: 'success' }]);
   const [consoleExpanded, setConsoleExpanded] = useState(false);
-  const { activeAction, progressPercent, executionHasError, runRead, runMutation } =
+  const [snapshot, setSnapshot] = useState<SnapshotCapturedPayload | null>(null);
+  const { activeAction, progressPercent, executionHasError, lastOutcome, runRead, runMutation } =
     useExecutionLifecycle();
-  const { backups, tasks, restorePoints, refreshBackups, refreshTasks, refreshRestorePoints } =
-    useOsBackedLists(activeScreen);
+  const { items: feedbackItems, dismiss: dismissFeedback } = useActionFeedback(
+    activeAction,
+    lastOutcome
+  );
+  const {
+    backups,
+    tasks,
+    restorePoints,
+    tweakCatalog,
+    tweakCatalogLoaded,
+    tweakCatalogStale,
+    history,
+    refreshBackups,
+    refreshTasks,
+    refreshRestorePoints,
+    refreshTweaks,
+  } = useOsBackedLists(activeScreen);
   const { settings, setLanguage, setSafetyBackup, toggleSidebar } = usePreferences(setLang);
 
   useEffect(() => {
@@ -62,6 +88,10 @@ function AppContent() {
 
       subscribeStatus((msg) => {
         setStatus(msg);
+      }),
+
+      subscribeSnapshot((payload) => {
+        setSnapshot(payload);
       }),
 
       subscribeUpdate((info) => {
@@ -78,11 +108,30 @@ function AppContent() {
     setLogs([]);
   };
 
-  // Translate at render time so logs/status re-localize when the language changes.
+  // The live measurement wins while the app is open; otherwise fall back to the last pair on disk,
+  // so the comparison is still there after a restart. A batch appends its before and after
+  // consecutively, and nothing else writes to the history, so the last two rows are that pair.
+  // The changes list is not persisted, hence empty — only the metrics come back.
+  const displayedSnapshot: SnapshotCapturedPayload | null =
+    snapshot ??
+    (history.length >= 2
+      ? { before: history[history.length - 2], after: history[history.length - 1], changes: [] }
+      : null);
+
+  // Translate at render time so logs/status re-localize when the language changes. A raw host
+  // line is already text and must not be looked up as a key.
+  const translateMessage = (message: LocalizedMessage): string =>
+    message.key === 'log.raw' ? String(message.args?.text ?? '') : t(message.key, message.args);
+
   const translatedLogs: LogEntryItem[] = logs.map((log) => ({
-    text: log.key === 'log.raw' ? String(log.args?.text ?? '') : t(log.key, log.args),
+    text: translateMessage(log),
     type: log.type,
   }));
+
+  const showLogTrail = () => {
+    setActiveScreen(AppScreen.Dashboard);
+    setConsoleExpanded(true);
+  };
   const statusMessage = t(status.key, status.args);
   const header = SCREEN_HEADERS[activeScreen];
   const displayHealth: SystemHealth = {
@@ -149,6 +198,20 @@ function AppContent() {
         />
       )}
 
+      {activeScreen === AppScreen.Optimize && (
+        <OptimizePage
+          catalog={tweakCatalog}
+          snapshot={displayedSnapshot}
+          catalogLoaded={tweakCatalogLoaded}
+          catalogStale={tweakCatalogStale}
+          disabled={activeAction !== null}
+          onApply={(change) => runMutation(SystemActions.APPLY_TWEAKS, change)}
+          onRevert={(tweakId) => runMutation(SystemActions.REVERT_TWEAK, tweakId)}
+          onRefresh={refreshTweaks}
+          onEnableProtection={() => runMutation(SystemActions.ENABLE_SYSTEM_PROTECTION)}
+        />
+      )}
+
       {activeScreen === AppScreen.Scheduling && (
         <SchedulingPage
           tasks={tasks}
@@ -190,6 +253,13 @@ function AppContent() {
           onDownloadUpdate={(url) => runRead(SystemActions.OPEN_URL, url)}
         />
       )}
+
+      <ToastHost
+        items={feedbackItems}
+        detailFor={(item) => (item.detail ? translateMessage(item.detail) : undefined)}
+        onDismiss={dismissFeedback}
+        onViewLog={showLogTrail}
+      />
     </MainLayout>
   );
 }

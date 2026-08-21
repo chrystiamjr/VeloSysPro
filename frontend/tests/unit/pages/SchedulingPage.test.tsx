@@ -41,7 +41,7 @@ describe('SchedulingPage (functional scheduler)', () => {
 
   it('describes a task by frequency and optimization instead of its technical name', () => {
     renderPage();
-    expect(screen.getByText('Diária - Otimização Rápida')).toBeInTheDocument();
+    expect(screen.getByText('Diária - Limpeza Rápida')).toBeInTheDocument();
     expect(screen.getByText('Todos os dias às 03:00')).toBeInTheDocument();
     expect(screen.queryByText('VeloSysPro_Quick_Daily_0300')).not.toBeInTheDocument();
   });
@@ -76,7 +76,7 @@ describe('SchedulingPage (functional scheduler)', () => {
       ],
     });
 
-    expect(screen.getByText('Semanal - Modo Gaming')).toBeInTheDocument();
+    expect(screen.getByText('Semanal - Predefinição Gaming')).toBeInTheDocument();
     expect(screen.getByText('Toda segunda-feira às 04:30')).toBeInTheDocument();
     expect(screen.getByText('Todo dia 15 às 02:00')).toBeInTheDocument();
   });
@@ -96,9 +96,9 @@ describe('SchedulingPage (functional scheduler)', () => {
       ],
     });
 
-    // Scoped to the table: "Otimização Rápida" is also a <option> in the type dropdown.
+    // Scoped to the table: "Limpeza Rápida" is also a <option> in the type dropdown.
     const table = within(screen.getByRole('table'));
-    expect(table.getByText('Otimização Rápida')).toBeInTheDocument();
+    expect(table.getByText('Limpeza Rápida')).toBeInTheDocument();
     expect(table.getByText('—')).toBeInTheDocument();
 
     vi.spyOn(window, 'confirm').mockReturnValue(true);
@@ -130,7 +130,7 @@ describe('SchedulingPage (functional scheduler)', () => {
       ],
     });
 
-    expect(screen.getAllByText('Diária - Otimização Rápida')).toHaveLength(2);
+    expect(screen.getAllByText('Diária - Limpeza Rápida')).toHaveLength(2);
     expect(screen.getByText('Todos os dias às 03:00')).toBeInTheDocument();
     expect(screen.getByText('Todos os dias às 05:00')).toBeInTheDocument();
   });

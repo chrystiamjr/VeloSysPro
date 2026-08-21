@@ -1,10 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { sendAction, subscribeActionFinished, subscribeProgress } from './bridge';
 
+/**
+ * The authoritative outcome of one mutation the user started here.
+ *
+ * `seq` increments per outcome because the identity of an outcome is the run, not its contents:
+ * creating a restore point twice and failing both times must be two separate reports, and an
+ * object compared by value would collapse them into one.
+ */
+export interface MutationOutcome {
+  seq: number;
+  action: string;
+  ok: boolean;
+}
+
 export interface ExecutionLifecycle {
   activeAction: string | null;
   progressPercent: number;
   executionHasError: boolean;
+  lastOutcome: MutationOutcome | null;
   runRead: (action: string, payload?: unknown) => void;
   runMutation: (action: string, payload?: unknown) => boolean;
 }
@@ -20,15 +34,19 @@ export function useExecutionLifecycle(): ExecutionLifecycle {
   const [activeAction, setActiveAction] = useState<string | null>(null);
   const [progressPercent, setProgressPercent] = useState(100);
   const [executionHasError, setExecutionHasError] = useState(false);
+  const [lastOutcome, setLastOutcome] = useState<MutationOutcome | null>(null);
 
   useEffect(() => {
     const unsubscribeProgress = subscribeProgress(setProgressPercent);
     const unsubscribeFinished = subscribeActionFinished((action, ok) => {
+      // The host reports every Action, reads included. Matching against the mutation this hook
+      // started is what keeps a routine list refresh from being announced to the user.
       if (action !== activeActionRef.current) return;
 
       activeActionRef.current = null;
       setActiveAction(null);
       setExecutionHasError(!ok);
+      setLastOutcome((previous) => ({ seq: (previous?.seq ?? 0) + 1, action, ok }));
     });
 
     return () => {
@@ -55,6 +73,7 @@ export function useExecutionLifecycle(): ExecutionLifecycle {
     activeAction,
     progressPercent,
     executionHasError,
+    lastOutcome,
     runRead,
     runMutation,
   };

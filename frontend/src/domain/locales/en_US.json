@@ -10,11 +10,7 @@
     },
     "full": {
       "desc": "Runs SFC scannow, DISM repair, disk check, DNS flush, and temp clean.",
-      "title": "Full Optimization"
-    },
-    "gaming": {
-      "desc": "Tunes TCP stack (RSS, Autotuning) for low latency and online gaming.",
-      "title": "Gaming Mode"
+      "title": "Full Repair"
     },
     "prefetch": {
       "desc": "Removes prefetch files so the app launch cache is rebuilt fresh.",
@@ -22,7 +18,7 @@
     },
     "quick": {
       "desc": "Flushes DNS cache, cleans temp files, and runs lightweight maintenance.",
-      "title": "Quick Optimization"
+      "title": "Quick Cleanup"
     },
     "restorePoint": {
       "desc": "Creates a verified System Restore Point prior to system changes.",
@@ -57,7 +53,6 @@
     "version": "Version 0.1.6 (C# / React Build)"
   },
   "btn": {
-    "applyMode": "Apply Mode",
     "clean": "Clean",
     "clearConsole": "Clear Console",
     "createNow": "Create Now",
@@ -68,12 +63,12 @@
   },
   "dashboard": {
     "maintenance": {
-      "desc": "Windows diagnostics and targeted cleanup tools.",
-      "title": "Maintenance"
+      "desc": "Targeted Windows tools, for when you already know what you want to fix.",
+      "title": "Diagnostics and cleanup"
     },
     "primary": {
-      "desc": "Choose the routine that best fits your system optimization needs.",
-      "title": "Primary actions"
+      "desc": "Routines that clean and repair Windows. They change no settings — use Optimizations for that.",
+      "title": "Maintenance"
     },
     "recovery": {
       "desc": "Backups, restore points, and network reset tools.",
@@ -84,6 +79,9 @@
       "title": "Tools"
     }
   },
+  "dialog": {
+    "cancel": "Cancel"
+  },
   "header": {
     "backup": {
       "subtitle": "Manage manual registry backups and system restore points",
@@ -92,6 +90,10 @@
     "dashboard": {
       "subtitle": "Windows maintenance, network acceleration, and recovery",
       "title": "Optimization Dashboard"
+    },
+    "optimize": {
+      "subtitle": "Pick, apply, and revert optimizations one by one",
+      "title": "À-la-carte Optimizations"
     },
     "restorePoints": {
       "subtitle": "Create and roll back Windows system restore points",
@@ -133,12 +135,8 @@
       "start": "Generating disk health report..."
     },
     "full": {
-      "done": "Full Optimization completed successfully.",
-      "start": "Starting Full Optimization..."
-    },
-    "gaming": {
-      "done": "Gaming Mode applied successfully.",
-      "start": "Applying low-latency network tweaks (Gaming Mode)..."
+      "done": "Full Repair completed successfully.",
+      "start": "Starting Full Repair..."
     },
     "hostReady": ".NET 8 WPF + Edge Chromium WebView2 host initialized (embedded UI).",
     "op": {
@@ -148,15 +146,21 @@
       "done": "Prefetch cleaned successfully.",
       "start": "Cleaning Prefetch folder..."
     },
+    "protection": {
+      "enabled": "System Protection enabled, and a restore point per optimization unlocked.",
+      "enabling": "Enabling System Protection...",
+      "failed": "Failed to enable System Protection: {{message}}"
+    },
     "quick": {
-      "done": "Quick Optimization completed successfully.",
-      "start": "Starting Quick Optimization..."
+      "done": "Quick Cleanup completed successfully.",
+      "start": "Starting Quick Cleanup..."
     },
     "raw": "{{text}}",
     "restorePoint": {
       "creating": "Creating System Restore Point...",
       "done": "Restore Point created successfully.",
-      "failed": "Failed to create restore point: {{message}}"
+      "failed": "Failed to create restore point: {{message}}",
+      "unconfirmed": "Windows did not create the Restore Point, despite reporting no error. Nothing on the system was changed."
     },
     "restoreToPoint": {
       "done": "Restore to point {{sequence}} initiated.",
@@ -167,10 +171,28 @@
       "done": "Settings reverted successfully.",
       "start": "Reverting network settings to defaults..."
     },
+    "snapshot": {
+      "unavailable": "The system could not be measured; the metrics will read as zero."
+    },
     "task": {
       "created": "Scheduled task created: {{name}}",
       "deleted": "Scheduled task removed: {{name}}",
       "failed": "Scheduling operation failed: {{message}}"
+    },
+    "tweaks": {
+      "applied": "Optimization applied: {{id}}",
+      "applyFailed": "Failed to apply the optimization: {{id}}",
+      "checkpointCreated": "Safety Checkpoint created before any change.",
+      "checkpointFailed": "Failed to create the Safety Checkpoint: {{message}}. Nothing was changed.",
+      "checkpointSkipped": "Safety Checkpoint turned off in preferences; proceeding without a safety net.",
+      "done": "Selected optimizations applied successfully.",
+      "noCapture": "No prior state stored for {{id}}; revert cancelled.",
+      "noneSelected": "Select at least one optimization before applying.",
+      "protectionDisabled": "Windows System Protection is turned off, so no restore point can be created. Nothing was changed.",
+      "revertFailed": "Failed to revert the optimization: {{id}}",
+      "reverted": "Optimization reverted: {{id}}",
+      "unknown": "Unknown optimization: {{id}}",
+      "unknownPreset": "Unknown preset: {{id}}"
     },
     "updateCache": {
       "done": "Windows Update cache cleared successfully.",
@@ -183,9 +205,156 @@
     "dashboard": "Dashboard",
     "expand": "Expand menu",
     "logsFolder": "Logs Folder",
+    "optimize": "Optimizations",
     "restorePoints": "Restore Points",
     "scheduling": "Scheduler",
     "settings": "Settings"
+  },
+  "optimize": {
+    "advancedConfirmBody": "You are about to apply {{apply}} optimization(s), at least one of which REDUCES the security of Windows. Read each risk below before continuing.",
+    "advancedConfirmBtn": "I understand the risk, apply",
+    "advancedConfirmTitle": "These optimizations reduce your security",
+    "advancedDesc": "Bigger gains, at a real cost in security or stability. Never included by a preset.",
+    "advancedTitle": "Advanced (may reduce security)",
+    "applyBtn": "Apply changes",
+    "category": {
+      "boot": "Boot and timers",
+      "cpu": "Processor and priorities",
+      "graphics": "Graphics and games",
+      "network": "Network",
+      "other": "Other",
+      "services": "Windows services",
+      "system": "System and performance"
+    },
+    "clearBtn": "Clear selection",
+    "empty": "No optimizations available. Use Refresh to query the system again.",
+    "loading": "Querying the system...",
+    "noPending": "No pending changes. Tick or untick items to build the change.",
+    "partialHint": "Partly applied: some of this item's settings do not match. Tick it and apply again to complete it.",
+    "pending": "{{apply}} to apply · {{revert}} to revert",
+    "preset": {
+      "gaming": {
+        "desc": "Everything the catalog offers for games: processor priority, network, graphics, power, and background services.",
+        "title": "Gaming preset"
+      }
+    },
+    "presetCount": "{{count}} optimizations",
+    "presetLabel": "Start from a preset",
+    "presetModified": "(modified)",
+    "rebootHint": "Only takes effect after Windows restarts.",
+    "recommended": {
+      "desc": "What suits most machines and takes effect right away — nothing that needs a Windows restart.",
+      "title": "Recommended"
+    },
+    "revertBtn": "Revert",
+    "revertConfirmBody": "You are about to undo {{revert}} already applied optimization(s) and apply {{apply}}. The items below will go back to the value Windows had before, captured when they were applied.",
+    "revertConfirmBtn": "Undo and apply",
+    "revertConfirmTitle": "Confirm revert",
+    "revertItemDetail": "Goes back to the value captured before it was applied.",
+    "revertSingleBody": "This optimization will go back to the value Windows had before it was applied.",
+    "risk": {
+      "advanced": "Advanced",
+      "advancedHint": "Reduces security or stability; requires an explicit confirmation.",
+      "safe": "Safe",
+      "safeHint": "Reversible, with no impact on Windows security."
+    },
+    "sectionCount": "{{selected}} of {{total}} ticked",
+    "sectionDesc": "Tick what you want applied and untick what you want undone. A Safety Checkpoint is created before any change.",
+    "sectionTitle": "Select optimizations",
+    "staleRead": "The host sent an invalid catalog; these are the last valid rows. Use Refresh to try again.",
+    "state": {
+      "applied": "Applied",
+      "notApplied": "Not applied",
+      "partial": "Partial"
+    },
+    "tweak": {
+      "boot": {
+        "disableDynamicTick": {
+          "desc": "Turns off the dynamic boot timer tick so clock intervals stay constant. Requires a restart.",
+          "title": "Disable the dynamic timer tick"
+        },
+        "platformClock": {
+          "desc": "Removes the boot setting that pins one clock source and lets Windows choose the best one available again.",
+          "title": "Stop forcing the platform clock"
+        },
+        "platformTick": {
+          "desc": "Makes Windows use the motherboard's hardware timer, keeping clock intervals more predictable.",
+          "title": "Use the platform timer"
+        }
+      },
+      "cpu": {
+        "gamesTaskPriority": {
+          "desc": "Raises the processor and graphics priority Windows grants to tasks registered as games.",
+          "title": "Scheduler priority for games"
+        },
+        "systemResponsiveness": {
+          "desc": "Lowers the share of the processor the multimedia scheduler holds back for background tasks and hands it to the foreground application.",
+          "title": "Reserve less CPU for background work"
+        },
+        "win32PrioritySeparation": {
+          "desc": "Gives the foreground application short, fixed quanta, favouring games and the active window.",
+          "title": "Boost the foreground application"
+        }
+      },
+      "graphics": {
+        "fullscreenExclusive": {
+          "desc": "Makes games use exclusive fullscreen instead of the Windows fullscreen optimizations.",
+          "title": "Force fullscreen exclusive"
+        },
+        "gameMode": {
+          "desc": "Lets Windows prioritise the running game and hold back updates and notifications.",
+          "title": "Windows Game Mode"
+        },
+        "hardwareScheduling": {
+          "desc": "Hands video memory scheduling to the graphics card itself. Only available where the display driver offers the feature.",
+          "title": "Hardware-accelerated GPU scheduling"
+        }
+      },
+      "network": {
+        "tcpParameters": {
+          "desc": "Applies a set of TCP stack parameters aimed at low-latency connections and more simultaneous ports.",
+          "title": "Tune the Windows TCP parameters"
+        },
+        "throttlingIndex": {
+          "desc": "Removes the ceiling the multimedia scheduler puts on network traffic while audio or video is playing.",
+          "title": "Turn off multimedia network throttling"
+        }
+      },
+      "services": {
+        "diagTrack": {
+          "desc": "Sets Windows telemetry to Manual start, cutting background collection and upload. Windows can still start it on demand.",
+          "title": "Telemetry (DiagTrack) on Manual start"
+        },
+        "doSvc": {
+          "desc": "Sets Delivery Optimization to Manual start, so the machine stops sharing updates over the network unprompted. Windows Update keeps working.",
+          "title": "Delivery Optimization on Manual start"
+        },
+        "sysMain": {
+          "desc": "Sets SysMain (Superfetch) to Manual start, cutting background disk activity.",
+          "title": "SysMain on Manual start"
+        },
+        "wSearch": {
+          "desc": "Sets the Windows Search indexer to Manual start, cutting background disk activity. Search keeps working, but is slower across large folders.",
+          "title": "Windows Search on Manual start"
+        }
+      },
+      "system": {
+        "powerPlan": {
+          "desc": "Activates the Ultimate Performance plan, or High performance when the machine does not have it. Draws more power on a laptop.",
+          "title": "High-performance power plan"
+        },
+        "visualEffects": {
+          "desc": "Trades the interface animations and shadows for the best-performance setting.",
+          "title": "Visual effects tuned for performance"
+        }
+      }
+    }
+  },
+  "protection": {
+    "desc": "Windows System Protection is turned off. Without it VeloSys Pro cannot create the restore point that precedes every optimization, and changes would be applied with no safety net.",
+    "enableBtn": "Enable System Protection",
+    "manualPath": "Rather do it yourself? Control Panel → System → System Protection → select the Windows drive → Configure → Turn on system protection.",
+    "title": "Enable System Protection before optimizing"
   },
   "rp": {
     "colActions": "Actions",
@@ -253,6 +422,30 @@
     "updateLatest": "You are on the latest version.",
     "updateTitle": "Updates"
   },
+  "snapshot": {
+    "absent": "(absent)",
+    "after": "After",
+    "before": "Before",
+    "capturedAt": "Measured at {{timestamp}}",
+    "changesTitle": "Applied changes",
+    "colMetric": "Metric",
+    "empty": "Apply optimizations to see what changed.",
+    "group": {
+      "immediate": "Immediate effect",
+      "nextBoot": "Effect on the next startup"
+    },
+    "metric": {
+      "automaticServices": "Automatic services",
+      "bootDuration": "Last boot duration",
+      "pendingReboot": "Restart pending",
+      "runningServices": "Running services",
+      "startupApps": "Startup programs"
+    },
+    "notMeasured": "—",
+    "restartToMeasure": "restart to measure",
+    "sectionDesc": "The changes below were read back off the system after applying. The metrics are context: some cannot move until you restart.",
+    "sectionTitle": "What changed on the system"
+  },
   "status": {
     "diskHealth": {
       "done": "Disk report generated!",
@@ -261,17 +454,10 @@
     "full": {
       "dism": "[2/4] Repairing system image (DISM)...",
       "dns": "[3/4] Flushing DNS cache...",
-      "done": "Full Optimization completed!",
+      "done": "Full Repair completed!",
       "sfc": "[1/4] Verifying system files (SFC)...",
-      "start": "Starting Full Optimization...",
+      "start": "Starting Full Repair...",
       "temp": "[4/4] Cleaning temporary files..."
-    },
-    "gaming": {
-      "autotuning": "Adjusting autotuning...",
-      "dns": "Flushing DNS...",
-      "done": "Gaming Mode applied successfully!",
-      "rss": "Enabling RSS...",
-      "start": "Applying Gaming Mode..."
     },
     "idle": "Awaiting action",
     "prefetch": {
@@ -281,8 +467,8 @@
     "quick": {
       "cleanmgr": "[2/3] Running temp files cleanup...",
       "dns": "[1/3] Flushing DNS cache...",
-      "done": "Quick Optimization completed successfully!",
-      "start": "Starting Quick Optimization...",
+      "done": "Quick Cleanup completed successfully!",
+      "start": "Starting Quick Cleanup...",
       "temp": "[3/3] Finalizing file cleanup..."
     },
     "restorePoint": {
@@ -295,6 +481,12 @@
       "ip": "Resetting IP stack...",
       "start": "Reverting settings...",
       "winsock": "Resetting Winsock..."
+    },
+    "tweaks": {
+      "applying": "Applying {{id}}...",
+      "done": "Optimizations completed!",
+      "measuring": "Measuring the system...",
+      "reverting": "Reverting {{id}}..."
     },
     "updateCache": {
       "done": "Windows Update cache cleared!",
@@ -312,6 +504,12 @@
   "terminal": {
     "title": "Live Real-Time Log",
     "waiting": "[SYSTEM] Awaiting execution logs..."
+  },
+  "toast": {
+    "dismiss": "Dismiss notification",
+    "fail": "Something went wrong",
+    "ok": "Done",
+    "viewLog": "View full log"
   },
   "updateBanner": {
     "btn": "Download",

@@ -1,8 +1,10 @@
 import type {
   AppSettings,
   BackupItem,
+  OptimizationSnapshot,
   RestorePointItem,
   ScheduledTaskItem,
+  TweakCatalog,
   UpdateInfo,
 } from '../../../src/domain/types';
 
@@ -58,6 +60,122 @@ export const restorePoints: RestorePointItem[] = [
     Description: 'Windows Update',
   },
 ];
+
+/**
+ * A cross-section of what TweakCatalog.CreateDefault ships: one Tweak per revert mechanism, one
+ * that needs a restart, and one the host recommends. Deliberately not the whole catalog — these
+ * specs are about the screen's behaviour, and pinning all twelve here would make every E2 catalog
+ * addition edit a file that has nothing to do with it.
+ */
+export const tweakCatalog: TweakCatalog = {
+  tweaks: [
+    {
+      id: 'cpu.win32PrioritySeparation',
+      category: 'cpu',
+      riskTier: 'Safe',
+      kind: 'registry',
+      state: 'NotApplied',
+      recommended: true,
+      requiresReboot: false,
+    },
+    {
+      id: 'boot.disableDynamicTick',
+      category: 'boot',
+      riskTier: 'Safe',
+      kind: 'bcd',
+      state: 'NotApplied',
+      recommended: false,
+      requiresReboot: true,
+    },
+    {
+      id: 'services.sysMain',
+      category: 'services',
+      riskTier: 'Safe',
+      kind: 'service',
+      state: 'NotApplied',
+      recommended: true,
+      requiresReboot: false,
+    },
+    {
+      id: 'system.powerPlan',
+      category: 'system',
+      riskTier: 'Safe',
+      kind: 'power',
+      state: 'NotApplied',
+      recommended: false,
+      requiresReboot: false,
+    },
+  ],
+  systemProtectionEnabled: true,
+  presets: [
+    {
+      id: 'gaming',
+      tweakIds: [
+        'cpu.win32PrioritySeparation',
+        'boot.disableDynamicTick',
+        'services.sysMain',
+        'system.powerPlan',
+      ],
+    },
+  ],
+};
+
+export const appliedTweakCatalog: TweakCatalog = {
+  ...tweakCatalog,
+  tweaks: tweakCatalog.tweaks.map((tweak) => ({ ...tweak, state: 'Applied' as const })),
+};
+
+/**
+ * Mixed tiers and an unknown category. No Advanced Tweak ships yet — E5 adds them — so this is the
+ * only place the gate around them can be exercised end to end.
+ */
+export const mixedTweakCatalog: TweakCatalog = {
+  ...tweakCatalog,
+  tweaks: [
+    ...tweakCatalog.tweaks,
+    {
+      id: 'advanced.memoryIntegrity',
+      category: 'security',
+      riskTier: 'Advanced',
+      kind: 'registry',
+      state: 'NotApplied',
+      recommended: false,
+      requiresReboot: false,
+    },
+    {
+      id: 'network.tcpTuning',
+      category: 'somethingNewTheHostInvented',
+      riskTier: 'Safe',
+      kind: 'registry',
+      state: 'NotApplied',
+      recommended: false,
+      requiresReboot: false,
+    },
+  ],
+};
+
+export const snapshotBefore: OptimizationSnapshot = {
+  capturedAt: '2026-07-25T10:00:00.000Z',
+  bootDurationMs: 32000,
+  freeMemoryBytes: 4194304,
+  totalMemoryBytes: 17179869184,
+  freeDiskBytes: 10485760,
+  totalDiskBytes: 500000000000,
+  automaticServices: 100,
+  runningServices: 80,
+  startupApps: 15,
+  pendingReboot: false,
+  lastBootUpTime: '2026-07-25T08:00:00.000Z',
+};
+
+export const snapshotAfter: OptimizationSnapshot = {
+  ...snapshotBefore,
+  capturedAt: '2026-07-25T10:04:00.000Z',
+  bootDurationMs: 21500,
+  freeMemoryBytes: 8388608,
+  automaticServices: 94,
+  runningServices: 71,
+};
 
 export const updateInfo: UpdateInfo = {
   version: '0.9.0',

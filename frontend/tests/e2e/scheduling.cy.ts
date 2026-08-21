@@ -17,9 +17,9 @@ describe('scheduled optimizations', () => {
 
   it('renders tasks received from the host by cadence, not by technical name', () => {
     cy.emitHost('tasksLoaded', tasks);
-    cy.contains('Diária - Otimização Rápida').should('be.visible');
+    cy.contains('Diária - Limpeza Rápida').should('be.visible');
     cy.contains('Todos os dias às 03:00').should('be.visible');
-    cy.contains('Semanal - Modo Gaming').should('be.visible');
+    cy.contains('Semanal - Predefinição Gaming').should('be.visible');
     cy.contains('Toda segunda-feira às 04:30').should('be.visible');
     cy.contains('Em execução').should('be.visible');
     cy.contains('VeloSysPro_Quick_Daily_0300').should('not.exist');

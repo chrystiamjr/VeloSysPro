@@ -12,16 +12,22 @@ import {
   IpcEventEnvelopeSchema,
   LocalizedMessageSchema,
   LogReceivedPayloadSchema,
+  OptimizationSnapshotSchema,
   RestorePointItemSchema,
   ScheduledTaskItemSchema,
+  SnapshotCapturedPayloadSchema,
+  TweakCatalogSchema,
   UpdateInfoSchema,
   type AppSettings,
   type BackupItem,
   type IpcEventName,
   type LocalizedMessage,
   type LogType,
+  type OptimizationSnapshot,
   type RestorePointItem,
   type ScheduledTaskItem,
+  type SnapshotCapturedPayload,
+  type TweakCatalog,
   type UpdateInfo,
 } from '../domain/schemas';
 
@@ -49,10 +55,26 @@ type Unsubscribe = () => void;
 type WebViewTransport = NonNullable<NonNullable<Window['chrome']>['webview']>;
 
 const listeners = new Map<IpcEventName, Set<EventListener>>();
+const rejectionListeners = new Set<(channel: string) => void>();
 let listeningWebView: WebViewTransport | undefined;
 
 function reject(channel: string, issues: unknown): void {
   console.error(`[IPC Bridge] ${channel} payload rejected`, issues);
+  for (const listener of rejectionListeners) listener(channel);
+}
+
+/**
+ * Observes payloads this module refused.
+ *
+ * Rejecting keeps the last valid state on screen, which is the right behaviour and also an
+ * invisible one: the user sees data that silently stopped updating. Screens subscribe here to say
+ * so, without every one of them having to re-validate anything.
+ */
+export function subscribeRejections(callback: (channel: string) => void): Unsubscribe {
+  rejectionListeners.add(callback);
+  return () => {
+    rejectionListeners.delete(callback);
+  };
 }
 
 function readPayload<T>(channel: string, schema: z.ZodType<T>, raw: unknown): T | null {
@@ -156,6 +178,20 @@ export function subscribeTasks(callback: (data: ScheduledTaskItem[]) => void): U
 
 export function subscribeRestorePoints(callback: (data: RestorePointItem[]) => void): Unsubscribe {
   return subscribeCollection('restorePointsLoaded', z.array(RestorePointItemSchema), callback);
+}
+
+export function subscribeTweaks(callback: (data: TweakCatalog) => void): Unsubscribe {
+  return subscribeCollection('tweaksLoaded', TweakCatalogSchema, callback);
+}
+
+export function subscribeSnapshot(
+  callback: (payload: SnapshotCapturedPayload) => void
+): Unsubscribe {
+  return subscribeCollection('snapshotCaptured', SnapshotCapturedPayloadSchema, callback);
+}
+
+export function subscribeHistory(callback: (data: OptimizationSnapshot[]) => void): Unsubscribe {
+  return subscribeCollection('historyLoaded', z.array(OptimizationSnapshotSchema), callback);
 }
 
 export function subscribeSettings(callback: (data: AppSettings) => void): Unsubscribe {

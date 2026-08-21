@@ -56,7 +56,12 @@ Filename: "powershell.exe"; \
   Check: WebView2Missing
 
 ; Optionally launch the app after install.
-Filename: "{app}\{#AppExe}"; Description: "{cm:LaunchProgram,{#AppName}}"; Flags: nowait postinstall skipifsilent
+; shellexec is required, not cosmetic: Inno runs postinstall entries as the original
+; (non-elevated) user, and plain CreateProcess cannot raise a UAC prompt -- against this
+; exe's requireAdministrator manifest it fails outright with code 740
+; (ERROR_ELEVATION_REQUIRED) before the process exists, so nothing reaches the app log.
+; ShellExecuteEx honours the manifest and elevates.
+Filename: "{app}\{#AppExe}"; Description: "{cm:LaunchProgram,{#AppName}}"; Flags: nowait postinstall skipifsilent shellexec
 
 [Code]
 function WebView2ClientPresent(RootKey: Integer; const SubKey: String): Boolean;

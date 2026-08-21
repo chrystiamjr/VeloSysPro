@@ -25,6 +25,14 @@ Key reference points and primary codebase entry points for VeloSys Pro.
   Zod definitions for every shape the C# host sends; `types.ts` infers its interfaces from these.
 - [Select Atom](file:///C:/Users/chrys/OneDrive/Desktop/Windows%20Optimizer/frontend/src/components/atoms/Select.tsx)
   Shared field styling plus the inset custom chevron. Exports `fieldClass` for native inputs that must match.
+- [Tweak Contract](file:///C:/Users/chrys/OneDrive/Desktop/Windows%20Optimizer/desktop/Features/Tweaks/ITweak.cs)
+  `ITweak`, `TweakState`, `RiskTier`, `TweakCapture`, `TweakChange`. Start here to add an optimization; the three subtypes beside it cover the registry, BCD, and service revert mechanisms.
+- [Tweak Catalog](file:///C:/Users/chrys/OneDrive/Desktop/Windows%20Optimizer/desktop/Features/Tweaks/TweakCatalog.cs)
+  Every shipped Tweak, the Presets over them, and the recommended set. Rejects at construction any Preset or recommendation naming an `Advanced` Tweak.
+- [Tweak Engine](file:///C:/Users/chrys/OneDrive/Desktop/Windows%20Optimizer/desktop/Features/Tweaks/TweakEngine.cs)
+  Safety Checkpoint, per-Tweak capture, apply and revert in one batch, and the before/after measurement. Returns facts; `ActionHost` publishes them.
+- [Optimize Selection Screen](file:///C:/Users/chrys/OneDrive/Desktop/Windows%20Optimizer/frontend/src/components/pages/OptimizePage.tsx)
+  The desired-state model: boxes mirror the host, the action bar submits the difference. See learning record 0004 before changing how selection behaves.
 
 ## External References
 

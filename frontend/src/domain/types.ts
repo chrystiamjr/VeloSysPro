@@ -11,8 +11,16 @@ export type {
   BackupItem,
   LocalizedMessage,
   LogType,
+  OptimizationSnapshot,
+  Preset,
   RestorePointItem,
+  RiskTier,
   ScheduledTaskItem,
+  SnapshotCapturedPayload,
+  Tweak,
+  TweakCatalog,
+  TweakChange,
+  TweakState,
   UpdateInfo,
 } from './schemas';
 
@@ -21,7 +29,6 @@ import type { LogType } from './schemas';
 export const SystemActions = {
   RUN_QUICK_OPTIMIZATION: 'runQuickOptimization',
   RUN_FULL_OPTIMIZATION: 'runFullOptimization',
-  RUN_GAMING_MODE: 'runGamingMode',
   REVERT_DEFAULTS: 'revertDefaults',
   CLEAR_UPDATE_CACHE: 'clearUpdateCache',
   CLEAN_PREFETCH: 'cleanPrefetch',
@@ -40,12 +47,19 @@ export const SystemActions = {
   RESTORE_TO_POINT: 'restoreToPoint',
   GET_SETTINGS: 'getSettings',
   SAVE_SETTINGS: 'saveSettings',
+  LOAD_TWEAKS: 'loadTweaks',
+  APPLY_TWEAKS: 'applyTweaks',
+  REVERT_TWEAK: 'revertTweak',
+  CAPTURE_SNAPSHOT: 'captureSnapshot',
+  LOAD_HISTORY: 'loadHistory',
+  ENABLE_SYSTEM_PROTECTION: 'enableSystemProtection',
 } as const;
 
 export type SystemActionType = (typeof SystemActions)[keyof typeof SystemActions];
 
 export enum AppScreen {
   Dashboard = 'Dashboard',
+  Optimize = 'Optimize',
   Scheduling = 'Scheduling',
   Backup = 'Backup',
   RestorePoints = 'RestorePoints',

@@ -41,12 +41,23 @@ describe('DashboardPage', () => {
   it('prioritizes primary actions and opens only the maintenance group initially', () => {
     renderDashboard();
 
-    expect(screen.getByText('Ações principais')).toBeVisible();
+    expect(screen.getByText('Manutenção')).toBeVisible();
     expect(screen.getByText('Saúde do Disco')).toBeVisible();
     expect(screen.queryByText('Backup de Registro')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /segurança e recuperação/i }));
     expect(screen.getByText('Backup de Registro')).toBeVisible();
+  });
+
+  it('no longer offers Modo Gaming, which cannot be undone from here', () => {
+    // E2-03 re-delivered its TCP settings as reversible Tweaks on the Optimize screen. This card
+    // was the last thing in the app that changed a persistent setting with no capture and no way
+    // back, so its absence is the point rather than an incidental layout detail.
+    renderDashboard();
+
+    expect(screen.queryByText('Modo Gaming')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Aplicar Modo' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Executar Agora' })).toHaveLength(2);
   });
 
   it('navigates from summary metrics and recovery shortcuts', () => {

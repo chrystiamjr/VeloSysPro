@@ -1,7 +1,6 @@
 const actions = [
   ['action-quick', 'runQuickOptimization'],
   ['action-full', 'runFullOptimization'],
-  ['action-gaming', 'runGamingMode'],
   ['action-disk-health', 'diskHealth'],
   ['action-update-cache', 'clearUpdateCache'],
   ['action-prefetch', 'cleanPrefetch'],

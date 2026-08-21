@@ -45,7 +45,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   };
 
   return (
-    <div className="flex select-none flex-col gap-6">
+    <div className="flex select-none flex-col gap-6 pb-4 sm:pb-6 lg:pb-8">
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <HealthCard
           testId="health-backups"
@@ -75,7 +75,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           <h3 className="text-sm font-bold text-textMain">{t('dashboard.primary.title')}</h3>
           <p className="mt-1 text-xs text-textMuted">{t('dashboard.primary.desc')}</p>
         </div>
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        {/* Two cards, not three: "Modo Gaming" left this screen when E2-03 re-delivered its TCP
+            settings as reversible Tweaks on the Optimize screen. It was the last thing here that
+            changed a persistent setting with no capture and no way back. */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <ActionCard
             testId="action-quick"
             title={t('act.quick.title')}
@@ -97,17 +100,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             disabled={actionsDisabled}
             active={activeAction === SystemActions.RUN_FULL_OPTIMIZATION}
             onExecute={() => onAction(SystemActions.RUN_FULL_OPTIMIZATION)}
-          />
-          <ActionCard
-            testId="action-gaming"
-            title={t('act.gaming.title')}
-            desc={t('act.gaming.desc')}
-            icon={<Icon name="gamepad" className="h-5 w-5 text-purple" />}
-            variant="purple"
-            buttonText={t('btn.applyMode')}
-            disabled={actionsDisabled}
-            active={activeAction === SystemActions.RUN_GAMING_MODE}
-            onExecute={() => onAction(SystemActions.RUN_GAMING_MODE)}
           />
         </div>
       </section>

@@ -26,10 +26,10 @@ describe('structured schedule display (pt_BR)', () => {
   });
 
   it('labels a task from structured host fields', () => {
-    expect(taskDisplayName(task(), t)).toBe('Diária - Otimização Rápida');
+    expect(taskDisplayName(task(), t)).toBe('Diária - Limpeza Rápida');
     expect(
       taskDisplayName(task({ Type: 'gaming', Frequency: 'WEEKLY' }), t)
-    ).toBe('Semanal - Modo Gaming');
+    ).toBe('Semanal - Predefinição Gaming');
   });
 
   it('falls back safely for a legacy record', () => {
@@ -38,7 +38,7 @@ describe('structured schedule display (pt_BR)', () => {
       Frequency: '',
       Time: '',
     });
-    expect(taskDisplayName(legacy, t)).toBe('Otimização Rápida');
+    expect(taskDisplayName(legacy, t)).toBe('Limpeza Rápida');
     expect(describeSchedule(legacy, t)).toBe('—');
   });
 

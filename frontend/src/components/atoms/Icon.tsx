@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  AlertTriangle,
   Zap,
   Rocket,
   Calendar,
@@ -7,7 +8,6 @@ import {
   ShieldCheck,
   Settings,
   FolderOpen,
-  Gamepad2,
   RotateCcw,
   Trash2,
   RefreshCw,
@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 
 export type IconName =
+  | 'alert-triangle'
   | 'zap'
   | 'rocket'
   | 'calendar'
@@ -38,7 +39,6 @@ export type IconName =
   | 'shield-check'
   | 'settings'
   | 'folder-open'
-  | 'gamepad'
   | 'rotate-ccw'
   | 'trash'
   | 'refresh-cw'
@@ -60,6 +60,7 @@ export type IconName =
   | 'chevrons-right';
 
 const iconMap: Record<IconName, React.FC<LucideProps>> = {
+  'alert-triangle': AlertTriangle,
   zap: Zap,
   rocket: Rocket,
   calendar: Calendar,
@@ -67,7 +68,6 @@ const iconMap: Record<IconName, React.FC<LucideProps>> = {
   'shield-check': ShieldCheck,
   settings: Settings,
   'folder-open': FolderOpen,
-  gamepad: Gamepad2,
   'rotate-ccw': RotateCcw,
   trash: Trash2,
   'refresh-cw': RefreshCw,

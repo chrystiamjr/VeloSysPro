@@ -14,11 +14,14 @@ namespace VeloSysPro
     {
         private sealed record SchedulePayload(string Type, string Frequency, string Time, string Day);
 
+        private sealed record ApplyTweaksPayload(string[]? TweakIds, string[]? RevertIds);
+
         private readonly Optimizer _optimizer;
         private readonly RegistryBackupManager _registryBackups;
         private readonly SystemRestoreManager _systemRestore;
         private readonly SchedulerManager _scheduler;
         private readonly SettingsManager _settings;
+        private readonly TweakEngine _tweaks;
         private readonly IpcEventEmitter _events;
         private readonly IStatusSink _sink;
         private readonly string _logsDir;
@@ -33,6 +36,7 @@ namespace VeloSysPro
             SystemRestoreManager systemRestore,
             SchedulerManager scheduler,
             SettingsManager settings,
+            TweakEngine tweaks,
             IpcEventEmitter events,
             IStatusSink sink,
             string logsDir,
@@ -44,6 +48,7 @@ namespace VeloSysPro
             _systemRestore = systemRestore;
             _scheduler = scheduler;
             _settings = settings;
+            _tweaks = tweaks;
             _events = events;
             _sink = sink;
             _logsDir = logsDir;
@@ -53,7 +58,6 @@ namespace VeloSysPro
             {
                 SystemActions.RunQuickOptimization,
                 SystemActions.RunFullOptimization,
-                SystemActions.RunGamingMode,
                 SystemActions.RevertDefaults,
                 SystemActions.ClearUpdateCache,
                 SystemActions.CleanPrefetch,
@@ -64,6 +68,9 @@ namespace VeloSysPro
                 SystemActions.CreateTask,
                 SystemActions.DeleteTask,
                 SystemActions.SaveSettings,
+                SystemActions.ApplyTweaks,
+                SystemActions.RevertTweak,
+                SystemActions.EnableSystemProtection,
             };
 
             _handlers = CreateHandlers();
@@ -107,7 +114,6 @@ namespace VeloSysPro
             {
                 [SystemActions.RunQuickOptimization] = _ => RunPlan(OptimizationPlan.Quick),
                 [SystemActions.RunFullOptimization] = _ => RunPlan(OptimizationPlan.Full),
-                [SystemActions.RunGamingMode] = _ => RunPlan(OptimizationPlan.Gaming),
                 [SystemActions.RevertDefaults] = _ => _optimizer.Execute(OptimizationPlan.Revert),
                 [SystemActions.ClearUpdateCache] = _ => _optimizer.ClearUpdateCache(),
                 [SystemActions.CleanPrefetch] = _ => _optimizer.CleanPrefetch(),
@@ -135,7 +141,46 @@ namespace VeloSysPro
                 [SystemActions.CreateTask] = payload => CreateTask(payload),
                 [SystemActions.DeleteTask] = payload =>
                     MutateAndRefresh(() => _scheduler.DeleteTask(ReadString(payload)), PushTasks),
+                [SystemActions.LoadTweaks] = _ => Run(PushTweaks),
+                [SystemActions.ApplyTweaks] = payload => ApplyTweaks(payload),
+                [SystemActions.RevertTweak] = payload =>
+                    MutateAndRefresh(() => _tweaks.RevertTweak(ReadString(payload)), PushTweaks),
+                [SystemActions.CaptureSnapshot] = _ => Run(PushSnapshot),
+                [SystemActions.LoadHistory] = _ => Run(PushHistory),
+                [SystemActions.EnableSystemProtection] = _ =>
+                    MutateAndRefresh(_tweaks.EnableSystemProtection, PushTweaks),
             };
+
+        private bool ApplyTweaks(JsonElement payload)
+        {
+            ApplyTweaksPayload parsed = ReadObject<ApplyTweaksPayload>(payload);
+            string[] toApply = parsed.TweakIds ?? Array.Empty<string>();
+            string[] toRevert = parsed.RevertIds ?? Array.Empty<string>();
+            if (toApply.Length == 0 && toRevert.Length == 0)
+                throw new ArgumentException("applyTweaks requires at least one Tweak id.");
+
+            TweakBatchResult result = _tweaks.ApplyTweaks(toApply, toRevert);
+
+            // A null diff means the batch never got past its Safety Checkpoint, so nothing was
+            // touched. Once it did run, the badges must reflect reality even if one Tweak failed —
+            // a stale "not applied" badge on a Tweak that is now applied is worse than a partial
+            // refresh (.agents/rules/os-backed-list-freshness.md).
+            if (result.Diff != null)
+            {
+                _events.Emit(
+                    IpcEvents.SnapshotCaptured,
+                    new
+                    {
+                        before = result.Diff.Before,
+                        after = result.Diff.After,
+                        changes = result.Changes,
+                    }
+                );
+                PushTweaks();
+            }
+
+            return result.Ok;
+        }
 
         private bool RunPlan(OptimizationPlan plan)
         {
@@ -161,6 +206,7 @@ namespace VeloSysPro
             SettingsManager.Settings settings = ReadObject<SettingsManager.Settings>(payload);
             SettingsManager.Settings applied = _settings.Save(settings);
             _optimizer.CreateSafetyBackupEnabled = applied.CreateBackupBeforeOptimize;
+            _tweaks.CreateSafetyBackupEnabled = applied.CreateBackupBeforeOptimize;
             PushSettings();
             return true;
         }
@@ -168,6 +214,14 @@ namespace VeloSysPro
         private bool MutateAndRefresh(Action mutation, Action refresh)
         {
             mutation();
+            refresh();
+            return true;
+        }
+
+        /// <summary>Refresh-after-success for a mutation that reports failure instead of throwing.</summary>
+        private static bool MutateAndRefresh(Func<bool> mutation, Action refresh)
+        {
+            if (!mutation()) return false;
             refresh();
             return true;
         }
@@ -188,6 +242,22 @@ namespace VeloSysPro
             _events.EmitJson(IpcEvents.RestorePointsLoaded, _systemRestore.GetRestorePointsJson());
 
         private void PushSettings() => _events.Emit(IpcEvents.SettingsLoaded, _settings.Current);
+
+        private void PushTweaks() => _events.EmitJson(IpcEvents.TweaksLoaded, _tweaks.GetTweaksJson());
+
+        /// <summary>A standalone measurement has no "before" to compare against, and changed nothing.</summary>
+        private void PushSnapshot() =>
+            _events.Emit(
+                IpcEvents.SnapshotCaptured,
+                new
+                {
+                    before = (OptimizationSnapshot?)null,
+                    after = _tweaks.CaptureSnapshot(),
+                    changes = Array.Empty<TweakChange>(),
+                }
+            );
+
+        private void PushHistory() => _events.Emit(IpcEvents.HistoryLoaded, _tweaks.LoadHistory());
 
         private static string ReadString(JsonElement payload)
         {

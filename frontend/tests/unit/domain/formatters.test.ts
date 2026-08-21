@@ -23,4 +23,32 @@ describe('locale-neutral management record formatting', () => {
     expect(formatBytes(39936, 'pt_BR')).toBe('39,0 KB');
     expect(formatBytes(39936, 'en_US')).toBe('39.0 KB');
   });
+
+  it('scales to the unit that keeps the figure readable', () => {
+    // A registry backup and free memory go through the same formatter; without scaling the
+    // second reads as "8.388.608,0 KB", which no user can parse at a glance.
+    expect(formatBytes(512, 'pt_BR')).toBe('512 B');
+    expect(formatBytes(1024, 'pt_BR')).toBe('1,0 KB');
+    expect(formatBytes(1264128, 'pt_BR')).toBe('1,2 MB');
+    expect(formatBytes(8589934592, 'pt_BR')).toBe('8,0 GB');
+    expect(formatBytes(8589934592, 'en_US')).toBe('8.0 GB');
+    expect(formatBytes(2199023255552, 'pt_BR')).toBe('2,0 TB');
+  });
+
+  it('does not invent a fraction of a byte', () => {
+    expect(formatBytes(0, 'pt_BR')).toBe('0 B');
+    // pt-BR groups thousands, and a byte count is no exception to that.
+    expect(formatBytes(1023, 'pt_BR')).toBe('1.023 B');
+    expect(formatBytes(1023, 'en_US')).toBe('1,023 B');
+  });
+
+  it('treats a nonsensical size as zero rather than rendering NaN', () => {
+    expect(formatBytes(Number.NaN, 'pt_BR')).toBe('0 B');
+    expect(formatBytes(-1, 'pt_BR')).toBe('0 B');
+    expect(formatBytes(Number.POSITIVE_INFINITY, 'pt_BR')).toBe('0 B');
+  });
+
+  it('stops scaling at the largest unit it knows', () => {
+    expect(formatBytes(1024 ** 5, 'en_US')).toBe('1,024.0 TB');
+  });
 });

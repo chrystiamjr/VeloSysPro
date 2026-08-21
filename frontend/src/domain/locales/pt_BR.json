@@ -10,11 +10,7 @@
     },
     "full": {
       "desc": "Executa SFC, DISM, verificação de disco, flush DNS e limpeza completa.",
-      "title": "Otimização Completa"
-    },
-    "gaming": {
-      "desc": "Ajusta pilha TCP (RSS, Autotuning) focados em latência e jogos online.",
-      "title": "Modo Gaming"
+      "title": "Reparo Completo"
     },
     "prefetch": {
       "desc": "Remove arquivos de prefetch para recriar o cache de inicialização de apps.",
@@ -22,7 +18,7 @@
     },
     "quick": {
       "desc": "Limpeza de cache DNS, arquivos temporários do sistema e manutenção leve.",
-      "title": "Otimização Rápida"
+      "title": "Limpeza Rápida"
     },
     "restorePoint": {
       "desc": "Cria um ponto de restauração verificado do Windows antes de alterações.",
@@ -57,7 +53,6 @@
     "version": "Versão 0.1.6 (Build C# / React)"
   },
   "btn": {
-    "applyMode": "Aplicar Modo",
     "clean": "Limpar",
     "clearConsole": "Limpar Console",
     "createNow": "Criar Agora",
@@ -68,12 +63,12 @@
   },
   "dashboard": {
     "maintenance": {
-      "desc": "Diagnóstico e limpezas específicas do Windows.",
-      "title": "Manutenção"
+      "desc": "Ferramentas pontuais do Windows, para quando você já sabe o que quer resolver.",
+      "title": "Diagnóstico e limpeza"
     },
     "primary": {
-      "desc": "Escolha a rotina mais adequada para otimizar o sistema.",
-      "title": "Ações principais"
+      "desc": "Rotinas que limpam e reparam o Windows. Não alteram configurações — para isso, use Otimizações.",
+      "title": "Manutenção"
     },
     "recovery": {
       "desc": "Backups, pontos de restauração e reversão de rede.",
@@ -84,6 +79,9 @@
       "title": "Ferramentas"
     }
   },
+  "dialog": {
+    "cancel": "Cancelar"
+  },
   "header": {
     "backup": {
       "subtitle": "Gerencie backups manuais do registro e pontos de restauração",
@@ -92,6 +90,10 @@
     "dashboard": {
       "subtitle": "Manutenção, aceleração de rede e recuperação do Windows",
       "title": "Painel de Otimização"
+    },
+    "optimize": {
+      "subtitle": "Escolha, aplique e reverta otimizações individualmente",
+      "title": "Otimizações à la carte"
     },
     "restorePoints": {
       "subtitle": "Crie e reverta pontos de restauração do sistema Windows",
@@ -133,12 +135,8 @@
       "start": "Gerando relatório de saúde do disco..."
     },
     "full": {
-      "done": "Otimização Completa concluída com sucesso.",
-      "start": "Iniciando Otimização Completa..."
-    },
-    "gaming": {
-      "done": "Modo Gaming aplicado com sucesso.",
-      "start": "Aplicando ajustes de rede para baixa latência (Modo Gaming)..."
+      "done": "Reparo Completo concluído com sucesso.",
+      "start": "Iniciando Reparo Completo..."
     },
     "hostReady": "Host .NET 8 WPF + Edge Chromium WebView2 inicializado (UI embutida).",
     "op": {
@@ -148,15 +146,21 @@
       "done": "Prefetch limpo com sucesso.",
       "start": "Limpando pasta Prefetch..."
     },
+    "protection": {
+      "enabled": "Proteção do Sistema ativada e ponto de restauração liberado por otimização.",
+      "enabling": "Ativando a Proteção do Sistema...",
+      "failed": "Falha ao ativar a Proteção do Sistema: {{message}}"
+    },
     "quick": {
-      "done": "Otimização Rápida concluída com sucesso.",
-      "start": "Iniciando Otimização Rápida..."
+      "done": "Limpeza Rápida concluída com sucesso.",
+      "start": "Iniciando Limpeza Rápida..."
     },
     "raw": "{{text}}",
     "restorePoint": {
       "creating": "Criando Ponto de Restauração do Sistema...",
       "done": "Ponto de Restauração criado com sucesso.",
-      "failed": "Falha ao criar ponto de restauração: {{message}}"
+      "failed": "Falha ao criar ponto de restauração: {{message}}",
+      "unconfirmed": "O Windows não criou o Ponto de Restauração, apesar de não relatar erro. Nada foi alterado no sistema."
     },
     "restoreToPoint": {
       "done": "Restauração para o ponto {{sequence}} iniciada.",
@@ -167,10 +171,28 @@
       "done": "Configurações revertidas com sucesso.",
       "start": "Revertendo configurações de rede para o padrão..."
     },
+    "snapshot": {
+      "unavailable": "Não foi possível medir o sistema; as métricas ficarão zeradas."
+    },
     "task": {
       "created": "Tarefa agendada criada: {{name}}",
       "deleted": "Tarefa agendada removida: {{name}}",
       "failed": "Falha na operação de agendamento: {{message}}"
+    },
+    "tweaks": {
+      "applied": "Otimização aplicada: {{id}}",
+      "applyFailed": "Falha ao aplicar a otimização: {{id}}",
+      "checkpointCreated": "Ponto de Segurança criado antes das alterações.",
+      "checkpointFailed": "Falha ao criar o Ponto de Segurança: {{message}}. Nada foi alterado.",
+      "checkpointSkipped": "Ponto de Segurança desativado nas preferências; seguindo sem rede de proteção.",
+      "done": "Otimizações selecionadas aplicadas com sucesso.",
+      "noCapture": "Sem estado anterior guardado para {{id}}; reversão cancelada.",
+      "noneSelected": "Selecione ao menos uma otimização antes de aplicar.",
+      "protectionDisabled": "A Proteção do Sistema do Windows está desativada, então nenhum ponto de restauração pode ser criado. Nada foi alterado.",
+      "revertFailed": "Falha ao reverter a otimização: {{id}}",
+      "reverted": "Otimização revertida: {{id}}",
+      "unknown": "Otimização desconhecida: {{id}}",
+      "unknownPreset": "Predefinição desconhecida: {{id}}"
     },
     "updateCache": {
       "done": "Cache do Windows Update limpo com sucesso.",
@@ -183,9 +205,156 @@
     "dashboard": "Painel Inicial",
     "expand": "Expandir menu",
     "logsFolder": "Pasta de Logs",
+    "optimize": "Otimizações",
     "restorePoints": "Pontos de Restauração",
     "scheduling": "Agendamento",
     "settings": "Configurações"
+  },
+  "optimize": {
+    "advancedConfirmBody": "Você está prestes a aplicar {{apply}} otimização(ões), sendo que ao menos uma REDUZ A SEGURANÇA do Windows. Leia o risco de cada item abaixo antes de continuar.",
+    "advancedConfirmBtn": "Entendi o risco, aplicar",
+    "advancedConfirmTitle": "Estas otimizações reduzem sua segurança",
+    "advancedDesc": "Ganho maior, com custo real de segurança ou estabilidade. Nunca entram por predefinição.",
+    "advancedTitle": "Avançadas (podem reduzir a segurança)",
+    "applyBtn": "Aplicar alterações",
+    "category": {
+      "boot": "Inicialização e temporizadores",
+      "cpu": "Processador e prioridades",
+      "graphics": "Gráficos e jogos",
+      "network": "Rede",
+      "other": "Outras",
+      "services": "Serviços do Windows",
+      "system": "Sistema e desempenho"
+    },
+    "clearBtn": "Limpar seleção",
+    "empty": "Nenhuma otimização disponível. Use Atualizar para consultar o sistema novamente.",
+    "loading": "Consultando o sistema...",
+    "noPending": "Nenhuma alteração pendente. Marque ou desmarque itens para montar a mudança.",
+    "partialHint": "Parcialmente aplicada: parte dos ajustes deste item não confere. Marque e aplique de novo para completar.",
+    "pending": "{{apply}} para aplicar · {{revert}} para reverter",
+    "preset": {
+      "gaming": {
+        "desc": "Tudo o que o catálogo oferece para jogos: prioridade de processador, rede, gráficos, energia e serviços em segundo plano.",
+        "title": "Predefinição Gaming"
+      }
+    },
+    "presetCount": "{{count}} otimizações",
+    "presetLabel": "Comece por uma predefinição",
+    "presetModified": "(modificada)",
+    "rebootHint": "Só entra em vigor depois de reiniciar o Windows.",
+    "recommended": {
+      "desc": "O que vale para a maioria e tem efeito na hora — sem nada que exija reiniciar o Windows.",
+      "title": "Recomendadas"
+    },
+    "revertBtn": "Reverter",
+    "revertConfirmBody": "Você está prestes a desfazer {{revert}} otimização(ões) já aplicada(s) e aplicar {{apply}}. As opções abaixo voltarão ao valor que o Windows tinha antes, guardado quando foram aplicadas.",
+    "revertConfirmBtn": "Desfazer e aplicar",
+    "revertConfirmTitle": "Confirmar reversão",
+    "revertItemDetail": "Volta ao valor guardado antes da aplicação.",
+    "revertSingleBody": "Esta otimização voltará ao valor que o Windows tinha antes de ela ser aplicada.",
+    "risk": {
+      "advanced": "Avançada",
+      "advancedHint": "Reduz a segurança ou a estabilidade; exige confirmação explícita.",
+      "safe": "Segura",
+      "safeHint": "Reversível e sem impacto na segurança do Windows."
+    },
+    "sectionCount": "{{selected}} de {{total}} marcadas",
+    "sectionDesc": "Marque o que você quer aplicado e desmarque o que quer desfeito. Um Ponto de Segurança é criado antes de qualquer alteração.",
+    "sectionTitle": "Selecionar otimizações",
+    "staleRead": "O host enviou um catálogo inválido; estes são os últimos dados válidos. Use Atualizar para tentar de novo.",
+    "state": {
+      "applied": "Aplicada",
+      "notApplied": "Não aplicada",
+      "partial": "Parcial"
+    },
+    "tweak": {
+      "boot": {
+        "disableDynamicTick": {
+          "desc": "Desativa o tick dinâmico do temporizador de boot, deixando os intervalos do relógio constantes. Exige reinicialização.",
+          "title": "Desativar tick dinâmico do temporizador"
+        },
+        "platformClock": {
+          "desc": "Remove a imposição de uma única fonte de relógio na inicialização e devolve ao Windows a escolha da melhor disponível.",
+          "title": "Não forçar o relógio da plataforma"
+        },
+        "platformTick": {
+          "desc": "Faz o Windows usar o temporizador de hardware da placa-mãe, deixando os intervalos de relógio mais previsíveis.",
+          "title": "Usar o temporizador da plataforma"
+        }
+      },
+      "cpu": {
+        "gamesTaskPriority": {
+          "desc": "Eleva a prioridade de processador e de vídeo que o Windows concede às tarefas registradas como jogos.",
+          "title": "Prioridade do agendador para jogos"
+        },
+        "systemResponsiveness": {
+          "desc": "Reduz a fatia de processador que o agendador multimídia guarda para tarefas de fundo e a devolve ao aplicativo em primeiro plano.",
+          "title": "Reservar menos CPU para o segundo plano"
+        },
+        "win32PrioritySeparation": {
+          "desc": "Dá quantum curto e fixo ao aplicativo em primeiro plano, favorecendo jogos e janelas ativas.",
+          "title": "Prioridade para o aplicativo em primeiro plano"
+        }
+      },
+      "graphics": {
+        "fullscreenExclusive": {
+          "desc": "Faz os jogos usarem o modo de tela cheia exclusiva em vez das otimizações de tela cheia do Windows.",
+          "title": "Forçar tela cheia exclusiva"
+        },
+        "gameMode": {
+          "desc": "Deixa o Windows priorizar o jogo em execução e adiar atualizações e notificações.",
+          "title": "Modo Jogo do Windows"
+        },
+        "hardwareScheduling": {
+          "desc": "Entrega o agendamento da memória de vídeo à própria placa. Disponível apenas onde o driver de vídeo oferece o recurso.",
+          "title": "Agendamento de GPU por hardware"
+        }
+      },
+      "network": {
+        "tcpParameters": {
+          "desc": "Aplica um conjunto de parâmetros da pilha TCP voltado a conexões de baixa latência e a mais portas simultâneas.",
+          "title": "Ajustar os parâmetros TCP do Windows"
+        },
+        "throttlingIndex": {
+          "desc": "Remove o teto que o agendador multimídia impõe ao tráfego de rede enquanto há áudio ou vídeo em execução.",
+          "title": "Desligar a limitação de rede multimídia"
+        }
+      },
+      "services": {
+        "diagTrack": {
+          "desc": "Coloca a telemetria do Windows em início Manual, reduzindo coleta e envio de dados em segundo plano. O Windows ainda pode iniciá-la sob demanda.",
+          "title": "Telemetria (DiagTrack) em início Manual"
+        },
+        "doSvc": {
+          "desc": "Coloca a Otimização de Entrega em início Manual, impedindo que a máquina compartilhe atualizações pela rede sem necessidade. O Windows Update continua funcionando.",
+          "title": "Otimização de Entrega em início Manual"
+        },
+        "sysMain": {
+          "desc": "Coloca o SysMain (Superfetch) em início Manual, reduzindo leitura de disco em segundo plano.",
+          "title": "SysMain em início Manual"
+        },
+        "wSearch": {
+          "desc": "Coloca o indexador do Windows Search em início Manual, reduzindo uso de disco em segundo plano. A busca continua funcionando, porém mais lenta em pastas grandes.",
+          "title": "Windows Search em início Manual"
+        }
+      },
+      "system": {
+        "powerPlan": {
+          "desc": "Ativa o plano Desempenho Máximo, ou o de Alto desempenho quando a máquina não tem o primeiro. Consome mais energia em notebooks.",
+          "title": "Plano de energia de alto desempenho"
+        },
+        "visualEffects": {
+          "desc": "Troca as animações e sombras da interface pelo ajuste de melhor desempenho.",
+          "title": "Efeitos visuais ajustados para desempenho"
+        }
+      }
+    }
+  },
+  "protection": {
+    "desc": "A Proteção do Sistema do Windows está desativada. Sem ela o VeloSys Pro não consegue criar o ponto de restauração que antecede cada otimização, e as alterações seriam aplicadas sem essa rede de proteção.",
+    "enableBtn": "Ativar Proteção do Sistema",
+    "manualPath": "Prefere fazer manualmente? Painel de Controle → Sistema → Proteção do Sistema → selecione o disco do Windows → Configurar → Ativar proteção do sistema.",
+    "title": "Ative a Proteção do Sistema antes de otimizar"
   },
   "rp": {
     "colActions": "Ações",
@@ -253,6 +422,30 @@
     "updateLatest": "Você está na versão mais recente.",
     "updateTitle": "Atualizações"
   },
+  "snapshot": {
+    "absent": "(ausente)",
+    "after": "Depois",
+    "before": "Antes",
+    "capturedAt": "Medição feita em {{timestamp}}",
+    "changesTitle": "Mudanças aplicadas",
+    "colMetric": "Métrica",
+    "empty": "Aplique otimizações para ver o que mudou.",
+    "group": {
+      "immediate": "Efeito imediato",
+      "nextBoot": "Efeito na próxima inicialização"
+    },
+    "metric": {
+      "automaticServices": "Serviços automáticos",
+      "bootDuration": "Duração do último boot",
+      "pendingReboot": "Reinicialização pendente",
+      "runningServices": "Serviços em execução",
+      "startupApps": "Programas na inicialização"
+    },
+    "notMeasured": "—",
+    "restartToMeasure": "reinicie para medir",
+    "sectionDesc": "As mudanças abaixo foram lidas de volta do sistema após a aplicação. As métricas são contexto: algumas só mudam depois de reiniciar.",
+    "sectionTitle": "O que mudou no sistema"
+  },
   "status": {
     "diskHealth": {
       "done": "Relatório de disco gerado!",
@@ -261,17 +454,10 @@
     "full": {
       "dism": "[2/4] Limpando imagem do sistema (DISM)...",
       "dns": "[3/4] Limpando cache DNS...",
-      "done": "Otimização Completa concluída!",
+      "done": "Reparo Completo concluído!",
       "sfc": "[1/4] Verificando arquivos do sistema (SFC)...",
-      "start": "Iniciando Otimização Completa...",
+      "start": "Iniciando Reparo Completo...",
       "temp": "[4/4] Limpando arquivos temporários..."
-    },
-    "gaming": {
-      "autotuning": "Ajustando autotuning...",
-      "dns": "Limpando DNS...",
-      "done": "Modo Gaming aplicado com sucesso!",
-      "rss": "Habilitando RSS...",
-      "start": "Aplicando Modo Gaming..."
     },
     "idle": "Aguardando ação",
     "prefetch": {
@@ -281,8 +467,8 @@
     "quick": {
       "cleanmgr": "[2/3] Executando limpeza de temporários...",
       "dns": "[1/3] Limpando cache DNS...",
-      "done": "Otimização Rápida concluída com sucesso!",
-      "start": "Iniciando Otimização Rápida...",
+      "done": "Limpeza Rápida concluída com sucesso!",
+      "start": "Iniciando Limpeza Rápida...",
       "temp": "[3/3] Finalizando limpeza de arquivos..."
     },
     "restorePoint": {
@@ -295,6 +481,12 @@
       "ip": "Resetando IP stack...",
       "start": "Revertendo configurações...",
       "winsock": "Resetando Winsock..."
+    },
+    "tweaks": {
+      "applying": "Aplicando {{id}}...",
+      "done": "Otimizações concluídas!",
+      "measuring": "Medindo o sistema...",
+      "reverting": "Revertendo {{id}}..."
     },
     "updateCache": {
       "done": "Cache do Windows Update limpo!",
@@ -312,6 +504,12 @@
   "terminal": {
     "title": "Log em Tempo Real",
     "waiting": "[SISTEMA] Aguardando logs de execução..."
+  },
+  "toast": {
+    "dismiss": "Fechar aviso",
+    "fail": "Algo não deu certo",
+    "ok": "Concluído",
+    "viewLog": "Ver registro completo"
   },
   "updateBanner": {
     "btn": "Baixar",

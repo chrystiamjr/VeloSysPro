@@ -107,7 +107,8 @@ export function DataTable<T>({
           <Button
             testId="table-refresh"
             variant="primary"
-            className="w-auto gap-1.5 px-4 py-2"
+            fullWidth={false}
+            className="gap-1.5 px-4 py-2"
             disabled={disabled}
             onClick={onRefresh}
           >
@@ -199,7 +200,8 @@ export function DataTable<T>({
                   <Button
                     testId="table-prev"
                     variant="primary"
-                    className="w-auto gap-1.5 px-4 py-2"
+                    fullWidth={false}
+                    className="gap-1.5 px-4 py-2"
                     disabled={currentPage === 0}
                     onClick={() => setPage(Math.max(0, currentPage - 1))}
                   >
@@ -211,7 +213,8 @@ export function DataTable<T>({
                   <Button
                     testId="table-next"
                     variant="primary"
-                    className="w-auto gap-1.5 px-4 py-2"
+                    fullWidth={false}
+                    className="gap-1.5 px-4 py-2"
                     disabled={currentPage >= totalPages - 1}
                     onClick={() => setPage(Math.min(totalPages - 1, currentPage + 1))}
                   >

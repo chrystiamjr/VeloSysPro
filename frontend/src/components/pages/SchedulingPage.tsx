@@ -84,7 +84,8 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
         <Button
           testId={`task-delete-${task.Name}`}
           variant="danger"
-          className="ml-auto flex w-auto items-center gap-1.5 px-4 py-2"
+          fullWidth={false}
+          className="ml-auto flex items-center gap-1.5 px-4 py-2"
           disabled={disabled}
           onClick={() => handleDelete(task.Name)}
         >
@@ -95,7 +96,7 @@ export const SchedulingPage: React.FC<SchedulingPageProps> = ({
   ];
 
   return (
-    <div className="flex select-none flex-col gap-6">
+    <div className="flex select-none flex-col gap-6 pb-4 sm:pb-6 lg:pb-8">
       {/* Create form */}
       <div className="flex flex-col gap-5 rounded-xl border border-borderColor bg-bgCard p-6">
         <div>
