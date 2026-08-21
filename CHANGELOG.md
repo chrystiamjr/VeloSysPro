@@ -1,3 +1,9 @@
+## [0.2.0](https://github.com/chrystiamjr/VeloSysPro/compare/v0.1.6...v0.2.0) (2026-08-21)
+
+### Features
+
+* **optimize:** reversible Tweak framework with a 14-Tweak catalog ([#44](https://github.com/chrystiamjr/VeloSysPro/issues/44)) ([3574752](https://github.com/chrystiamjr/VeloSysPro/commit/35747529b28aed5f320e1f87625b360eafe94a98))
+
 ## [0.1.6](https://github.com/chrystiamjr/VeloSysPro/compare/v0.1.5...v0.1.6) (2026-07-25)
 
 ### Bug Fixes
