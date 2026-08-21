@@ -4,6 +4,7 @@ import {
   NEXT_BOOT_METRICS,
   formatMetricValue,
   isSameBootSession,
+  resolveNextBootComparison,
 } from '../../../src/domain/metricDeltas';
 import type { OptimizationSnapshot, SnapshotCapturedPayload } from '../../../src/domain/types';
 
@@ -66,5 +67,80 @@ describe('metricDeltas', () => {
       changes: [],
     };
     expect(isSameBootSession(differentBoot)).toBe(false);
+  });
+});
+
+describe('resolveNextBootComparison', () => {
+  const inSession = (boot: string, bootDurationMs: number): OptimizationSnapshot => ({
+    ...sampleSnapshot,
+    lastBootUpTime: boot,
+    bootDurationMs,
+  });
+
+  const bootX = '2026-08-20T10:00:00.000Z';
+  const bootY = '2026-08-21T09:00:00.000Z';
+  const bootZ = '2026-08-22T09:00:00.000Z';
+
+  const batchIn = (boot: string, before: number, after: number): SnapshotCapturedPayload => ({
+    before: inSession(boot, before),
+    after: inSession(boot, after),
+    changes: [],
+  });
+
+  it('has nothing to compare while the machine has not rebooted', () => {
+    // The batch measured itself twice seconds apart. Boot duration provably cannot have moved,
+    // which is what the "restart to measure" hint is for.
+    const batch = batchIn(bootX, 15400, 15400);
+
+    expect(resolveNextBootComparison(batch, [batch.before!, batch.after])).toBeNull();
+  });
+
+  it('compares the batch against the first measurement from a later boot', () => {
+    const batch = batchIn(bootX, 15400, 15400);
+    const afterReboot = inSession(bootY, 11200);
+
+    const pair = resolveNextBootComparison(batch, [batch.before!, batch.after, afterReboot]);
+
+    // Anchored to what the machine looked like *before* the change, not to the post-batch
+    // measurement — that one was taken in the same boot and carries the same old number.
+    expect(pair?.before?.bootDurationMs).toBe(15400);
+    expect(pair?.after.bootDurationMs).toBe(11200);
+  });
+
+  it('stays anchored to the batch across further reboots', () => {
+    // Two reboots later the newest row is a different session again. The comparison must still be
+    // "before the change vs now", never "the last two boots", which would drift into noise.
+    const batch = batchIn(bootX, 15400, 15400);
+    const history = [batch.before!, batch.after, inSession(bootY, 11200), inSession(bootZ, 10900)];
+
+    const pair = resolveNextBootComparison(batch, history);
+
+    expect(pair?.before?.bootDurationMs).toBe(15400);
+    expect(pair?.after.bootDurationMs).toBe(10900);
+  });
+
+  it('ignores older sessions that precede the batch', () => {
+    // A row from before the batch is also "a different session", but using it as the *after* side
+    // would run the comparison backwards.
+    const batch = batchIn(bootY, 15400, 15400);
+    const history = [inSession(bootX, 20000), batch.before!, batch.after];
+
+    expect(resolveNextBootComparison(batch, history)).toBeNull();
+  });
+
+  it('refuses to compare when a boot identity is missing', () => {
+    // Rows written before lastBootUpTime existed carry "". Two empty strings are not evidence of
+    // the same boot, and an empty against a real one is not evidence of a different one.
+    const batch = batchIn('', 15400, 15400);
+
+    expect(resolveNextBootComparison(batch, [batch.before!, batch.after, inSession('', 11200)]))
+      .toBeNull();
+    expect(resolveNextBootComparison(batch, [batch.before!, batch.after, inSession(bootY, 11200)]))
+      .toBeNull();
+  });
+
+  it('has nothing to compare without a batch or without history', () => {
+    expect(resolveNextBootComparison(null, [inSession(bootY, 11200)])).toBeNull();
+    expect(resolveNextBootComparison(batchIn(bootX, 15400, 15400), [])).toBeNull();
   });
 });

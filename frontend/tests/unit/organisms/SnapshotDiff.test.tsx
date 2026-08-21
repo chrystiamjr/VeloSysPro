@@ -45,10 +45,13 @@ const changes = [
   },
 ];
 
-const renderDiff = (snapshot: React.ComponentProps<typeof SnapshotDiff>['snapshot']) => {
+const renderDiff = (
+  snapshot: React.ComponentProps<typeof SnapshotDiff>['snapshot'],
+  nextBoot: React.ComponentProps<typeof SnapshotDiff>['nextBoot'] = null
+) => {
   const { container } = render(
     <LanguageProvider>
-      <SnapshotDiff snapshot={snapshot} />
+      <SnapshotDiff snapshot={snapshot} nextBoot={nextBoot} />
     </LanguageProvider>
   );
   return container;
@@ -102,7 +105,12 @@ describe('SnapshotDiff', () => {
   });
 
   it('reports the real boot figure once the machine has restarted', () => {
-    const container = renderDiff({ before, after: afterReboot, changes: [] });
+    // The batch pair still describes one session and cannot answer for boot duration; the
+    // cross-boot pair is what resolves it, and it arrives separately.
+    const container = renderDiff(
+      { before, after, changes: [] },
+      { before, after: afterReboot, changes: [] }
+    );
 
     expect(cells(container, 'bootDuration')).toEqual([
       'Duração do último boot',
@@ -112,9 +120,25 @@ describe('SnapshotDiff', () => {
   });
 
   it('renders boolean metrics as words, not as raw true/false', () => {
-    const container = renderDiff({ before, after, changes: [] });
+    // pendingReboot is a next-boot metric, so it reads from the cross-boot pair like its group.
+    const container = renderDiff(
+      { before, after, changes: [] },
+      { before, after, changes: [] }
+    );
 
     expect(cells(container, 'pendingReboot')).toEqual(['Reinicialização pendente', 'Não', 'Sim']);
+  });
+
+  it('keeps the known "before" while the whole next-boot group waits for a restart', () => {
+    // The before side was measured; only the after side needs the machine to come back up. The
+    // whole group waits together, not just boot duration.
+    const container = renderDiff({ before, after, changes: [] });
+
+    expect(cells(container, 'pendingReboot')).toEqual([
+      'Reinicialização pendente',
+      'Não',
+      'reinicie para medir',
+    ]);
   });
 
   it('marks a standalone measurement as having no baseline', () => {
@@ -124,11 +148,10 @@ describe('SnapshotDiff', () => {
   });
 
   it('treats an unreadable boot duration as not measured rather than instant', () => {
-    const container = renderDiff({
-      before: null,
-      after: { ...after, bootDurationMs: 0 },
-      changes: [],
-    });
+    const container = renderDiff(
+      { before: null, after, changes: [] },
+      { before: null, after: { ...after, bootDurationMs: 0 }, changes: [] }
+    );
 
     expect(cells(container, 'bootDuration')).toEqual(['Duração do último boot', '—', '—']);
   });
