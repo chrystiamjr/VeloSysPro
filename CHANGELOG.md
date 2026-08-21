@@ -1,3 +1,9 @@
+## [0.4.0](https://github.com/chrystiamjr/VeloSysPro/compare/v0.3.0...v0.4.0) (2026-08-21)
+
+### Features
+
+* **debloat:** allow-listed Appx removal with per-package results ([#45](https://github.com/chrystiamjr/VeloSysPro/issues/45)) ([b0bb69f](https://github.com/chrystiamjr/VeloSysPro/commit/b0bb69f9b1aae4e7a3d12760e73ab336eb2acc86))
+
 ## [0.3.0](https://github.com/chrystiamjr/VeloSysPro/compare/v0.2.0...v0.3.0) (2026-08-21)
 
 ### Features
