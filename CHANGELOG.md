@@ -1,3 +1,9 @@
+## [0.4.1](https://github.com/chrystiamjr/VeloSysPro/compare/v0.4.0...v0.4.1) (2026-08-22)
+
+### Bug Fixes
+
+* **snapshot:** resolve the restart hint after an actual restart ([#47](https://github.com/chrystiamjr/VeloSysPro/issues/47)) ([646d7ed](https://github.com/chrystiamjr/VeloSysPro/commit/646d7ed17880ed81ab8276a65b63acf335a0e3dc))
+
 ## [0.4.0](https://github.com/chrystiamjr/VeloSysPro/compare/v0.3.0...v0.4.0) (2026-08-21)
 
 ### Features
