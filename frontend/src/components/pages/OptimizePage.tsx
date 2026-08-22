@@ -12,6 +12,8 @@ import { useTranslation } from '../../infrastructure/i18nContext';
 export interface OptimizePageProps {
   catalog: TweakCatalog;
   snapshot: SnapshotCapturedPayload | null;
+  /** The cross-boot pair for reboot-dependent metrics; null until a later boot has been measured. */
+  nextBootSnapshot?: SnapshotCapturedPayload | null;
   onApply: (change: { tweakIds: string[]; revertIds: string[] }) => void;
   onRevert: (tweakId: string) => void;
   onRefresh: () => void;
@@ -35,6 +37,7 @@ const sameSet = (left: string[], right: string[]) =>
 export const OptimizePage: React.FC<OptimizePageProps> = ({
   catalog,
   snapshot,
+  nextBootSnapshot = null,
   onApply,
   onRevert,
   onRefresh,
@@ -202,7 +205,7 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
         stale={catalogStale}
       />
 
-      <SnapshotDiff snapshot={snapshot} />
+      <SnapshotDiff snapshot={snapshot} nextBoot={nextBootSnapshot} />
 
       {/* Bleeds through the page padding to span the whole content panel, so it reads as a bar the
           screen sits on rather than one more card in the stack. Sticky so the pending difference

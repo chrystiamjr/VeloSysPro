@@ -26,6 +26,7 @@ import {
   subscribeUpdate,
 } from './infrastructure/bridge';
 import { formatDateTime } from './domain/formatters';
+import { resolveNextBootComparison } from './domain/metricDeltas';
 import { useHostMutation } from './infrastructure/useHostMutation';
 import { useOsBackedLists } from './infrastructure/useOsBackedLists';
 import { usePreferences } from './infrastructure/usePreferences';
@@ -86,6 +87,7 @@ function AppContent() {
     refreshRestorePoints,
     refreshTweaks,
     refreshDebloat,
+    refreshHistory,
   } = useOsBackedLists(activeScreen);
   const { settings, setLanguage, setSafetyBackup, toggleSidebar } = usePreferences(setLang);
 
@@ -96,6 +98,14 @@ function AppContent() {
       }),
 
       subscribeSnapshot((payload) => {
+        // A payload with no `before` is a standalone measurement, not a comparison — the one this
+        // app takes at startup so a post-reboot number exists to compare against. It belongs in
+        // the history series, never in the batch panel, and the history has to be re-read for it
+        // to be seen.
+        if (payload.before === null) {
+          refreshHistory();
+          return;
+        }
         setSnapshot(payload);
       }),
 
@@ -111,7 +121,15 @@ function AppContent() {
     return () => {
       for (const unsubscribe of unsubscribers) unsubscribe();
     };
-  }, [setLang]);
+  }, [setLang, refreshHistory]);
+
+  // One measurement per launch, which is what makes a reboot-dependent metric ever resolve. Boot
+  // duration describes the boot that just happened, so the first reading after a restart is the
+  // only evidence that a change which needed one did anything. Nothing dispatched this Action
+  // before, so "restart to measure" was a hint that could never come true.
+  useEffect(() => {
+    runRead(SystemActions.CAPTURE_SNAPSHOT);
+  }, [runRead]);
 
   const handleClearLogs = () => {
     clearLogs();
@@ -126,6 +144,11 @@ function AppContent() {
     (history.length >= 2
       ? { before: history[history.length - 2], after: history[history.length - 1], changes: [] }
       : null);
+
+  // Boot duration cannot move inside the session that changed it, so the batch's own pair can
+  // never answer for it. This looks for a measurement from a later boot instead, and stays null —
+  // leaving "restart to measure" on screen — until one exists.
+  const nextBootSnapshot = resolveNextBootComparison(displayedSnapshot, history);
 
   // Translate at render time so logs/status re-localize when the language changes. A raw host
   // line is already text and must not be looked up as a key.
@@ -213,6 +236,7 @@ function AppContent() {
         <OptimizePage
           catalog={tweakCatalog}
           snapshot={displayedSnapshot}
+          nextBootSnapshot={nextBootSnapshot}
           catalogLoaded={tweakCatalogLoaded}
           catalogStale={tweakCatalogStale}
           disabled={activeAction !== null}
