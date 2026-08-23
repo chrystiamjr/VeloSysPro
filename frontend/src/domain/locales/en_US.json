@@ -358,7 +358,7 @@
     "pending": "{{apply}} to apply · {{revert}} to revert",
     "preset": {
       "gaming": {
-        "desc": "A curated starting point for games, not the whole catalog: foreground priority, network, fullscreen, power plan and background services.",
+        "desc": "A curated starting point for games, not the whole catalog: foreground priority, network, fullscreen, Game Mode, power plan and background services.",
         "title": "Gaming preset"
       }
     },

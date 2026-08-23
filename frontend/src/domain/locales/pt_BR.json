@@ -358,7 +358,7 @@
     "pending": "{{apply}} para aplicar · {{revert}} para reverter",
     "preset": {
       "gaming": {
-        "desc": "Um ponto de partida curado para jogos, não o catálogo inteiro: prioridade em primeiro plano, rede, tela cheia, plano de energia e serviços em segundo plano.",
+        "desc": "Um ponto de partida curado para jogos, não o catálogo inteiro: prioridade em primeiro plano, rede, tela cheia, Modo Jogo, plano de energia e serviços em segundo plano.",
         "title": "Predefinição Gaming"
       }
     },
