@@ -659,10 +659,12 @@ public class CatalogTweakTests
         Assert.NotNull(catalog.Find("services.wSearch"));
 
         foreach (string id in new[] { "services.diagTrack", "services.doSvc" })
-        {
             Assert.Contains(id, gaming);
-            Assert.Contains(id, catalog.Recommended);
-        }
+
+        // Telemetry is the sibling that is still recommended after E7, which is what keeps the
+        // `wSearch` exclusion above falsifiable: an empty `Recommended` would satisfy it for the
+        // wrong reason. Which ids belong to each curated set is pinned by E7-03, not here.
+        Assert.Contains("services.diagTrack", catalog.Recommended);
     }
 
     // ---- E3-03 — the contract every service Tweak owes -----------------------------------------

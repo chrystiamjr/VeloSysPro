@@ -300,6 +300,119 @@ public class TweakCatalogTests
         }
     }
 
+    [Fact]
+    public void CreateDefault_PinsTheCuratedSetsToADecisionSomeoneWroteDown()
+    {
+        // `Recommended` reached eight entries without anyone deciding it should: each addition was
+        // locally reasonable and the set was never reviewed as a whole. E7 rebuilt both sets against
+        // primary sources; this test is what makes the next addition a decision instead of a habit.
+        TweakCatalog catalog = TweakCatalog.CreateDefault(
+            new FakeCommandRunner(),
+            NewBackupManager()
+        );
+
+        AssertCuratedSet(
+            "`Recommended`",
+            new[] { "graphics.gameMode", "services.diagTrack" },
+            catalog.Recommended
+        );
+
+        AssertCuratedSet(
+            "The `gaming` Preset",
+            new[]
+            {
+                "cpu.win32PrioritySeparation",
+                "cpu.systemResponsiveness",
+                "network.throttlingIndex",
+                "graphics.fullscreenExclusive",
+                "graphics.gameMode",
+                "system.powerPlan",
+                "services.sysMain",
+                "services.diagTrack",
+                "services.doSvc",
+            },
+            // By id, not Assert.Single: a second Preset arriving is a different decision, and
+            // failing on the count here would report it as a curated-set drift.
+            Assert.Single(catalog.Presets, preset => preset.Id == "gaming").TweakIds
+        );
+    }
+
+    /// <summary>
+    /// Sequence equality carrying the reason the set is pinned. xUnit's <c>Assert.Equal</c> has no
+    /// message overload, and an unexplained failure here reads as a stale test rather than as the
+    /// question it is meant to ask.
+    /// </summary>
+    private static void AssertCuratedSet(
+        string name,
+        IReadOnlyList<string> expected,
+        IReadOnlyList<string> actual
+    )
+    {
+        Assert.True(
+            expected.SequenceEqual(actual),
+            name
+                + " is curated, not incidental — E7-03 pins it so that changing it is a decision "
+                + "someone writes down. Nothing joins `Recommended` without a primary source for the "
+                + "gain it claims, and nothing joins `gaming` that Windows does not act on. If this "
+                + "change is deliberate, record why and update the list here."
+                + Environment.NewLine
+                + "Expected: "
+                + string.Join(", ", expected)
+                + Environment.NewLine
+                + "Actual:   "
+                + string.Join(", ", actual)
+        );
+    }
+
+    /// <summary>
+    /// Written out rather than read from the catalog: a list derived from the live catalog would
+    /// agree with any deletion and prove nothing. These are the seventeen ids `v0.2.0` shipped.
+    /// </summary>
+    private static readonly string[] V020TweakIds =
+    {
+        "boot.disableDynamicTick",
+        "boot.platformClock",
+        "boot.platformTick",
+        "cpu.gamesTaskPriority",
+        "cpu.systemResponsiveness",
+        "cpu.win32PrioritySeparation",
+        "graphics.fullscreenExclusive",
+        "graphics.gameMode",
+        "graphics.hardwareScheduling",
+        "network.tcpParameters",
+        "network.throttlingIndex",
+        "services.diagTrack",
+        "services.doSvc",
+        "services.sysMain",
+        "services.wSearch",
+        "system.powerPlan",
+        "system.visualEffects",
+    };
+
+    [Fact]
+    public void CreateDefault_StillResolvesEveryTweakEverShipped()
+    {
+        // Demoting a Tweak means removing it from the curated sets, never from the catalog.
+        // RevertTweak resolves through Find, so a deleted id returns null and anyone who applied
+        // that Tweak on v0.2.0 is stuck with it for good — the one failure this epic must not cause.
+        TweakCatalog catalog = TweakCatalog.CreateDefault(
+            new FakeCommandRunner(),
+            NewBackupManager()
+        );
+
+        foreach (string id in V020TweakIds)
+        {
+            Assert.True(
+                catalog.Find(id) is not null,
+                "Tweak '"
+                    + id
+                    + "' shipped in v0.2.0 and no longer resolves. Users who applied it cannot "
+                    + "revert it: RevertTweak calls TweakCatalog.Find, which now returns null. "
+                    + "Leave the Tweak in the catalog and take it out of the curated sets instead."
+            );
+        }
+    }
+
     private static RegistryBackupManager NewBackupManager()
     {
         var temp = new TemporaryDirectory();

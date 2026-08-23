@@ -11,8 +11,8 @@ VeloSys Pro offers both automated maintenance plans and an individually selectab
 ## 1. À-la-carte Tweaks & Presets {#ala-carte-tweaks}
 
 Choose optimizations individually or start from a curated Preset:
-- **Gaming Preset**: Fine-tunes processor priorities, network responsiveness, graphics scheduling, and power plans for minimal input latency and consistent frame rates.
-- **Recommended Preset**: Safe, high-impact tweaks with immediate effect that require no system reboot.
+- **Gaming Preset**: A curated starting point you opt into — foreground scheduler priorities, multimedia network throttling, fullscreen behaviour, Windows Game Mode, the high-performance power plan, and three background services moved to Manual start. Every entry stays individually selectable and reversible.
+- **Recommended**: One click for anyone who would rather not read the whole list — simple changes with honest gains: fewer ads, less needless background cost. Nothing that needs a restart, and nothing whose gain we cannot trace to a primary source.
 - **Advanced Tier**: High-gain tweaks (e.g. Memory Integrity adjustments) requiring explicit confirmation of trade-offs.
 
 ### Safety Checkpoint & Measurement
