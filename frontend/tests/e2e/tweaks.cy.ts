@@ -179,6 +179,22 @@ describe('à-la-carte optimizations', () => {
     cy.getByCy('tweak-apply').should('be.disabled');
   });
 
+  it('refuses to pass two unrelated readings off as a batch comparison', () => {
+    // Shipped in v0.4.1: a standalone reading persisted weeks later became the second half of an
+    // old batch's pair, and the drift between them was presented as an optimization result.
+    cy.emitHost('tweaksLoaded', tweakCatalog);
+
+    // Establish a real comparison first, so the assertion below observes it *disappearing*. The
+    // panel starts empty, and asserting the empty state against a fresh screen would pass whether
+    // the guard exists or not.
+    cy.emitHost('historyLoaded', [snapshotBefore, snapshotAfter]);
+    cy.getByCy('snapshot-metric-automaticServices').should('exist');
+
+    cy.emitHost('historyLoaded', [snapshotBefore, snapshotAfterReboot]);
+    cy.getByCy('snapshot-metric-automaticServices').should('not.exist');
+    cy.getByCy('snapshot-diff').should('contain', 'Aplique otimizações para ver o que mudou');
+  });
+
   it('brings the last comparison back from disk when there is no live measurement', () => {
     cy.emitHost('tweaksLoaded', tweakCatalog);
     cy.emitHost('historyLoaded', [snapshotBefore, snapshotAfter]);
@@ -210,8 +226,9 @@ describe('à-la-carte optimizations', () => {
     cy.emitHost('snapshotCaptured', { before: snapshotBefore, after: snapshotAfter, changes: [] });
     cy.getByCy('snapshot-metric-bootDuration').should('contain', 'reinicie para medir');
 
-    // The machine restarted and the launch measurement landed in the series.
-    cy.emitHost('historyLoaded', [snapshotBefore, snapshotAfter, snapshotAfterReboot]);
+    // The machine restarted and the app measured on launch. That reading is a standalone one —
+    // no `before` — and it never enters the history series.
+    cy.emitHost('snapshotCaptured', { before: null, after: snapshotAfterReboot, changes: [] });
 
     cy.getByCy('snapshot-metric-bootDuration')
       .should('not.contain', 'reinicie para medir')

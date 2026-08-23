@@ -54,7 +54,6 @@ export interface OsBackedLists {
   refreshRestorePoints: () => void;
   refreshTweaks: () => void;
   refreshDebloat: () => void;
-  refreshHistory: () => void;
 }
 
 export function useOsBackedLists(activeScreen: AppScreen): OsBackedLists {
@@ -105,7 +104,6 @@ export function useOsBackedLists(activeScreen: AppScreen): OsBackedLists {
   const refreshRestorePoints = useCallback(() => sendAction(SystemActions.GET_RESTORE_POINTS), []);
   const refreshTweaks = useCallback(() => sendAction(SystemActions.LOAD_TWEAKS), []);
   const refreshDebloat = useCallback(() => sendAction(SystemActions.LOAD_DEBLOAT), []);
-  const refreshHistory = useCallback(() => sendAction(SystemActions.LOAD_HISTORY), []);
 
   return {
     backups,
@@ -123,6 +121,5 @@ export function useOsBackedLists(activeScreen: AppScreen): OsBackedLists {
     refreshRestorePoints,
     refreshTweaks,
     refreshDebloat,
-    refreshHistory,
   };
 }

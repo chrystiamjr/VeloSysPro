@@ -251,9 +251,11 @@ public class ActionHostTweakTests
     [Fact]
     public void LoadHistory_EmitsThePersistedSeriesOldestFirst()
     {
+        // Seeded through a real batch, because that is the only thing that writes history now: a
+        // standalone captureSnapshot reads the machine without recording it, so the series stays
+        // the record of what batches did.
         using var harness = new Harness();
-        harness.Dispatch(SystemActions.CaptureSnapshot);
-        harness.Dispatch(SystemActions.CaptureSnapshot);
+        harness.Dispatch(SystemActions.ApplyTweaks, """{"tweakIds":["services.sysMain"]}""");
 
         Assert.True(harness.Dispatch(SystemActions.LoadHistory));
 
