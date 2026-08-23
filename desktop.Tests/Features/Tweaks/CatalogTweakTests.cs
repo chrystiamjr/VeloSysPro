@@ -661,12 +661,10 @@ public class CatalogTweakTests
         foreach (string id in new[] { "services.diagTrack", "services.doSvc" })
             Assert.Contains(id, gaming);
 
-        // Delivery Optimization left `Recommended` in E7 for a different reason than Windows Search
-        // stays out of it: the goal is right and the mechanism is wrong — stopping the service is a
-        // blunt stand-in for the Delivery Optimization policy E8 sets. Telemetry is the one of the
-        // three that survives on its own evidence.
+        // Telemetry is the sibling that is still recommended after E7, which is what keeps the
+        // `wSearch` exclusion above falsifiable: an empty `Recommended` would satisfy it for the
+        // wrong reason. Which ids belong to each curated set is pinned by E7-03, not here.
         Assert.Contains("services.diagTrack", catalog.Recommended);
-        Assert.DoesNotContain("services.doSvc", catalog.Recommended);
     }
 
     // ---- E3-03 — the contract every service Tweak owes -----------------------------------------

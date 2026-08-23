@@ -358,7 +358,7 @@
     "pending": "{{apply}} to apply · {{revert}} to revert",
     "preset": {
       "gaming": {
-        "desc": "Everything the catalog offers for games: processor priority, network, graphics, power, and background services.",
+        "desc": "A curated starting point for games, not the whole catalog: foreground priority, network, fullscreen, power plan and background services.",
         "title": "Gaming preset"
       }
     },
@@ -367,7 +367,7 @@
     "presetModified": "(modified)",
     "rebootHint": "Only takes effect after Windows restarts.",
     "recommended": {
-      "desc": "What suits most machines and takes effect right away — nothing that needs a Windows restart.",
+      "desc": "Simple changes with honest gains — fewer ads, less needless background cost. Nothing that needs a restart.",
       "title": "Recommended"
     },
     "revertBtn": "Revert",

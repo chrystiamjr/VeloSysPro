@@ -311,12 +311,14 @@ public class TweakCatalogTests
             NewBackupManager()
         );
 
-        Assert.Equal(
+        AssertCuratedSet(
+            "`Recommended`",
             new[] { "graphics.gameMode", "services.diagTrack" },
             catalog.Recommended
         );
 
-        Assert.Equal(
+        AssertCuratedSet(
+            "The `gaming` Preset",
             new[]
             {
                 "cpu.win32PrioritySeparation",
@@ -329,7 +331,36 @@ public class TweakCatalogTests
                 "services.diagTrack",
                 "services.doSvc",
             },
-            Assert.Single(catalog.Presets).TweakIds
+            // By id, not Assert.Single: a second Preset arriving is a different decision, and
+            // failing on the count here would report it as a curated-set drift.
+            Assert.Single(catalog.Presets, preset => preset.Id == "gaming").TweakIds
+        );
+    }
+
+    /// <summary>
+    /// Sequence equality carrying the reason the set is pinned. xUnit's <c>Assert.Equal</c> has no
+    /// message overload, and an unexplained failure here reads as a stale test rather than as the
+    /// question it is meant to ask.
+    /// </summary>
+    private static void AssertCuratedSet(
+        string name,
+        IReadOnlyList<string> expected,
+        IReadOnlyList<string> actual
+    )
+    {
+        Assert.True(
+            expected.SequenceEqual(actual),
+            name
+                + " is curated, not incidental — E7-03 pins it so that changing it is a decision "
+                + "someone writes down. Nothing joins `Recommended` without a primary source for the "
+                + "gain it claims, and nothing joins `gaming` that Windows does not act on. If this "
+                + "change is deliberate, record why and update the list here."
+                + Environment.NewLine
+                + "Expected: "
+                + string.Join(", ", expected)
+                + Environment.NewLine
+                + "Actual:   "
+                + string.Join(", ", actual)
         );
     }
 

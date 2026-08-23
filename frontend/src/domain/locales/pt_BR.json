@@ -358,7 +358,7 @@
     "pending": "{{apply}} para aplicar · {{revert}} para reverter",
     "preset": {
       "gaming": {
-        "desc": "Tudo o que o catálogo oferece para jogos: prioridade de processador, rede, gráficos, energia e serviços em segundo plano.",
+        "desc": "Um ponto de partida curado para jogos, não o catálogo inteiro: prioridade em primeiro plano, rede, tela cheia, plano de energia e serviços em segundo plano.",
         "title": "Predefinição Gaming"
       }
     },
@@ -367,7 +367,7 @@
     "presetModified": "(modificada)",
     "rebootHint": "Só entra em vigor depois de reiniciar o Windows.",
     "recommended": {
-      "desc": "O que vale para a maioria e tem efeito na hora — sem nada que exija reiniciar o Windows.",
+      "desc": "Mudanças simples com ganho honesto — menos anúncios, menos custo em segundo plano. Nada que exija reiniciar.",
       "title": "Recomendadas"
     },
     "revertBtn": "Reverter",
