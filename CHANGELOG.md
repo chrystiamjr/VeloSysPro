@@ -1,3 +1,9 @@
+## [0.4.3](https://github.com/chrystiamjr/VeloSysPro/compare/v0.4.2...v0.4.3) (2026-08-23)
+
+### Bug Fixes
+
+* **optimize:** recommend only what primary sources support ([#49](https://github.com/chrystiamjr/VeloSysPro/issues/49)) ([a245553](https://github.com/chrystiamjr/VeloSysPro/commit/a245553e2fcc1dba24bd99d1270f3ab47b388b3c))
+
 ## [0.4.2](https://github.com/chrystiamjr/VeloSysPro/compare/v0.4.1...v0.4.2) (2026-08-23)
 
 ### Bug Fixes
