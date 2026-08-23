@@ -93,6 +93,7 @@ All components in `frontend/src/components/` MUST strictly follow this hierarchy
 | **Report an Outcome Where the Action Was Taken** | [report-outcomes-where-acted.md](file:///C:/Users/chrys/OneDrive/Desktop/Windows%20Optimizer/.agents/rules/report-outcomes-where-acted.md) | `actionFinished, toast, log panel, mutation filter, outcome, screen` |
 | **Bounded Streaming Buffers & IPC Event Windows** | [bounded-streaming-buffers.md](file:///C:/Users/chrys/OneDrive/Desktop/Windows%20Optimizer/.agents/rules/bounded-streaming-buffers.md) | `IPC, ring buffer, useLogBuffer, streaming, logs, stdout, memory safety` |
 | **Semantic Version Resolution across Boundaries** | [semver-boundary-resolution.md](file:///C:/Users/chrys/OneDrive/Desktop/Windows%20Optimizer/.agents/rules/semver-boundary-resolution.md) | `SemanticVersion, SemVer, GitHub Releases, AssemblyInformationalVersionAttribute` |
+| **Copy Length Is a Layout Change** | [copy-length-is-a-layout-change.md](file:///C:/Users/chrys/OneDrive/Desktop/Windows%20Optimizer/.agents/rules/copy-length-is-a-layout-change.md) | `i18n, locale JSON, copy length, Cypress be.visible, scrollport, pt_BR` |
 | **Absence of an Error Is Not Success** (global) | [absence-of-error-is-not-success.md](file:///C:/Users/chrys/.agents/rules/absence-of-error-is-not-success.md) | `exit code, warning, silent refusal, UAC, elevation, read-back, verify the artifact` |
 
 ---
