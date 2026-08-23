@@ -1,3 +1,9 @@
+## [0.4.2](https://github.com/chrystiamjr/VeloSysPro/compare/v0.4.1...v0.4.2) (2026-08-23)
+
+### Bug Fixes
+
+* **snapshot:** stop pairing unrelated readings as a batch result ([#48](https://github.com/chrystiamjr/VeloSysPro/issues/48)) ([02daeb5](https://github.com/chrystiamjr/VeloSysPro/commit/02daeb5c37892702378c0e8264b3a8c1b8c9e5cc))
+
 ## [0.4.1](https://github.com/chrystiamjr/VeloSysPro/compare/v0.4.0...v0.4.1) (2026-08-22)
 
 ### Bug Fixes
