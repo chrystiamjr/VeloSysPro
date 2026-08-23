@@ -557,6 +557,43 @@ public class TweakEngineTests
     }
 
     [Fact]
+    public void Measure_DoesNotAppendToTheHistory()
+    {
+        // The Optimization History is the record of what batches did. A standalone measurement is
+        // not a batch, and persisting one wedges an unrelated row between a batch's before and its
+        // after — which is exactly what the panel reads as "the last comparison".
+        var harness = new Harness(new SpyTweak("cpu.a"));
+
+        harness.Engine.Measure();
+
+        Assert.Empty(harness.History.Snapshots);
+    }
+
+    [Fact]
+    public void Measure_StillReturnsTheReading()
+    {
+        // Not persisting it must not mean not taking it: the caller needs the current boot's
+        // identity and duration to resolve a reboot-dependent comparison.
+        var harness = new Harness(new SpyTweak("cpu.a"));
+
+        Assert.NotNull(harness.Engine.Measure());
+    }
+
+    [Fact]
+    public void ApplyTweaks_LeavesOnlyItsOwnPairInTheHistory()
+    {
+        // The pair has to stay adjacent and alone, whatever else the app measured around it.
+        var harness = new Harness(new SpyTweak("cpu.a"));
+        harness.Engine.Measure();
+
+        harness.Engine.ApplyTweaks(new[] { "cpu.a" });
+
+        harness.Engine.Measure();
+
+        Assert.Equal(2, harness.History.Snapshots.Count);
+    }
+
+    [Fact]
     public void LoadHistory_ReturnsEverySnapshotEverCaptured()
     {
         var harness = new Harness(new SpyTweak("cpu.a"));

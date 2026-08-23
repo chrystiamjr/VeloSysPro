@@ -14,6 +14,7 @@ import {
   LogEntryItem,
   DebloatResult,
   LocalizedMessage,
+  OptimizationSnapshot,
   SnapshotCapturedPayload,
   UpdateInfo,
   SystemActions,
@@ -26,7 +27,7 @@ import {
   subscribeUpdate,
 } from './infrastructure/bridge';
 import { formatDateTime } from './domain/formatters';
-import { resolveNextBootComparison } from './domain/metricDeltas';
+import { resolveBatchComparison, resolveNextBootComparison } from './domain/metricDeltas';
 import { useHostMutation } from './infrastructure/useHostMutation';
 import { useOsBackedLists } from './infrastructure/useOsBackedLists';
 import { usePreferences } from './infrastructure/usePreferences';
@@ -62,6 +63,10 @@ function AppContent() {
   // Per-run rather than per-list: what a removal batch did is not something the refreshed list can
   // answer, so it is held here until the next batch replaces it.
   const [debloatResults, setDebloatResults] = useState<DebloatResult[]>([]);
+  // This boot's own reading, held in memory rather than written to the Optimization History: the
+  // history is the record of what batches did, and a standalone row inside it becomes half of a
+  // comparison it was never part of.
+  const [currentReading, setCurrentReading] = useState<OptimizationSnapshot | null>(null);
   const {
     activeAction,
     progressPercent,
@@ -87,7 +92,6 @@ function AppContent() {
     refreshRestorePoints,
     refreshTweaks,
     refreshDebloat,
-    refreshHistory,
   } = useOsBackedLists(activeScreen);
   const { settings, setLanguage, setSafetyBackup, toggleSidebar } = usePreferences(setLang);
 
@@ -103,7 +107,7 @@ function AppContent() {
         // the history series, never in the batch panel, and the history has to be re-read for it
         // to be seen.
         if (payload.before === null) {
-          refreshHistory();
+          setCurrentReading(payload.after);
           return;
         }
         setSnapshot(payload);
@@ -121,7 +125,7 @@ function AppContent() {
     return () => {
       for (const unsubscribe of unsubscribers) unsubscribe();
     };
-  }, [setLang, refreshHistory]);
+  }, [setLang]);
 
   // One measurement per launch, which is what makes a reboot-dependent metric ever resolve. Boot
   // duration describes the boot that just happened, so the first reading after a restart is the
@@ -140,15 +144,12 @@ function AppContent() {
   // consecutively, and nothing else writes to the history, so the last two rows are that pair.
   // The changes list is not persisted, hence empty — only the metrics come back.
   const displayedSnapshot: SnapshotCapturedPayload | null =
-    snapshot ??
-    (history.length >= 2
-      ? { before: history[history.length - 2], after: history[history.length - 1], changes: [] }
-      : null);
+    snapshot ?? resolveBatchComparison(history);
 
   // Boot duration cannot move inside the session that changed it, so the batch's own pair can
   // never answer for it. This looks for a measurement from a later boot instead, and stays null —
   // leaving "restart to measure" on screen — until one exists.
-  const nextBootSnapshot = resolveNextBootComparison(displayedSnapshot, history);
+  const nextBootSnapshot = resolveNextBootComparison(displayedSnapshot, currentReading);
 
   // Translate at render time so logs/status re-localize when the language changes. A raw host
   // line is already text and must not be looked up as a key.

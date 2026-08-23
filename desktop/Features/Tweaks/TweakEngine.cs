@@ -387,10 +387,23 @@ namespace VeloSysPro
             return ok;
         }
 
+        /// <summary>
+        /// Reads the system's current metrics without recording them.
+        /// </summary>
+        /// <remarks>
+        /// The Optimization History is the record of what *batches* did, and the frontend reads a
+        /// batch's comparison out of it as two adjacent rows. A standalone reading persisted into
+        /// that series lands between a batch's before and its after and silently becomes half of a
+        /// comparison it was never part of — which is how a measurement taken a month later came to
+        /// be shown as the result of an optimization. Callers that only need the current numbers
+        /// use this; only <see cref="CaptureSnapshot"/> writes.
+        /// </remarks>
+        public OptimizationSnapshot Measure() => _snapshots.Capture();
+
         /// <summary>Captures a Snapshot and appends it to the Optimization History.</summary>
         public OptimizationSnapshot CaptureSnapshot()
         {
-            OptimizationSnapshot snapshot = _snapshots.Capture();
+            OptimizationSnapshot snapshot = Measure();
             try
             {
                 _history.Append(snapshot);

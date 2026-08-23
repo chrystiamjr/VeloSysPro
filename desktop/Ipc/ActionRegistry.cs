@@ -253,7 +253,7 @@ namespace VeloSysPro
                 new
                 {
                     before = (OptimizationSnapshot?)null,
-                    after = _tweaks.CaptureSnapshot(),
+                    after = _tweaks.Measure(),
                     changes = Array.Empty<TweakChange>(),
                 }
             );
