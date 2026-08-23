@@ -325,46 +325,55 @@ namespace VeloSysPro
                 },
                 new Dictionary<string, IReadOnlyList<string>>
                 {
-                    // Everything that serves a game and can be applied on any machine.
+                    // What serves a game, applies on any machine, and does something Windows still
+                    // acts on. Every entry is opt-in: this is the curated starting point, not a
+                    // default. Its exact contents are pinned by
+                    // TweakCatalogTests.CreateDefault_PinsTheCuratedSetsToADecisionSomeoneWroteDown,
+                    // so an addition here is a decision someone has to write down.
                     //
-                    // Two deliberate omissions. Visual Effects changes how Windows looks, which is
-                    // not a side effect anyone clicking "gaming" is asking for. GPU Hardware
-                    // Scheduling refuses to apply where the display driver never exposed
+                    // The omissions, each for its own reason. Visual Effects changes how Windows
+                    // looks, which is not a side effect anyone clicking "gaming" is asking for. GPU
+                    // Hardware Scheduling refuses to apply where the display driver never exposed
                     // `HwSchMode` — the common case — and a Preset is applied wholesale by the
                     // scheduler, so including it would make every headless `--task=gaming` run
                     // report failure on those machines. It stays individually selectable.
+                    //
+                    // E7 removed five more against primary sources (2026-08-20). The three BCD
+                    // timers carry Microsoft's own note on `bcdedit /set`: "This option should only
+                    // be used for debugging." `cpu.gamesTaskPriority` cancels itself — MMCSS
+                    // documents `GPU Priority` as "not yet used" and treats `Priority` as 2 for any
+                    // task whose Scheduling Category is High, which is the third value it writes.
+                    // `network.tcpParameters` bundles stack settings no primary source ties to a
+                    // gaming gain. All five stay in the catalog, individually selectable.
                     ["gaming"] = new[]
                     {
                         win32PrioritySeparation.Id,
                         systemResponsiveness.Id,
-                        gamesTaskPriority.Id,
                         networkThrottling.Id,
-                        tcpParameters.Id,
                         fullscreenExclusive.Id,
                         gameMode.Id,
                         powerPlan.Id,
-                        disableDynamicTick.Id,
-                        platformTick.Id,
-                        platformClock.Id,
+                        // Left `Recommended` in E7 but stays here: the stutter improvement is real
+                        // on machines that see idle disk spikes and absent on the rest, and SysMain
+                        // is a cache by design. A Preset the user opts into is the right home for a
+                        // conditional gain; a box ticked for them is not.
                         sysMain.Id,
                         diagTrack.Id,
                         doSvc.Id,
                     },
                 },
-                // One click for someone who will not read the list, so it holds only what suits any
-                // machine and acts immediately. The constructor enforces the "no restart" half; the
-                // two judgement calls it cannot are the power plan, which costs battery on a laptop,
-                // and forced fullscreen-exclusive, which is a preference rather than a gain.
+                // One click for someone who will not read the list: simple changes with honest gains
+                // — fewer ads, less stutter, less needless background cost. Not "the gaming tweaks
+                // that are safe enough to tick by default", which is how it was assembled and why
+                // six of its eight entries did not survive the E7 evidence review (2026-08-20).
+                // Nothing goes in without a primary source for the gain, on top of what the
+                // constructor enforces (`Safe`, no restart) and the two judgement calls it cannot:
+                // the power plan, which costs battery on a laptop, and forced fullscreen-exclusive,
+                // which is a preference rather than a gain.
                 new[]
                 {
-                    win32PrioritySeparation.Id,
-                    systemResponsiveness.Id,
-                    gamesTaskPriority.Id,
-                    networkThrottling.Id,
                     gameMode.Id,
-                    sysMain.Id,
                     diagTrack.Id,
-                    doSvc.Id,
                 }
             );
         }

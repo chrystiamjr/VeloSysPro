@@ -394,29 +394,29 @@
     "tweak": {
       "boot": {
         "disableDynamicTick": {
-          "desc": "Desativa o tick dinâmico do temporizador de boot, deixando os intervalos do relógio constantes. Exige reinicialização.",
+          "desc": "Desativa o tick dinâmico do temporizador, fazendo o temporizador do kernel disparar em intervalo constante em vez de apenas quando necessário. A Microsoft documenta essa opção de inicialização para depuração.",
           "title": "Desativar tick dinâmico do temporizador"
         },
         "platformClock": {
-          "desc": "Remove a imposição de uma única fonte de relógio na inicialização e devolve ao Windows a escolha da melhor disponível.",
+          "desc": "Remove o elemento de boot useplatformclock, devolvendo ao Windows a escolha da fonte de relógio. A Microsoft documenta essa opção de inicialização para depuração; esta entrada a retira, em vez de defini-la.",
           "title": "Não forçar o relógio da plataforma"
         },
         "platformTick": {
-          "desc": "Faz o Windows usar o temporizador de hardware da placa-mãe, deixando os intervalos de relógio mais previsíveis.",
+          "desc": "Força o Windows a usar o temporizador de hardware da plataforma em vez de escolher a fonte na inicialização. A Microsoft documenta essa opção de inicialização para depuração.",
           "title": "Usar o temporizador da plataforma"
         }
       },
       "cpu": {
         "gamesTaskPriority": {
-          "desc": "Eleva a prioridade de processador e de vídeo que o Windows concede às tarefas registradas como jogos.",
+          "desc": "Grava três valores MMCSS na tarefa Games. A Microsoft documenta a prioridade de GPU como ainda não utilizada e fixa a prioridade de thread sempre que a categoria de agendamento é High — que é o terceiro valor gravado aqui. O Windows aplica quase nada disso.",
           "title": "Prioridade do agendador para jogos"
         },
         "systemResponsiveness": {
-          "desc": "Reduz a fatia de processador que o agendador multimídia guarda para tarefas de fundo e a devolve ao aplicativo em primeiro plano.",
+          "desc": "Reduz o SystemResponsiveness, a fatia de processador que o agendador multimídia reserva para tarefas em segundo plano. O mecanismo é documentado; o que ele muda em um jogo específico não é algo que possamos demonstrar.",
           "title": "Reservar menos CPU para o segundo plano"
         },
         "win32PrioritySeparation": {
-          "desc": "Dá quantum curto e fixo ao aplicativo em primeiro plano, favorecendo jogos e janelas ativas.",
+          "desc": "Define o Win32PrioritySeparation com quantum curto e fixo voltado ao aplicativo em primeiro plano, mudando como o agendador divide o tempo de processador entre as janelas. Nenhuma fonte primária liga esse valor a um ganho medido.",
           "title": "Prioridade para o aplicativo em primeiro plano"
         }
       },
@@ -436,11 +436,11 @@
       },
       "network": {
         "tcpParameters": {
-          "desc": "Aplica um conjunto de parâmetros da pilha TCP voltado a conexões de baixa latência e a mais portas simultâneas.",
+          "desc": "Grava quatro valores da pilha TCP: o TTL padrão, o escalonamento de janela da RFC 1323, o atraso de TIME_WAIT e o topo da faixa de portas efêmeras. O que cada um faz é documentado; nenhuma fonte primária liga o conjunto a menor latência em jogos.",
           "title": "Ajustar os parâmetros TCP do Windows"
         },
         "throttlingIndex": {
-          "desc": "Remove o teto que o agendador multimídia impõe ao tráfego de rede enquanto há áudio ou vídeo em execução.",
+          "desc": "Remove o teto que o agendador multimídia impõe aos pacotes de rede enquanto há áudio ou vídeo em execução. Comportamento documentado; se um jogo percebe a diferença é outra questão.",
           "title": "Desligar a limitação de rede multimídia"
         }
       },
@@ -450,11 +450,11 @@
           "title": "Telemetria (DiagTrack) em início Manual"
         },
         "doSvc": {
-          "desc": "Coloca a Otimização de Entrega em início Manual, impedindo que a máquina compartilhe atualizações pela rede sem necessidade. O Windows Update continua funcionando.",
+          "desc": "Coloca a Otimização de Entrega em início Manual, impedindo que a máquina compartilhe atualizações pela rede sem necessidade. O Windows Update continua funcionando. Parar o serviço é um caminho grosseiro para esse objetivo; uma configuração própria da Otimização de Entrega vai substituí-lo.",
           "title": "Otimização de Entrega em início Manual"
         },
         "sysMain": {
-          "desc": "Coloca o SysMain (Superfetch) em início Manual, reduzindo leitura de disco em segundo plano.",
+          "desc": "Coloca o SysMain (Superfetch) em início Manual. O SysMain é um cache por natureza: em máquinas onde ele provoca picos de disco ou de processador em ociosidade, desativá-lo elimina esses picos; nas demais, o efeito é neutro ou levemente negativo, porque o Windows perde a pré-carga.",
           "title": "SysMain em início Manual"
         },
         "wSearch": {

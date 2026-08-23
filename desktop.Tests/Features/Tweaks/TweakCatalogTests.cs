@@ -300,6 +300,88 @@ public class TweakCatalogTests
         }
     }
 
+    [Fact]
+    public void CreateDefault_PinsTheCuratedSetsToADecisionSomeoneWroteDown()
+    {
+        // `Recommended` reached eight entries without anyone deciding it should: each addition was
+        // locally reasonable and the set was never reviewed as a whole. E7 rebuilt both sets against
+        // primary sources; this test is what makes the next addition a decision instead of a habit.
+        TweakCatalog catalog = TweakCatalog.CreateDefault(
+            new FakeCommandRunner(),
+            NewBackupManager()
+        );
+
+        Assert.Equal(
+            new[] { "graphics.gameMode", "services.diagTrack" },
+            catalog.Recommended
+        );
+
+        Assert.Equal(
+            new[]
+            {
+                "cpu.win32PrioritySeparation",
+                "cpu.systemResponsiveness",
+                "network.throttlingIndex",
+                "graphics.fullscreenExclusive",
+                "graphics.gameMode",
+                "system.powerPlan",
+                "services.sysMain",
+                "services.diagTrack",
+                "services.doSvc",
+            },
+            Assert.Single(catalog.Presets).TweakIds
+        );
+    }
+
+    /// <summary>
+    /// Written out rather than read from the catalog: a list derived from the live catalog would
+    /// agree with any deletion and prove nothing. These are the seventeen ids `v0.2.0` shipped.
+    /// </summary>
+    private static readonly string[] V020TweakIds =
+    {
+        "boot.disableDynamicTick",
+        "boot.platformClock",
+        "boot.platformTick",
+        "cpu.gamesTaskPriority",
+        "cpu.systemResponsiveness",
+        "cpu.win32PrioritySeparation",
+        "graphics.fullscreenExclusive",
+        "graphics.gameMode",
+        "graphics.hardwareScheduling",
+        "network.tcpParameters",
+        "network.throttlingIndex",
+        "services.diagTrack",
+        "services.doSvc",
+        "services.sysMain",
+        "services.wSearch",
+        "system.powerPlan",
+        "system.visualEffects",
+    };
+
+    [Fact]
+    public void CreateDefault_StillResolvesEveryTweakEverShipped()
+    {
+        // Demoting a Tweak means removing it from the curated sets, never from the catalog.
+        // RevertTweak resolves through Find, so a deleted id returns null and anyone who applied
+        // that Tweak on v0.2.0 is stuck with it for good — the one failure this epic must not cause.
+        TweakCatalog catalog = TweakCatalog.CreateDefault(
+            new FakeCommandRunner(),
+            NewBackupManager()
+        );
+
+        foreach (string id in V020TweakIds)
+        {
+            Assert.True(
+                catalog.Find(id) is not null,
+                "Tweak '"
+                    + id
+                    + "' shipped in v0.2.0 and no longer resolves. Users who applied it cannot "
+                    + "revert it: RevertTweak calls TweakCatalog.Find, which now returns null. "
+                    + "Leave the Tweak in the catalog and take it out of the curated sets instead."
+            );
+        }
+    }
+
     private static RegistryBackupManager NewBackupManager()
     {
         var temp = new TemporaryDirectory();

@@ -394,29 +394,29 @@
     "tweak": {
       "boot": {
         "disableDynamicTick": {
-          "desc": "Turns off the dynamic boot timer tick so clock intervals stay constant. Requires a restart.",
+          "desc": "Turns off the dynamic timer tick, so the kernel timer fires at a constant interval instead of only when needed. Microsoft documents this boot option for debugging.",
           "title": "Disable the dynamic timer tick"
         },
         "platformClock": {
-          "desc": "Removes the boot setting that pins one clock source and lets Windows choose the best one available again.",
+          "desc": "Removes the useplatformclock boot element, letting Windows pick its own clock source again. Microsoft documents this boot option for debugging; this entry takes it away rather than setting it.",
           "title": "Stop forcing the platform clock"
         },
         "platformTick": {
-          "desc": "Makes Windows use the motherboard's hardware timer, keeping clock intervals more predictable.",
+          "desc": "Forces Windows to use the platform's hardware timer instead of picking a timer source at boot. Microsoft documents this boot option for debugging.",
           "title": "Use the platform timer"
         }
       },
       "cpu": {
         "gamesTaskPriority": {
-          "desc": "Raises the processor and graphics priority Windows grants to tasks registered as games.",
+          "desc": "Writes three MMCSS values to the Games task. Microsoft documents the GPU priority as not yet used, and pins the thread priority to a fixed value whenever the scheduling category is High — which is the third value written here. Windows acts on almost none of it.",
           "title": "Scheduler priority for games"
         },
         "systemResponsiveness": {
-          "desc": "Lowers the share of the processor the multimedia scheduler holds back for background tasks and hands it to the foreground application.",
+          "desc": "Lowers SystemResponsiveness, the share of the processor the multimedia scheduler reserves for background tasks. The mechanism is documented; what it changes for a given game is not something we can show.",
           "title": "Reserve less CPU for background work"
         },
         "win32PrioritySeparation": {
-          "desc": "Gives the foreground application short, fixed quanta, favouring games and the active window.",
+          "desc": "Sets Win32PrioritySeparation to short, fixed quanta biased to the foreground application, changing how the scheduler slices processor time between windows. No primary source ties this value to a measured gain.",
           "title": "Boost the foreground application"
         }
       },
@@ -436,11 +436,11 @@
       },
       "network": {
         "tcpParameters": {
-          "desc": "Applies a set of TCP stack parameters aimed at low-latency connections and more simultaneous ports.",
+          "desc": "Writes four TCP stack values: the default TTL, RFC 1323 window scaling, the TIME_WAIT delay and the top of the ephemeral port range. What each one does is documented; no primary source ties the set to lower latency in games.",
           "title": "Tune the Windows TCP parameters"
         },
         "throttlingIndex": {
-          "desc": "Removes the ceiling the multimedia scheduler puts on network traffic while audio or video is playing.",
+          "desc": "Removes the ceiling the multimedia scheduler puts on network packets while audio or video is playing. Documented behaviour; whether a game notices it is a separate question.",
           "title": "Turn off multimedia network throttling"
         }
       },
@@ -450,11 +450,11 @@
           "title": "Telemetry (DiagTrack) on Manual start"
         },
         "doSvc": {
-          "desc": "Sets Delivery Optimization to Manual start, so the machine stops sharing updates over the network unprompted. Windows Update keeps working.",
+          "desc": "Sets Delivery Optimization to Manual start, so the machine stops sharing updates over the network unprompted. Windows Update keeps working. Stopping the service is a blunt way to reach that goal; a dedicated Delivery Optimization setting will replace it.",
           "title": "Delivery Optimization on Manual start"
         },
         "sysMain": {
-          "desc": "Sets SysMain (Superfetch) to Manual start, cutting background disk activity.",
+          "desc": "Sets SysMain (Superfetch) to Manual start. SysMain is a cache by design: on a machine where it causes idle disk or processor spikes, stopping it removes them; elsewhere the effect is neutral or slightly negative, because Windows loses the prefetching.",
           "title": "SysMain on Manual start"
         },
         "wSearch": {
