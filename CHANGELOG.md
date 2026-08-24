@@ -1,3 +1,9 @@
+## [0.5.0](https://github.com/chrystiamjr/VeloSysPro/compare/v0.4.3...v0.5.0) (2026-08-24)
+
+### Features
+
+* **optimize:** refill Recommended with what the machine exposes ([#50](https://github.com/chrystiamjr/VeloSysPro/issues/50)) ([2146a21](https://github.com/chrystiamjr/VeloSysPro/commit/2146a218f4716a945f808ea9897a38c9e544478e))
+
 ## [0.4.3](https://github.com/chrystiamjr/VeloSysPro/compare/v0.4.2...v0.4.3) (2026-08-23)
 
 ### Bug Fixes
