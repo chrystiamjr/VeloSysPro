@@ -97,13 +97,19 @@ namespace VeloSysPro
             return matches == 0 ? TweakState.NotApplied : TweakState.Partial;
         }
 
-        public IReadOnlyList<CapturedValue> ReadCurrentValues()
+        public IReadOnlyList<CapturedValue> ReadCurrentValues() => ReadCurrentValues(KeyIsReadable());
+
+        /// <summary>
+        /// Takes the key-readable answer rather than asking again, so <see cref="Capture"/> can use
+        /// the same one to decide whether there is a key worth exporting.
+        /// </summary>
+        private IReadOnlyList<CapturedValue> ReadCurrentValues(bool keyIsReadable)
         {
             // "reg query" fails both for a value that is absent and for a key it could not read at
             // all, and those must not be confused: recording "absent" for a value that exists would
             // make Revert delete it. Only when the key itself reads back is an absent value real.
             var captured = new List<CapturedValue>(_values.Count);
-            if (!KeyIsReadable())
+            if (!keyIsReadable)
             {
                 // ...unless the key's absence is the prior state itself. A `Policies` branch that
                 // nobody has created is the normal condition of every policy here, and it takes the
@@ -123,14 +129,22 @@ namespace VeloSysPro
             return captured;
         }
 
-        public TweakCapture Capture() =>
-            new(
+        public TweakCapture Capture()
+        {
+            bool keyIsReadable = KeyIsReadable();
+            return new(
                 Id,
                 Kind,
                 TweakClock.NowUtc(),
-                ReadCurrentValues(),
-                _backup.ExportKey(_keyPath, Id)
+                ReadCurrentValues(keyIsReadable),
+                // Exporting a key that is not there fails, and reg.exe's complaint reaches the
+                // user's log as a red error line beside a step that actually succeeded — seen on a
+                // real machine on 2026-08-23, applying the Delivery Optimization policy. There is
+                // nothing to archive either: the capture already holds the whole prior state, which
+                // for an absent policy key is "no policy set".
+                keyIsReadable ? _backup.ExportKey(_keyPath, Id) : ""
             );
+        }
 
         public bool Apply(TweakCapture capture)
         {

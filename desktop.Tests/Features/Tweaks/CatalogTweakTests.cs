@@ -798,6 +798,13 @@ public class CatalogTweakTests
         // precisely the bug.
         Assert.NotEmpty(tweakCapture.Values);
         Assert.All(tweakCapture.Values, value => Assert.False(value.Existed));
+
+        // No export attempt: `reg export` of a key that is not there fails, and the failure is
+        // logged to the user as an error next to a step that succeeded. Verified on a real machine
+        // on 2026-08-23 — the applied batch showed a red "could not find the registry key" line
+        // above its own success.
+        Assert.DoesNotContain(catalog.Args, arg => arg.StartsWith("export "));
+        Assert.Equal(string.Empty, tweakCapture.ArtifactFile);
         Assert.True(tweak.Apply(tweakCapture));
 
         catalog.Runner.Runs.Clear();
