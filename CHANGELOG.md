@@ -1,3 +1,9 @@
+## [0.5.1](https://github.com/chrystiamjr/VeloSysPro/compare/v0.5.0...v0.5.1) (2026-08-24)
+
+### Bug Fixes
+
+* **optimize:** remove the empty policy key a Tweak created ([#52](https://github.com/chrystiamjr/VeloSysPro/issues/52)) ([52c9545](https://github.com/chrystiamjr/VeloSysPro/commit/52c95453b366e3006eb55363be0ebb973e3bf5fd)), closes [#51](https://github.com/chrystiamjr/VeloSysPro/issues/51)
+
 ## [0.5.0](https://github.com/chrystiamjr/VeloSysPro/compare/v0.4.3...v0.5.0) (2026-08-24)
 
 ### Features
