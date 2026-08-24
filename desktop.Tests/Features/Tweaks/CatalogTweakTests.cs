@@ -60,6 +60,12 @@ public class CatalogTweakTests
         /// <summary>A value reg.exe cannot find — indistinguishable from a failed query by design.</summary>
         public void ValueAbsent() => Runner.EnqueueFailedCapture();
 
+        /// <summary>Answers the optional-feature probe: this Windows image has the feature.</summary>
+        public void FeaturePresent() => Runner.EnqueueCapture("present\r\n");
+
+        /// <summary>...and the answer a machine without it gives.</summary>
+        public void FeatureAbsent() => Runner.EnqueueCapture("absent\r\n");
+
         public List<string> Args => Runner.Runs.Select(run => run.Args).ToList();
 
         public void Dispose() => _temp.Dispose();
@@ -741,6 +747,329 @@ public class CatalogTweakTests
         }
     }
 
+    // ---- E8-02 — Copilot and Recall policies ---------------------------------------------------
+
+    [Fact]
+    public void CopilotPolicy_WritesTheUserPolicyKeyAndRemovesItAgainOnRevert()
+    {
+        // A Policies branch is the one place creating an absent value is the supported mechanism:
+        // Windows reads the key whether or not an administrator ever created it. HKCU, because
+        // WindowsCopilot.admx declares TurnOffWindowsCopilot as a user policy — read live on
+        // 2026-08-23, along with the CSP's own redirect to this key.
+        using var catalog = new ShippedCatalog();
+        catalog.KeyReadsBack();
+        catalog.ValueAbsent();
+
+        ITweak copilot = catalog.Find("windows.copilotPolicy");
+        TweakCapture capture = copilot.Capture();
+
+        Assert.True(copilot.Apply(capture));
+        Assert.Equal(
+            "add \"" + CopilotPolicy + "\" /v \"TurnOffWindowsCopilot\" /t REG_DWORD /d \"1\" /f",
+            catalog.Args.Last()
+        );
+
+        // Absence is not a zero. Writing 0 would leave the policy behind, saying "Copilot is
+        // explicitly allowed" where the machine had said nothing at all.
+        catalog.Runner.Runs.Clear();
+        Assert.True(copilot.Revert(capture));
+        Assert.Equal(
+            "delete \"" + CopilotPolicy + "\" /v \"TurnOffWindowsCopilot\" /f",
+            Assert.Single(catalog.Args)
+        );
+    }
+
+    [Fact]
+    public void Recall_ReportsUnsupportedWhereWindowsDoesNotHaveTheFeature()
+    {
+        // The reason TweakState.Unsupported exists. Without it the row says "Not applied", the user
+        // ticks it, the policy write succeeds, and the next refresh says "Applied" for a feature
+        // that is not on the machine.
+        using var catalog = new ShippedCatalog();
+        catalog.FeatureAbsent();
+
+        Assert.Equal(TweakState.Unsupported, catalog.Find("windows.recall").Detect());
+    }
+
+    [Fact]
+    public void Recall_AsksTheOptionalFeatureListRatherThanThePolicysOwnAbsence()
+    {
+        // An unset policy on a Copilot+ PC and a machine that has never had Recall are the same
+        // bytes. Only the capability tells them apart, so the probe has to be the thing that runs.
+        using var catalog = new ShippedCatalog();
+        catalog.FeatureAbsent();
+
+        catalog.Find("windows.recall").Detect();
+
+        string probe = Assert.Single(catalog.Args);
+        Assert.Contains("Win32_OptionalFeature", probe);
+        Assert.Contains("'Recall'", probe);
+        Assert.DoesNotContain("DisableAIDataAnalysis", probe);
+    }
+
+    [Fact]
+    public void Recall_DetectsAndAppliesNormallyOnAMachineThatHasIt()
+    {
+        using var catalog = new ShippedCatalog();
+        catalog.FeaturePresent();
+        catalog.Value("DisableAIDataAnalysis", "REG_DWORD", "0x1");
+
+        ITweak recall = catalog.Find("windows.recall");
+        Assert.Equal(TweakState.Applied, recall.Detect());
+
+        catalog.Runner.Runs.Clear();
+        catalog.KeyReadsBack();
+        catalog.ValueAbsent();
+        TweakCapture capture = recall.Capture();
+
+        Assert.True(recall.Apply(capture));
+        Assert.Equal(
+            "add \"" + WindowsAiPolicy + "\" /v \"DisableAIDataAnalysis\" /t REG_DWORD /d \"1\" /f",
+            catalog.Args.Last()
+        );
+    }
+
+    [Fact]
+    public void Recall_RefusesToApplyOnAMachineWithoutTheFeatureEvenWhenAskedDirectly()
+    {
+        // Detect is advice; this is the refusal. A caller that never asked — a stale IPC payload, a
+        // Preset applied headlessly — must not be able to write the policy anyway.
+        using var catalog = new ShippedCatalog();
+        catalog.FeatureAbsent();
+        catalog.KeyReadsBack();
+        catalog.ValueAbsent();
+
+        ITweak recall = catalog.Find("windows.recall");
+        TweakCapture capture = recall.Capture();
+        catalog.Runner.Runs.Clear();
+
+        Assert.False(recall.Apply(capture));
+        Assert.DoesNotContain(catalog.Args, arg => arg.StartsWith("add "));
+    }
+
+    [Fact]
+    public void Recall_StillRevertsWhatItAppliedAfterTheFeatureIsGone()
+    {
+        // A capture only exists because the Tweak was applied while the feature was there. Gating
+        // Revert on support would strand the user with a policy they can no longer take back.
+        using var catalog = new ShippedCatalog();
+        catalog.FeatureAbsent();
+
+        var capture = new TweakCapture(
+            "windows.recall",
+            TweakKinds.Registry,
+            "2026-08-23T10:00:00.0000000Z",
+            new[] { new CapturedValue("DisableAIDataAnalysis", "REG_DWORD", "", false) }
+        );
+
+        Assert.True(catalog.Find("windows.recall").Revert(capture));
+        Assert.Equal(
+            "delete \"" + WindowsAiPolicy + "\" /v \"DisableAIDataAnalysis\" /f",
+            Assert.Single(catalog.Args)
+        );
+    }
+
+    // ---- E8-03 — Game DVR capture and transparency ----------------------------------------------
+
+    [Theory]
+    [InlineData("0x0", TweakState.Applied)]
+    [InlineData("0x1", TweakState.NotApplied)] // what the verified machine ships with
+    public void GameDvrCapture_DetectsTheValueGameConfigStoreActuallyHolds(
+        string live,
+        TweakState expected
+    )
+    {
+        using var catalog = new ShippedCatalog();
+        catalog.Value("GameDVR_Enabled", "REG_DWORD", live);
+
+        Assert.Equal(expected, catalog.Find("graphics.gameDvrCapture").Detect());
+        Assert.All(catalog.Args, arg => Assert.Contains(GameConfigStore, arg));
+    }
+
+    [Fact]
+    public void GameDvrCapture_RoundTripsTheValueAndTouchesNothingElse()
+    {
+        // Game Bar, ShowStartupPanel and the Xbox services are deliberately out of scope: turning
+        // off background capture is not the same as taking the overlay away from someone using a
+        // controller.
+        using var catalog = new ShippedCatalog();
+        catalog.KeyReadsBack();
+        catalog.Value("GameDVR_Enabled", "REG_DWORD", "0x1");
+
+        ITweak capture_ = catalog.Find("graphics.gameDvrCapture");
+        TweakCapture capture = capture_.Capture();
+
+        Assert.True(capture_.Apply(capture));
+        Assert.Equal(
+            "add \"" + GameConfigStore + "\" /v \"GameDVR_Enabled\" /t REG_DWORD /d \"0\" /f",
+            catalog.Args.Last()
+        );
+
+        catalog.Runner.Runs.Clear();
+        Assert.True(capture_.Revert(capture));
+        Assert.Contains("/d \"0x1\"", Assert.Single(catalog.Args));
+
+        Assert.DoesNotContain(catalog.Args, arg => arg.Contains("GameBar", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(catalog.Args, arg => arg.Contains("Xbox", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Transparency_RoundTripsTheSwitchWindowsSettingsWrites()
+    {
+        using var catalog = new ShippedCatalog();
+        catalog.KeyReadsBack();
+        catalog.Value("EnableTransparency", "REG_DWORD", "0x1");
+
+        ITweak transparency = catalog.Find("system.transparency");
+        TweakCapture capture = transparency.Capture();
+
+        Assert.True(transparency.Apply(capture));
+        Assert.Equal(
+            "add \"" + Personalize + "\" /v \"EnableTransparency\" /t REG_DWORD /d \"0\" /f",
+            catalog.Args.Last()
+        );
+
+        catalog.Runner.Runs.Clear();
+        Assert.True(transparency.Revert(capture));
+        Assert.Contains("/d \"0x1\"", Assert.Single(catalog.Args));
+    }
+
+    [Fact]
+    public void Transparency_NeedsNoRestartAndIsThereforeRecommendable()
+    {
+        // DWM picks the change up immediately, which is what lets it sit in `Recommended` at all.
+        using var catalog = new ShippedCatalog();
+
+        Assert.False(catalog.Find("system.transparency").RequiresReboot);
+        Assert.Contains("system.transparency", catalog.Recommended);
+    }
+
+    // ---- E8-04 — Startup ads and Delivery Optimization -------------------------------------------
+
+    /// <summary>The four suggestion values, in the order the Tweak queries them.</summary>
+    private static readonly string[] AdValues =
+    {
+        "SystemPaneSuggestionsEnabled",
+        "RotatingLockScreenOverlayEnabled",
+        "SoftLandingEnabled",
+        "SilentInstalledAppsEnabled",
+    };
+
+    [Fact]
+    public void StartupAds_ReportsAppliedOnlyWhenEverySuggestionIsOff()
+    {
+        using var catalog = new ShippedCatalog();
+        foreach (string name in AdValues) catalog.Value(name, "REG_DWORD", "0x0");
+
+        Assert.Equal(TweakState.Applied, catalog.Find("windows.startupAds").Detect());
+        Assert.All(catalog.Args, arg => Assert.Contains(ContentDelivery, arg));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    public void StartupAds_ReportsPartialWhenExactlyOneSuggestionIsStillOn(int stillOn)
+    {
+        // Four values behind one row, which is what Partial exists for: rounding this to "applied"
+        // would tell the user the ads are gone while one of them still shows.
+        using var catalog = new ShippedCatalog();
+        for (int index = 0; index < AdValues.Length; index++)
+            catalog.Value(AdValues[index], "REG_DWORD", index == stillOn ? "0x1" : "0x0");
+
+        Assert.Equal(TweakState.Partial, catalog.Find("windows.startupAds").Detect());
+    }
+
+    [Fact]
+    public void StartupAds_RefusesToCreateASuggestionValueTheMachineDoesNotExpose()
+    {
+        // Not a Policies branch: these are the values Windows writes for its own Settings switches,
+        // so an absent one is a switch this build does not have and creating it would write
+        // something nothing reads.
+        using var catalog = new ShippedCatalog();
+        catalog.KeyReadsBack();
+        catalog.Value(AdValues[0], "REG_DWORD", "0x1");
+        catalog.Value(AdValues[1], "REG_DWORD", "0x1");
+        catalog.ValueAbsent();
+        catalog.Value(AdValues[3], "REG_DWORD", "0x1");
+
+        ITweak ads = catalog.Find("windows.startupAds");
+        TweakCapture capture = ads.Capture();
+        catalog.Runner.Runs.Clear();
+
+        Assert.False(ads.Apply(capture));
+        Assert.Empty(catalog.Args);
+    }
+
+    [Fact]
+    public void StartupAds_RoundTripsEveryValueItOwns()
+    {
+        using var catalog = new ShippedCatalog();
+        catalog.KeyReadsBack();
+        foreach (string name in AdValues) catalog.Value(name, "REG_DWORD", "0x1");
+
+        ITweak ads = catalog.Find("windows.startupAds");
+        TweakCapture capture = ads.Capture();
+
+        Assert.True(ads.Apply(capture));
+        Assert.Equal(
+            AdValues,
+            catalog.Args
+                .Where(arg => arg.StartsWith("add "))
+                .Select(arg => arg.Split(" /v \"")[1].Split('"')[0])
+        );
+
+        catalog.Runner.Runs.Clear();
+        Assert.True(ads.Revert(capture));
+        Assert.Equal(
+            new[] { "/d \"0x1\"", "/d \"0x1\"", "/d \"0x1\"", "/d \"0x1\"" },
+            catalog.Args.Select(Payload)
+        );
+    }
+
+    [Fact]
+    public void DeliveryOptimization_SetsTheHttpOnlyModeAndRestoresTheAbsentPolicy()
+    {
+        // 0 is "HTTP only, no peering", quoted from this build's own DeliveryOptimization.adml on
+        // 2026-08-23. Content keeps coming from Microsoft; what stops is this PC uploading it.
+        using var catalog = new ShippedCatalog();
+        catalog.KeyReadsBack();
+        catalog.ValueAbsent();
+
+        ITweak delivery = catalog.Find("network.deliveryOptimization");
+        TweakCapture capture = delivery.Capture();
+
+        Assert.True(delivery.Apply(capture));
+        Assert.Equal(
+            "add \"" + DeliveryPolicy + "\" /v \"DODownloadMode\" /t REG_DWORD /d \"0\" /f",
+            catalog.Args.Last()
+        );
+
+        catalog.Runner.Runs.Clear();
+        Assert.True(delivery.Revert(capture));
+        Assert.Equal(
+            "delete \"" + DeliveryPolicy + "\" /v \"DODownloadMode\" /f",
+            Assert.Single(catalog.Args)
+        );
+    }
+
+    [Fact]
+    public void DoSvc_KeepsWorkingAlongsideTheDeliveryOptimizationPolicy()
+    {
+        // E8-04 replaces the mechanism, not the entry. Removing services.doSvc would strand anyone
+        // who applied it: RevertTweak resolves through Find, and the two are different settings
+        // that happen to share a goal.
+        using var catalog = new ShippedCatalog();
+
+        Assert.NotNull(catalog.Find("services.doSvc"));
+        Assert.NotNull(catalog.Find("network.deliveryOptimization"));
+        Assert.NotEqual(
+            catalog.Find("services.doSvc").Kind,
+            catalog.Find("network.deliveryOptimization").Kind
+        );
+    }
+
     // ---- Cross-cutting -------------------------------------------------------------------------
 
     [Fact]
@@ -782,6 +1111,16 @@ public class CatalogTweakTests
     private const string GameBar = @"HKCU\Software\Microsoft\GameBar";
     private const string VisualEffects =
         @"HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects";
+    private const string GameConfigStore = @"HKCU\System\GameConfigStore";
+    private const string Personalize =
+        @"HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
+    private const string ContentDelivery =
+        @"HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager";
+    private const string CopilotPolicy =
+        @"HKCU\Software\Policies\Microsoft\Windows\WindowsCopilot";
+    private const string WindowsAiPolicy = @"HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsAI";
+    private const string DeliveryPolicy =
+        @"HKLM\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization";
 
     /// <summary>The <c>/d "…"</c> fragment of a reg.exe command, for comparing payloads.</summary>
     private static string Payload(string args)

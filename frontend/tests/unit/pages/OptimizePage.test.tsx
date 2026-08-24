@@ -385,6 +385,50 @@ describe('OptimizePage (desired-state selection screen)', () => {
     });
   });
 
+  it('draws one fewer box for a preset naming a Tweak this machine cannot use', () => {
+    // Preset membership is the catalog's decision and stays legal; what the machine has is a
+    // separate question, answered per row. The rest of the preset still ticks.
+    const withUnsupported: TweakCatalog = {
+      ...catalog,
+      tweaks: catalog.tweaks.map((tweak) =>
+        tweak.id === 'services.sysMain' ? { ...tweak, state: 'Unsupported' as const } : tweak
+      ),
+    };
+    const { container, onApply } = renderPage({ catalog: withUnsupported });
+
+    click(container, 'tweak-preset-quick');
+
+    expect(box(container, 'cpu.win32PrioritySeparation')).toBeChecked();
+    expect(box(container, 'services.sysMain')).not.toBeChecked();
+
+    click(container, 'tweak-apply');
+    expect(onApply).toHaveBeenCalledWith({
+      tweakIds: ['cpu.win32PrioritySeparation'],
+      revertIds: [],
+    });
+  });
+
+  it('never submits an Unsupported id, even one the user had ticked before', () => {
+    // The host refuses it at its own seam; this is what stops the screen asking. A drawn selection
+    // survives a refresh, so a Tweak that becomes unsupported between the click and the submit has
+    // to drop out of the difference rather than travel with it.
+    const { container, rerender, onApply } = renderPage();
+    click(container, 'tweak-select-cpu.win32PrioritySeparation');
+
+    reload(rerender, {
+      ...catalog,
+      tweaks: catalog.tweaks.map((tweak) =>
+        tweak.id === 'cpu.win32PrioritySeparation'
+          ? { ...tweak, state: 'Unsupported' as const }
+          : tweak
+      ),
+    });
+
+    expect(screen.getByText(/Nenhuma alteração pendente/i)).toBeInTheDocument();
+    click(container, 'tweak-apply');
+    expect(onApply).not.toHaveBeenCalled();
+  });
+
   it('draws only the Tweaks the catalog recommends', () => {
     const recommendedCatalog: TweakCatalog = {
       ...catalog,

@@ -74,9 +74,14 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
     setPresetSelection(null);
   }
 
-  // Anything the host stopped reporting cannot be acted on, whatever the user drew earlier.
+  // Anything the host stopped reporting cannot be acted on, whatever the user drew earlier — and
+  // neither can a Tweak whose feature this machine does not have. The host refuses an Unsupported
+  // id at its own seam; leaving it out here is what stops the screen asking in the first place, and
+  // it is read off the live catalog so a machine that gains the feature simply starts offering it.
   const knownIds = catalog.tweaks.map((tweak) => tweak.id);
-  const liveDesired = desiredIds.filter((id) => knownIds.includes(id));
+  const selectable = (id: string) =>
+    catalog.tweaks.some((tweak) => tweak.id === id && tweak.state !== 'Unsupported');
+  const liveDesired = desiredIds.filter(selectable);
 
   const toApply = liveDesired.filter((id) => !appliedIds.includes(id));
   const toRevert = appliedIds.filter((id) => !liveDesired.includes(id));
@@ -100,10 +105,13 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
   // builds the catalog; it is enforced again here because these are the controls a non-expert
   // clicks without reading, so malformed or stale host data must not tick an Advanced Tweak for
   // them. An Advanced Tweak already applied stays ticked — unticking it would stage a revert
-  // nobody asked for.
+  // nobody asked for. A Preset naming a Tweak this machine cannot use simply draws one fewer box:
+  // the catalog decides membership, the machine decides what is offered.
   const drawSafeOnly = (ids: string[]) => {
     const safe = ids.filter((id) =>
-      catalog.tweaks.some((tweak) => tweak.id === id && tweak.riskTier === 'Safe')
+      catalog.tweaks.some(
+        (tweak) => tweak.id === id && tweak.riskTier === 'Safe' && tweak.state !== 'Unsupported'
+      )
     );
     const appliedAdvanced = appliedIds.filter(
       (id) => catalog.tweaks.find((tweak) => tweak.id === id)?.riskTier === 'Advanced'
@@ -136,7 +144,7 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
   const submit = () => {
     // Revalidated one last time against the catalog as it stands right now: the list may have been
     // re-read while the user was deciding.
-    const apply = toApply.filter((id) => knownIds.includes(id));
+    const apply = toApply.filter(selectable);
     const revert = toRevert.filter((id) => knownIds.includes(id));
     if (apply.length === 0 && revert.length === 0) return;
 

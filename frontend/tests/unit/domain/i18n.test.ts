@@ -94,9 +94,18 @@ function catalogTweaks(): { id: string; advanced: boolean }[] {
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
-/** How many Tweaks the catalog constructs, counted independently of the id pattern. */
+/**
+ * How many Tweaks the catalog registers, counted independently of the id pattern.
+ *
+ * Counted by the category argument every Tweak constructor takes exactly once, not by
+ * `new \w+Tweak(`: a decorator such as `SupportGatedTweak` is a second constructor call around a
+ * Tweak that is already counted, and would make the count disagree with the list for a reason that
+ * is not a missing entry. What the guard is for survives untouched — an id whose *shape* the
+ * pattern above does not anticipate still drops out of `catalogTweaks()` while the category
+ * argument beside it is still counted here, and the two disagree.
+ */
 function catalogTweakConstructorCount(): number {
-  return [...readFileSync(CATALOG_SOURCE, 'utf8').matchAll(/new \w+Tweak\(/g)].length;
+  return [...readFileSync(CATALOG_SOURCE, 'utf8').matchAll(/,\s*TweakCategories\.\w+\s*,/g)].length;
 }
 
 const DEBLOAT_SOURCE = resolve('../desktop/Features/Debloat/DebloatCatalog.cs');

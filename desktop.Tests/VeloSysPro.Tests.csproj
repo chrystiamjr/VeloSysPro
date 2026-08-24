@@ -33,6 +33,7 @@
     <Compile Include="..\desktop\Features\Tweaks\PowerPlanTweak.cs" />
     <Compile Include="..\desktop\Features\Tweaks\RegistryTweak.cs" />
     <Compile Include="..\desktop\Features\Tweaks\ServiceTweak.cs" />
+    <Compile Include="..\desktop\Features\Tweaks\SupportGatedTweak.cs" />
     <Compile Include="..\desktop\Features\Tweaks\TweakCaptureStore.cs" />
     <Compile Include="..\desktop\Features\Tweaks\TweakCatalog.cs" />
     <Compile Include="..\desktop\Features\Tweaks\TweakEngine.cs" />

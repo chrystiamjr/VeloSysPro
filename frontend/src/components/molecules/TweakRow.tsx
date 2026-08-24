@@ -15,7 +15,7 @@ export interface TweakRowProps {
 }
 
 interface StateBadge {
-  variant: 'success' | 'info' | 'warning';
+  variant: 'success' | 'info' | 'warning' | 'neutral';
   labelKey: string;
 }
 
@@ -23,6 +23,9 @@ const STATE_BADGE: Record<TweakState, StateBadge> = {
   Applied: { variant: 'success', labelKey: 'optimize.state.applied' },
   NotApplied: { variant: 'info', labelKey: 'optimize.state.notApplied' },
   Partial: { variant: 'warning', labelKey: 'optimize.state.partial' },
+  // Its own copy and its own colour, never NotApplied's: "not applied" invites the click that
+  // this row exists to refuse.
+  Unsupported: { variant: 'neutral', labelKey: 'optimize.state.unsupported' },
 };
 
 /**
@@ -41,18 +44,24 @@ export const TweakRow: React.FC<TweakRowProps> = ({
   // i18n path, so a Tweak carries no display text across the IPC boundary.
   const labelKey = `optimize.tweak.${tweak.id}`;
   const badge = STATE_BADGE[tweak.state];
+  // Nothing about this row is selectable: the machine does not have the feature, so the box is
+  // disabled and the reason is stated. An unticked box that looks selectable would be an invitation
+  // the host is going to refuse.
+  const unsupported = tweak.state === 'Unsupported';
 
   return (
     <div
       data-cy={`tweak-row-${tweak.id}`}
       className="flex flex-col gap-3 border-b border-borderColor/50 px-5 py-4 last:border-none sm:flex-row sm:items-center sm:justify-between"
     >
-      <label className="flex flex-1 cursor-pointer items-start gap-3">
+      <label
+        className={`flex flex-1 items-start gap-3 ${unsupported ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+      >
         <input
           type="checkbox"
           data-cy={`tweak-select-${tweak.id}`}
-          checked={selected}
-          disabled={disabled}
+          checked={selected && !unsupported}
+          disabled={disabled || unsupported}
           onChange={() => onToggle(tweak.id)}
           aria-label={t(`${labelKey}.title`)}
           className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-primary disabled:cursor-not-allowed"
@@ -88,6 +97,16 @@ export const TweakRow: React.FC<TweakRowProps> = ({
           {tweak.state === 'Partial' && (
             <span data-cy={`tweak-partial-${tweak.id}`} className="mt-1 block text-xs text-warning">
               {t('optimize.partialHint')}
+            </span>
+          )}
+          {/* A disabled box with no explanation reads as a bug. The badge says "Unavailable"; this
+              says why, which is the only thing that turns a dead row into an answer. */}
+          {unsupported && (
+            <span
+              data-cy={`tweak-unsupported-${tweak.id}`}
+              className="mt-1 block text-xs text-textMuted"
+            >
+              {t('optimize.unsupportedHint')}
             </span>
           )}
         </span>

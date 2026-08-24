@@ -315,7 +315,8 @@
       "revertFailed": "Falha ao reverter a otimização: {{id}}",
       "reverted": "Otimização revertida: {{id}}",
       "unknown": "Otimização desconhecida: {{id}}",
-      "unknownPreset": "Predefinição desconhecida: {{id}}"
+      "unknownPreset": "Predefinição desconhecida: {{id}}",
+      "unsupported": "Este PC não tem o recurso que {{id}} configura, então ela não foi aplicada."
     },
     "updateCache": {
       "done": "Cache do Windows Update limpo com sucesso.",
@@ -348,7 +349,8 @@
       "network": "Rede",
       "other": "Outras",
       "services": "Serviços do Windows",
-      "system": "Sistema e desempenho"
+      "system": "Sistema e desempenho",
+      "windows": "Windows e privacidade"
     },
     "clearBtn": "Limpar seleção",
     "empty": "Nenhuma otimização disponível. Use Atualizar para consultar o sistema novamente.",
@@ -389,7 +391,8 @@
     "state": {
       "applied": "Aplicada",
       "notApplied": "Não aplicada",
-      "partial": "Parcial"
+      "partial": "Parcial",
+      "unsupported": "Indisponível"
     },
     "tweak": {
       "boot": {
@@ -425,6 +428,10 @@
           "desc": "Faz os jogos usarem o modo de tela cheia exclusiva em vez das otimizações de tela cheia do Windows.",
           "title": "Forçar tela cheia exclusiva"
         },
+        "gameDvrCapture": {
+          "desc": "Desliga o buffer contínuo que o Windows mantém para permitir salvar os últimos minutos de jogo depois que algo acontece. A contrapartida é clara: \"gravar os últimos 30 segundos\" deixa de funcionar. A sobreposição da Barra de Jogos não é alterada.",
+          "title": "Parar a gravação em segundo plano do Game DVR"
+        },
         "gameMode": {
           "desc": "Deixa o Windows priorizar o jogo em execução e adiar atualizações e notificações.",
           "title": "Modo Jogo do Windows"
@@ -435,6 +442,10 @@
         }
       },
       "network": {
+        "deliveryOptimization": {
+          "desc": "Faz a Otimização de Entrega baixar somente da Microsoft, sem compartilhamento ponto a ponto: as atualizações continuam chegando normalmente, mas este PC deixa de enviar pedaços delas para outras máquinas na rede ou na internet. O Windows Update continua funcionando.",
+          "title": "Parar de compartilhar atualizações com outros PCs"
+        },
         "tcpParameters": {
           "desc": "Grava quatro valores da pilha TCP: o TTL padrão, o escalonamento de janela da RFC 1323, o atraso de TIME_WAIT e o topo da faixa de portas efêmeras. O que cada um faz é documentado; nenhuma fonte primária liga o conjunto a menor latência em jogos.",
           "title": "Ajustar os parâmetros TCP do Windows"
@@ -450,7 +461,7 @@
           "title": "Telemetria (DiagTrack) em início Manual"
         },
         "doSvc": {
-          "desc": "Coloca a Otimização de Entrega em início Manual, impedindo que a máquina compartilhe atualizações pela rede sem necessidade. O Windows Update continua funcionando. Parar o serviço é um caminho grosseiro para esse objetivo; uma configuração própria da Otimização de Entrega vai substituí-lo.",
+          "desc": "Coloca a Otimização de Entrega em início Manual, para a máquina parar de compartilhar atualizações pela rede sem pedir. O Windows Update continua funcionando. Parar o serviço é uma forma grosseira de chegar lá; \"Parar de compartilhar atualizações com outros PCs\" chega pela configuração que o próprio Windows oferece.",
           "title": "Otimização de Entrega em início Manual"
         },
         "sysMain": {
@@ -467,12 +478,31 @@
           "desc": "Ativa o plano Desempenho Máximo, ou o de Alto desempenho quando a máquina não tem o primeiro. Consome mais energia em notebooks.",
           "title": "Plano de energia de alto desempenho"
         },
+        "transparency": {
+          "desc": "Desliga o efeito de transparência, para o compositor da área de trabalho parar de recompor as superfícies desfocadas atrás dos menus, do Iniciar e da barra de tarefas. É a mesma opção das Configurações do Windows; depois disso essas superfícies ficam sólidas.",
+          "title": "Desativar a transparência das janelas"
+        },
         "visualEffects": {
           "desc": "Troca as animações e sombras da interface pelo ajuste de melhor desempenho.",
           "title": "Efeitos visuais ajustados para desempenho"
         }
+      },
+      "windows": {
+        "copilotPolicy": {
+          "desc": "Aplica a política do Windows Copilot que desliga o assistente para esta conta. Não é o mesmo que remover o aplicativo Copilot: desinstalar deixa o botão na barra de tarefas e a tecla Copilot funcionando, e a política é o controle que a Microsoft documenta para desligar a integração.",
+          "title": "Desativar o Windows Copilot"
+        },
+        "recall": {
+          "desc": "Aplica a política que impede o Recall de salvar instantâneos do que está na tela. O Recall existe apenas em um PC Copilot+; em qualquer outro este item aparece como indisponível em vez de ser aplicado a um recurso que não está lá.",
+          "title": "Desativar os instantâneos do Recall"
+        },
+        "startupAds": {
+          "desc": "Desliga as sugestões no menu Iniciar, as dicas na tela de bloqueio, as dicas do Windows e a instalação silenciosa de aplicativos sugeridos. Cada uma delas também é uma opção oferecida pelas Configurações do Windows.",
+          "title": "Desativar sugestões e anúncios do Windows"
+        }
       }
-    }
+    },
+    "unsupportedHint": "Este PC não tem o recurso que este item configura, então não há nada a aplicar aqui."
   },
   "protection": {
     "desc": "A Proteção do Sistema do Windows está desativada. Sem ela o VeloSys Pro não consegue criar o ponto de restauração que antecede cada otimização, e as alterações seriam aplicadas sem essa rede de proteção.",

@@ -5,6 +5,7 @@ import {
   snapshotAfterReboot,
   snapshotBefore,
   tweakCatalog,
+  unsupportedTweakCatalog,
 } from './support/fixtures';
 
 const countOf = (stub: Sinon.SinonStub, action: string) =>
@@ -339,6 +340,35 @@ describe('à-la-carte optimizations', () => {
 
     cy.getByCy('tweak-recommended').click();
     cy.getByCy('tweak-select-advanced.memoryIntegrity').should('not.be.checked');
+  });
+
+  it('locks a Tweak this machine cannot use and says why', () => {
+    cy.emitHost('tweaksLoaded', unsupportedTweakCatalog);
+
+    cy.getByCy('tweak-state-services.sysMain').should('contain', 'Indisponível');
+    cy.getByCy('tweak-select-services.sysMain').should('be.disabled');
+    cy.getByCy('tweak-unsupported-services.sysMain')
+      .scrollIntoView()
+      .should('be.visible')
+      .and('contain', 'não tem o recurso');
+  });
+
+  it('draws one fewer box for a preset naming an unavailable Tweak, and submits the rest', () => {
+    cy.emitHost('tweaksLoaded', unsupportedTweakCatalog);
+
+    cy.getByCy('tweak-preset-gaming').click();
+    cy.getByCy('tweak-select-services.sysMain').should('not.be.checked');
+    cy.getByCy('tweak-select-cpu.win32PrioritySeparation').should('be.checked');
+
+    cy.getByCy('tweak-apply').click();
+    cy.expectIpc('applyTweaks', {
+      tweakIds: [
+        'cpu.win32PrioritySeparation',
+        'boot.disableDynamicTick',
+        'system.powerPlan',
+      ],
+      revertIds: [],
+    });
   });
 
   it('renders a category it does not have copy for instead of dropping it', () => {

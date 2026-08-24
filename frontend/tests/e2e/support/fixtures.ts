@@ -127,6 +127,18 @@ export const appliedTweakCatalog: TweakCatalog = {
 };
 
 /**
+ * A machine that does not have the feature one of the preset's Tweaks configures — a desktop PC
+ * and Recall, which is the case `TweakState.Unsupported` was added for. The id stays in the preset:
+ * membership is the catalog's decision, and the machine decides what is offered.
+ */
+export const unsupportedTweakCatalog: TweakCatalog = {
+  ...tweakCatalog,
+  tweaks: tweakCatalog.tweaks.map((tweak) =>
+    tweak.id === 'services.sysMain' ? { ...tweak, state: 'Unsupported' as const } : tweak
+  ),
+};
+
+/**
  * Mixed tiers and an unknown category. No Advanced Tweak ships yet — E5 adds them — so this is the
  * only place the gate around them can be exercised end to end.
  */
