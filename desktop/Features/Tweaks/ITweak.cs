@@ -53,12 +53,29 @@ namespace VeloSysPro
     /// values individually — the export is the archive kept for manual recovery, and the fallback
     /// when a capture's values cannot be read.
     /// </param>
+    /// <param name="KeyWasReadable">
+    /// False when the registry key itself did not read back before the Tweak ran, which is what
+    /// lets Revert remove a key the Tweak created rather than leave it behind empty.
+    /// </param>
+    /// <remarks>
+    /// <paramref name="KeyWasReadable"/> says what was observed, not what was inferred: a key that
+    /// exists but denies access reads back the same way an absent one does, and naming the field
+    /// after existence would claim knowledge the read never produced. Revert asks a second question
+    /// before deleting anything — whether the key is empty *now* — so the one case the two answers
+    /// differ on, a pre-existing key that was unreadable then and empty now, is not enough on its
+    /// own to delete it.
+    ///
+    /// It defaults to true because captures are persisted as JSON and read back by later versions:
+    /// one written before this field existed never observed the key at all, and true is the answer
+    /// that changes nothing.
+    /// </remarks>
     public sealed record TweakCapture(
         string TweakId,
         string Kind,
         string CapturedAt,
         IReadOnlyList<CapturedValue> Values,
-        string ArtifactFile = ""
+        string ArtifactFile = "",
+        bool KeyWasReadable = true
     );
 
     /// <summary>

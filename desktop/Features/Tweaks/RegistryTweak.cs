@@ -142,7 +142,8 @@ namespace VeloSysPro
                 // real machine on 2026-08-23, applying the Delivery Optimization policy. There is
                 // nothing to archive either: the capture already holds the whole prior state, which
                 // for an absent policy key is "no policy set".
-                keyIsReadable ? _backup.ExportKey(_keyPath, Id) : ""
+                keyIsReadable ? _backup.ExportKey(_keyPath, Id) : "",
+                keyIsReadable
             );
         }
 
@@ -180,11 +181,63 @@ namespace VeloSysPro
                     ? Write(value.Name, value.Type, value.Data)
                     : Delete(value.Name);
             }
+
+            // Apply created the key along with the value, so leaving it behind is an artefact the
+            // app made and did not clean up. Only ever for a key this Tweak is allowed to create,
+            // only when the capture could not read it, and only when nothing is left in it:
+            // between Apply and Revert an administrator may have set another policy under the same
+            // branch, and deleting the branch wholesale would destroy their setting — a far worse
+            // failure than the leftover key (#51). A restore that already failed is left exactly as
+            // it is.
+            //
+            // Nothing can make the emptiness check and the delete one operation through reg.exe, so
+            // a value written into the key in between is deleted with it. The window is
+            // microseconds on a policy branch nothing else is touching, and the alternative —
+            // never cleaning up — is the bug being fixed.
+            //
+            // Its result deliberately does not reach `ok`. The prior state is already restored by
+            // this point; an empty key nobody reads is cosmetic, and failing the whole Revert over
+            // it would report a failure that did not happen and that the user cannot act on.
+            if (ok && !capture.KeyWasReadable && _keyMayBeAbsent && KeyIsEmpty()) DeleteKey();
+
             return ok;
         }
 
-        private bool KeyIsReadable() =>
-            _cmd.RunCapture("reg.exe", "query \"" + _keyPath + "\"").Success;
+        /// <summary>
+        /// True when the key reads back holding nothing at all — no values, no subkeys.
+        /// </summary>
+        /// <remarks>
+        /// Read on a real machine on 2026-08-23: reg.exe answers an empty key with exit 0 and a
+        /// single line break, not even echoing the key's own path, while a key holding anything
+        /// prints that path and a line per value or subkey. So "no non-blank line" is the whole
+        /// test, and it needs nothing Windows translates — the alternative, reading the localized
+        /// text of a failure, is the trap `.agents/rules/locale-neutral-boundary-data.md` names.
+        ///
+        /// A query that fails answers nothing, and nothing is not permission to delete.
+        /// </remarks>
+        private bool KeyIsEmpty()
+        {
+            CaptureResult query = QueryKey();
+            if (!query.Success) return false;
+
+            foreach (string line in query.Output.Split('\n'))
+            {
+                if (line.Trim().Length > 0) return false;
+            }
+            return true;
+        }
+
+        private bool DeleteKey() =>
+            _cmd.Run("reg.exe", "delete \"" + _keyPath + "\" /f").Success;
+
+        /// <summary>
+        /// The one read of the whole key, asked two different questions: whether it answered at
+        /// all, and whether it answered holding anything.
+        /// </summary>
+        private CaptureResult QueryKey() =>
+            _cmd.RunCapture("reg.exe", "query \"" + _keyPath + "\"");
+
+        private bool KeyIsReadable() => QueryKey().Success;
 
         private CapturedValue Read(RegistryValue value)
         {
