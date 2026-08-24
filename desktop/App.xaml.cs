@@ -68,15 +68,13 @@ namespace VeloSysPro
             var systemRestore = new SystemRestoreManager(cmd, sink);
             var safety = new SafetyCheckpoint(systemRestore, backup, sink);
 
-            TweakEngine tweaks = TweakEngine.CreateDefault(cmd, backup, systemRestore, sink);
+            TweakEngine tweaks = TweakEngine.CreateDefault(cmd, backup, systemRestore, safety, sink);
 
             // The same preference the window applies. A user who turned the safety backup off did
             // so to opt out of the Safety Checkpoint; ignoring that here would make every scheduled
-            // run abort on a machine with System Protection disabled. Set on both, because
-            // CreateDefault builds the engine its own checkpoint.
-            bool safetyEnabled = new SettingsManager().Current.CreateBackupBeforeOptimize;
-            safety.Enabled = safetyEnabled;
-            tweaks.CreateSafetyBackupEnabled = safetyEnabled;
+            // run abort on a machine with System Protection disabled. One checkpoint, so one place
+            // to set it — this used to be written to two objects because the engine built its own.
+            safety.Enabled = new SettingsManager().Current.CreateBackupBeforeOptimize;
 
             bool ok = tweaks.HasPreset(task)
                 ? tweaks.ApplyPreset(task)

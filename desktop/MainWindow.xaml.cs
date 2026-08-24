@@ -15,17 +15,8 @@ namespace VeloSysPro
         private readonly string _logFile;
         private readonly string _errorLogFile;
 
-        private readonly CommandRunner _cmd;
-        private readonly RegistryBackupManager _backup;
-        private readonly SystemRestoreManager _systemRestore;
-        private readonly SafetyCheckpoint _safety;
-        private readonly Optimizer _optimizer;
-        private readonly SchedulerManager _scheduler;
-        private readonly SettingsManager _settings;
-        private readonly TweakEngine _tweaks;
-        private readonly DebloatManager _debloat;
         private readonly IpcEventEmitter _events;
-        private readonly ActionHost _actionHost;
+        private readonly HostServices _services;
         private readonly WebViewHost _webViewHost;
 
         public MainWindow()
@@ -41,26 +32,16 @@ namespace VeloSysPro
             Directory.CreateDirectory(_logsDir);
             Directory.CreateDirectory(_backupsDir);
 
-            _cmd = new CommandRunner(this);
-            _backup = new RegistryBackupManager(_backupsDir, _cmd, this);
-            _systemRestore = new SystemRestoreManager(_cmd, this);
-            _safety = new SafetyCheckpoint(_systemRestore, _backup, this);
-            _optimizer = new Optimizer(_cmd, _safety, this);
-            _scheduler = new SchedulerManager(_cmd, this);
-            _settings = new SettingsManager();
+            // Composed outside the window, where a test can see it. Wiring assembled in here is
+            // invisible to the test project, and that is how the Tweaks engine came to keep its own
+            // Safety Checkpoint and ignore the user's stored preference until Settings was saved
+            // again (#53).
+            // Built before the services, because this window is also their IStatusSink: anything
+            // logged while they are being composed has to reach an emitter that already exists.
             _events = new IpcEventEmitter(json => _webViewHost?.PostEventJson(json));
-            _tweaks = TweakEngine.CreateDefault(_cmd, _backup, _systemRestore, this);
-            // Shares the window's checkpoint with Optimizer, so the "create a safety backup"
-            // preference reaches Debloat through the same object SaveSettings already writes to.
-            _debloat = new DebloatManager(DebloatCatalog.CreateDefault(), _cmd, _safety, this);
-            _safety.Enabled = _settings.Current.CreateBackupBeforeOptimize;
+            _services = new HostServices(this, _events, _logsDir, _backupsDir);
 
-            _actionHost = new ActionHost(
-                _optimizer, _backup, _systemRestore, _scheduler, _settings, _tweaks, _debloat,
-                _events, this, _logsDir, _backupsDir
-            );
-
-            _webViewHost = new WebViewHost(webView, _actionHost, this, Dispatcher);
+            _webViewHost = new WebViewHost(webView, _services.ActionHost, this, Dispatcher);
 
             Loaded += MainWindow_Loaded;
         }
