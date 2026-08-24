@@ -289,6 +289,19 @@ namespace VeloSysPro
             {
                 _sink.Status("status.tweaks.applying", 40 + (40 * done++ / total), new { id = tweak.Id });
 
+                // The machine decides, not the payload. The screen already leaves these out, but
+                // the selection arrives over IPC and this is the seam that has to hold: applying a
+                // Tweak whose feature is not on this machine would write a setting nothing reads
+                // and report it as an optimization. Per item — the rest of the batch is still a
+                // change the user asked for — and never for a revert, which restores a capture
+                // taken while the feature was there.
+                if (tweak.Detect() == TweakState.Unsupported)
+                {
+                    _sink.Log("log.tweaks.unsupported", "error", new { id = tweak.Id });
+                    ok = false;
+                    continue;
+                }
+
                 TweakCapture capture = tweak.Capture();
                 _captures.Save(capture);
 

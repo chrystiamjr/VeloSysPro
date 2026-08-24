@@ -40,12 +40,18 @@ namespace VeloSysPro
         private readonly ICommandRunner _cmd;
         private readonly RegistryBackupManager _backup;
         private readonly bool _requiresExistingValue;
+        private readonly bool _keyMayBeAbsent;
 
         /// <param name="requiresExistingValue">
         /// When true, Apply refuses to create a value that is not already there. This is for the
         /// settings Windows writes itself only where the hardware supports the feature — GPU
         /// Hardware Scheduling being the one that ships: creating <c>HwSchMode</c> on a machine
         /// where Windows never did would report a success the driver is going to ignore.
+        /// </param>
+        /// <param name="keyMayBeAbsent">
+        /// True when the key itself not existing is a legitimate prior state that Revert has to be
+        /// able to restore — a <c>Policies</c> branch nobody has created yet, which is the normal
+        /// condition of every policy this catalog writes.
         /// </param>
         public RegistryTweak(
             string id,
@@ -56,7 +62,8 @@ namespace VeloSysPro
             ICommandRunner cmd,
             RegistryBackupManager backup,
             bool requiresReboot = false,
-            bool requiresExistingValue = false
+            bool requiresExistingValue = false,
+            bool keyMayBeAbsent = false
         )
         {
             Id = id;
@@ -68,6 +75,7 @@ namespace VeloSysPro
             _cmd = cmd;
             _backup = backup;
             _requiresExistingValue = requiresExistingValue;
+            _keyMayBeAbsent = keyMayBeAbsent;
         }
 
         public string Id { get; }
@@ -89,26 +97,54 @@ namespace VeloSysPro
             return matches == 0 ? TweakState.NotApplied : TweakState.Partial;
         }
 
-        public IReadOnlyList<CapturedValue> ReadCurrentValues()
+        public IReadOnlyList<CapturedValue> ReadCurrentValues() => ReadCurrentValues(KeyIsReadable());
+
+        /// <summary>
+        /// Takes the key-readable answer rather than asking again, so <see cref="Capture"/> can use
+        /// the same one to decide whether there is a key worth exporting.
+        /// </summary>
+        private IReadOnlyList<CapturedValue> ReadCurrentValues(bool keyIsReadable)
         {
             // "reg query" fails both for a value that is absent and for a key it could not read at
             // all, and those must not be confused: recording "absent" for a value that exists would
             // make Revert delete it. Only when the key itself reads back is an absent value real.
             var captured = new List<CapturedValue>(_values.Count);
-            if (!KeyIsReadable()) return captured;
+            if (!keyIsReadable)
+            {
+                // ...unless the key's absence is the prior state itself. A `Policies` branch that
+                // nobody has created is the normal condition of every policy here, and it takes the
+                // whole-key export down with it — leaving Revert with neither values to restore nor
+                // an archive to import, so the policy would stay applied for good. Recording every
+                // value as absent is what the machine actually said, and Revert then deletes what
+                // Apply created. Off everywhere else, where an unreadable key is more likely to
+                // mean "could not read" than "is not there".
+                if (!_keyMayBeAbsent) return captured;
+
+                foreach (RegistryValue value in _values)
+                    captured.Add(new CapturedValue(value.Name, value.Type, "", false));
+                return captured;
+            }
 
             foreach (RegistryValue value in _values) captured.Add(Read(value));
             return captured;
         }
 
-        public TweakCapture Capture() =>
-            new(
+        public TweakCapture Capture()
+        {
+            bool keyIsReadable = KeyIsReadable();
+            return new(
                 Id,
                 Kind,
                 TweakClock.NowUtc(),
-                ReadCurrentValues(),
-                _backup.ExportKey(_keyPath, Id)
+                ReadCurrentValues(keyIsReadable),
+                // Exporting a key that is not there fails, and reg.exe's complaint reaches the
+                // user's log as a red error line beside a step that actually succeeded — seen on a
+                // real machine on 2026-08-23, applying the Delivery Optimization policy. There is
+                // nothing to archive either: the capture already holds the whole prior state, which
+                // for an absent policy key is "no policy set".
+                keyIsReadable ? _backup.ExportKey(_keyPath, Id) : ""
             );
+        }
 
         public bool Apply(TweakCapture capture)
         {

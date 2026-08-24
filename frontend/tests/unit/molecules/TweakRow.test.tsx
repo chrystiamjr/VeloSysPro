@@ -71,6 +71,7 @@ describe('TweakRow', () => {
     ['Applied', 'Aplicada'],
     ['NotApplied', 'Não aplicada'],
     ['Partial', 'Parcial'],
+    ['Unsupported', 'Indisponível'],
   ])('badges the %s state detected by the host', (state, label) => {
     const { container } = renderRow({ tweak: { ...tweak, state } });
 
@@ -101,6 +102,36 @@ describe('TweakRow', () => {
 
     const hint = container.querySelector('[data-cy="tweak-partial-cpu.win32PrioritySeparation"]');
     expect(Boolean(hint)).toBe(explained);
+  });
+
+  it('draws an Unsupported Tweak as a locked row with the reason stated', () => {
+    // A machine without the feature has nothing to apply here. An unticked box that looks
+    // selectable would be an invitation the host is going to refuse, and a disabled box with no
+    // explanation reads as a bug.
+    const { container } = renderRow({ tweak: { ...tweak, state: 'Unsupported' } });
+
+    expect(screen.getByRole('checkbox')).toBeDisabled();
+    expect(
+      container.querySelector('[data-cy="tweak-unsupported-cpu.win32PrioritySeparation"]')
+    ).toBeInTheDocument();
+    expect(screen.getByText(/não tem o recurso/i)).toBeInTheDocument();
+  });
+
+  it('never draws an Unsupported Tweak as ticked, whatever selection it is handed', () => {
+    // The selection is drawn from a Preset the catalog defines, and Preset membership is legal for
+    // a Tweak this machine cannot use. The row is what refuses to show it as chosen.
+    renderRow({ tweak: { ...tweak, state: 'Unsupported' }, selected: true });
+
+    expect(screen.getByRole('checkbox')).not.toBeChecked();
+  });
+
+  it.each<[TweakState, boolean]>([
+    ['Unsupported', false],
+    ['NotApplied', true],
+  ])('leaves the box selectable for %s: %s', (state, selectable) => {
+    renderRow({ tweak: { ...tweak, state } });
+
+    expect(screen.getByRole('checkbox').hasAttribute('disabled')).toBe(!selectable);
   });
 
   it('calls out only the Advanced tier, with its risk spelled out', () => {

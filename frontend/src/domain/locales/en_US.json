@@ -315,7 +315,8 @@
       "revertFailed": "Failed to revert the optimization: {{id}}",
       "reverted": "Optimization reverted: {{id}}",
       "unknown": "Unknown optimization: {{id}}",
-      "unknownPreset": "Unknown preset: {{id}}"
+      "unknownPreset": "Unknown preset: {{id}}",
+      "unsupported": "This PC does not have the feature {{id}} configures, so it was not applied."
     },
     "updateCache": {
       "done": "Windows Update cache cleared successfully.",
@@ -348,7 +349,8 @@
       "network": "Network",
       "other": "Other",
       "services": "Windows services",
-      "system": "System and performance"
+      "system": "System and performance",
+      "windows": "Windows and privacy"
     },
     "clearBtn": "Clear selection",
     "empty": "No optimizations available. Use Refresh to query the system again.",
@@ -389,7 +391,8 @@
     "state": {
       "applied": "Applied",
       "notApplied": "Not applied",
-      "partial": "Partial"
+      "partial": "Partial",
+      "unsupported": "Unavailable"
     },
     "tweak": {
       "boot": {
@@ -425,6 +428,10 @@
           "desc": "Makes games use exclusive fullscreen instead of the Windows fullscreen optimizations.",
           "title": "Force fullscreen exclusive"
         },
+        "gameDvrCapture": {
+          "desc": "Turns off the rolling buffer Windows keeps so the last minutes of play can be saved after the fact. The trade-off is plain: \"record the last 30 seconds\" stops working. The Game Bar overlay itself is left alone.",
+          "title": "Stop Game DVR background recording"
+        },
         "gameMode": {
           "desc": "Lets Windows prioritise the running game and hold back updates and notifications.",
           "title": "Windows Game Mode"
@@ -435,6 +442,10 @@
         }
       },
       "network": {
+        "deliveryOptimization": {
+          "desc": "Sets Delivery Optimization to download from Microsoft only, with no peer-to-peer sharing: updates still arrive normally, but this PC stops uploading pieces of them to other machines on the network or the internet. Windows Update keeps working.",
+          "title": "Stop sharing updates with other PCs"
+        },
         "tcpParameters": {
           "desc": "Writes four TCP stack values: the default TTL, RFC 1323 window scaling, the TIME_WAIT delay and the top of the ephemeral port range. What each one does is documented; no primary source ties the set to lower latency in games.",
           "title": "Tune the Windows TCP parameters"
@@ -450,7 +461,7 @@
           "title": "Telemetry (DiagTrack) on Manual start"
         },
         "doSvc": {
-          "desc": "Sets Delivery Optimization to Manual start, so the machine stops sharing updates over the network unprompted. Windows Update keeps working. Stopping the service is a blunt way to reach that goal; a dedicated Delivery Optimization setting will replace it.",
+          "desc": "Sets Delivery Optimization to Manual start, so the machine stops sharing updates over the network unprompted. Windows Update keeps working. Stopping the service is a blunt way to reach that goal; \"Stop sharing updates with other PCs\" reaches it with the setting Windows itself provides.",
           "title": "Delivery Optimization on Manual start"
         },
         "sysMain": {
@@ -467,12 +478,31 @@
           "desc": "Activates the Ultimate Performance plan, or High performance when the machine does not have it. Draws more power on a laptop.",
           "title": "High-performance power plan"
         },
+        "transparency": {
+          "desc": "Turns off the transparency effect, so the desktop compositor stops recomposing the blurred surfaces behind menus, the Start menu and the taskbar. The same switch Windows Settings offers; afterwards those surfaces are solid.",
+          "title": "Turn off window transparency"
+        },
         "visualEffects": {
           "desc": "Trades the interface animations and shadows for the best-performance setting.",
           "title": "Visual effects tuned for performance"
         }
+      },
+      "windows": {
+        "copilotPolicy": {
+          "desc": "Applies the Windows Copilot policy that turns the assistant off for this account. This is not the same as removing the Copilot app: uninstalling it leaves the taskbar entry and the Copilot key working, and the policy is the control Microsoft documents for turning the integration off.",
+          "title": "Turn off Windows Copilot"
+        },
+        "recall": {
+          "desc": "Applies the policy that stops Recall saving snapshots of what is on screen. Recall exists only on a Copilot+ PC; anywhere else this item is shown as unavailable instead of being applied to a feature that is not there.",
+          "title": "Turn off Recall snapshots"
+        },
+        "startupAds": {
+          "desc": "Turns off the suggestions in the Start menu, the tips on the lock screen, the Windows tips, and the silent installation of suggested apps. Every one of them is a switch Windows Settings offers too.",
+          "title": "Turn off Windows suggestions and ads"
+        }
       }
-    }
+    },
+    "unsupportedHint": "This PC does not have the feature this item configures, so there is nothing to apply here."
   },
   "protection": {
     "desc": "Windows System Protection is turned off. Without it VeloSys Pro cannot create the restore point that precedes every optimization, and changes would be applied with no safety net.",

@@ -311,9 +311,21 @@ public class TweakCatalogTests
             NewBackupManager()
         );
 
+        // E8 refilled the set E7 emptied. Seven entries, each a switch Windows itself exposes, each
+        // path read on a live machine before it shipped — and one E8 candidate deliberately left
+        // out, which is the same decision as the additions and just as written down.
         AssertCuratedSet(
             "`Recommended`",
-            new[] { "graphics.gameMode", "services.diagTrack" },
+            new[]
+            {
+                "graphics.gameMode",
+                "graphics.gameDvrCapture",
+                "system.transparency",
+                "windows.startupAds",
+                "windows.copilotPolicy",
+                "network.deliveryOptimization",
+                "services.diagTrack",
+            },
             catalog.Recommended
         );
 

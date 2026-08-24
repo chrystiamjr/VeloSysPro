@@ -187,6 +187,26 @@ describe('IPC Event module', () => {
     unsubscribe();
   });
 
+  it.each([['Applied'], ['NotApplied'], ['Partial'], ['Unsupported']])(
+    'accepts a catalog reporting the %s state',
+    (state) => {
+      // The first three are what a host built before Unsupported existed can send, and a dev build
+      // running an older VeloSysPro.exe has to keep working. The fourth is the widening itself.
+      const callback = vi.fn();
+      const unsubscribe = subscribeTweaks(callback);
+
+      const catalog = {
+        tweaks: [{ ...validTweak, state }],
+        presets: [],
+        systemProtectionEnabled: true,
+      };
+      emitHostEventForTest('tweaksLoaded', catalog);
+
+      expect(callback).toHaveBeenCalledWith(catalog);
+      unsubscribe();
+    }
+  );
+
   it.each([
     ['an unknown Tweak state', { ...validTweak, state: 'Pending' }],
     ['an unknown risk tier', { ...validTweak, riskTier: 'Dangerous' }],

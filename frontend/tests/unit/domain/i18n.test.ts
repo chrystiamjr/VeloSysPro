@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, it, expect } from 'vitest';
+import { KNOWN_CATEGORIES } from '../../../src/components/organisms/TweakCatalogList';
 import { i18n } from '../../../src/domain/i18n';
 import pt_BR from '../../../src/domain/locales/pt_BR.json';
 import en_US from '../../../src/domain/locales/en_US.json';
@@ -94,9 +95,25 @@ function catalogTweaks(): { id: string; advanced: boolean }[] {
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
-/** How many Tweaks the catalog constructs, counted independently of the id pattern. */
+/**
+ * How many Tweaks the catalog registers, counted independently of the id pattern.
+ *
+ * Still every `new …Tweak(` call, so a Tweak class this file has never heard of is counted the
+ * moment it appears — minus the decorators, which are a second constructor call wrapped around a
+ * Tweak that is already counted. `SupportGatedTweak` is the only one; a new decorator has to be
+ * named here, and until it is, the count disagrees with the list and this test fails. That is the
+ * intended direction: the guard exists to fail rather than to skip.
+ */
+const TWEAK_DECORATORS = ['SupportGatedTweak'];
+
 function catalogTweakConstructorCount(): number {
-  return [...readFileSync(CATALOG_SOURCE, 'utf8').matchAll(/new \w+Tweak\(/g)].length;
+  const source = readFileSync(CATALOG_SOURCE, 'utf8');
+  const constructors = [...source.matchAll(/new \w+Tweak\(/g)].length;
+  const decorators = TWEAK_DECORATORS.reduce(
+    (total, name) => total + [...source.matchAll(new RegExp(`new ${name}\\(`, 'g'))].length,
+    0
+  );
+  return constructors - decorators;
 }
 
 const DEBLOAT_SOURCE = resolve('../desktop/Features/Debloat/DebloatCatalog.cs');
@@ -193,6 +210,36 @@ describe('i18n locales', () => {
     );
 
     expect(missing).toEqual([]);
+  });
+
+  it('gives every category the catalog uses a heading in both locales', () => {
+    // A Tweak's category is its id's first segment, and `TweakCatalogList` renders the section
+    // heading as `optimize.category.<category>`. Adding a category is a three-layer hand edit —
+    // the C# constant, the TS order list, the copy in two locales — with no compiler tying them
+    // together, so a new one lands as a raw key under a heading nobody wrote.
+    const missing = [...new Set(catalogTweaks().map(({ id }) => id.split('.')[0]))].flatMap(
+      (category) =>
+        locales
+          .filter(
+            ([, locale]) =>
+              typeof lookup(locale as Record<string, unknown>, `optimize.category.${category}`) !==
+              'string'
+          )
+          .map(([name]) => `${name}: optimize.category.${category}`)
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it('orders every category the catalog uses instead of dropping it into Other', () => {
+    // `KNOWN_CATEGORIES` is what decides both the order of the sections and whether one gets its
+    // own heading at all. A category missing from it still renders — under the "Other" fallback,
+    // which is the quiet failure this catches.
+    const unordered = [...new Set(catalogTweaks().map(({ id }) => id.split('.')[0]))].filter(
+      (category) => !KNOWN_CATEGORIES.includes(category)
+    );
+
+    expect(unordered).toEqual([]);
   });
 
   it('spells out the risk of every Advanced Tweak in both locales', () => {

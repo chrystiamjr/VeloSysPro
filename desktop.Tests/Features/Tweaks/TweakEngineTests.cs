@@ -293,6 +293,49 @@ public class TweakEngineTests
     }
 
     [Fact]
+    public void ApplyTweaks_RefusesATweakThisMachineCannotUseAndSaysWhy()
+    {
+        // The seam, not the screen. OptimizePage leaves Unsupported ids out of the difference it
+        // submits, but the payload arrives over IPC and the engine is what stands between a
+        // malformed or stale one and a policy write configuring a feature the machine does not
+        // have. Refused per item: the rest of the batch is a change the user asked for.
+        var unsupported = new SpyTweak("windows.recall") { DetectedState = TweakState.Unsupported };
+        var working = new SpyTweak("cpu.b");
+        var harness = new Harness(unsupported, working);
+
+        TweakBatchResult result = harness.Engine.ApplyTweaks(new[] { "windows.recall", "cpu.b" });
+
+        Assert.False(result.Ok);
+        Assert.Empty(unsupported.Calls);
+        Assert.DoesNotContain(harness.Captures.Saved, capture => capture.TweakId == "windows.recall");
+        Assert.DoesNotContain(result.Changes, change => change.TweakId == "windows.recall");
+        Assert.Contains(
+            harness.Sink.Logs,
+            log => log.Key == "log.tweaks.unsupported" && log.Type == "error"
+        );
+
+        Assert.Contains("apply", working.Calls);
+    }
+
+    [Fact]
+    public void ApplyTweaks_StillUndoesATweakThatBecameUnsupportedAfterItWasApplied()
+    {
+        // A capture exists, so the Tweak was applied while the machine still had the feature.
+        // Refusing to undo it there would strand the user with a change they can no longer take
+        // back — the refusal guards writing, not restoring.
+        var tweak = new SpyTweak("windows.recall") { DetectedState = TweakState.Unsupported };
+        var harness = new Harness(tweak);
+        harness.Captures.Save(
+            new TweakCapture("windows.recall", TweakKinds.Registry, "2026-08-23T10:00:00.0000000Z",
+                new[] { new CapturedValue("DisableAIDataAnalysis", "REG_DWORD", "", false) })
+        );
+
+        Assert.True(harness.Engine.ApplyTweaks(Array.Empty<string>(), new[] { "windows.recall" }).Ok);
+
+        Assert.Contains("revert", tweak.Calls);
+    }
+
+    [Fact]
     public void ApplyTweaks_MeasuresTheSystemBeforeAndAfterAndPersistsBothSnapshots()
     {
         var harness = new Harness(new SpyTweak("cpu.a"));

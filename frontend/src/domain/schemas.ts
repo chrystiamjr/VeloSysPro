@@ -48,8 +48,15 @@ export const UpdateInfoSchema = z.object({
   url: z.string(),
 });
 
-/** Narrow: the badge and the Revert control branch on this, so an unknown state must be rejected. */
-export const TweakStateSchema = z.enum(['Applied', 'NotApplied', 'Partial']);
+/**
+ * Narrow: the badge and the Revert control branch on this, so an unknown state must be rejected.
+ *
+ * `Unsupported` means the machine does not have the feature the Tweak configures. Widening the set
+ * is backwards compatible in the direction that matters — a host that predates it still sends one
+ * of the first three and parses unchanged — so a dev build running an older `VeloSysPro.exe` keeps
+ * working.
+ */
+export const TweakStateSchema = z.enum(['Applied', 'NotApplied', 'Partial', 'Unsupported']);
 
 export const RiskTierSchema = z.enum(['Safe', 'Advanced']);
 

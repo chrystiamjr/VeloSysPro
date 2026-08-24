@@ -1,7 +1,7 @@
 import React from 'react';
 
 export interface DotProps {
-  variant?: 'success' | 'warning' | 'danger' | 'info';
+  variant?: 'success' | 'warning' | 'danger' | 'info' | 'neutral';
 }
 
 const dotColors: Record<NonNullable<DotProps['variant']>, string> = {
@@ -9,6 +9,9 @@ const dotColors: Record<NonNullable<DotProps['variant']>, string> = {
   warning: 'bg-warning shadow-glow-warning',
   danger: 'bg-danger shadow-glow-danger',
   info: 'bg-info shadow-glow-info',
+  // No glow: neutral marks a state nothing can be done about, and the glow is what makes the other
+  // four read as live.
+  neutral: 'bg-textMuted',
 };
 
 export const Dot: React.FC<DotProps> = ({ variant = 'success' }) => {
