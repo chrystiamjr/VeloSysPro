@@ -90,37 +90,28 @@ namespace VeloSysPro
             _sink = sink;
         }
 
-        public TweakEngine(
-            TweakCatalog catalog,
-            ITweakCaptureStore captures,
-            SystemRestoreManager systemRestore,
-            SnapshotManager snapshots,
-            ISnapshotStore history,
-            IStatusSink sink
-        )
-            : this(
-                catalog,
-                captures,
-                systemRestore,
-                new SafetyCheckpoint(systemRestore, new RegistryBackupManager(AppPaths.Backups, new CommandRunner(sink), sink), sink),
-                snapshots,
-                history,
-                sink
-            )
-        {
-        }
+        // An overload that built its own SafetyCheckpoint used to sit here, unused by anything.
+        // It was the same trap `CreateDefault` fell into (#53): a second checkpoint is a second
+        // answer to "did the user ask for a safety net?", and nothing keeps the two in step. Every
+        // caller now names the one it means.
 
         /// <summary>
         /// The engine as the app ships it, so the window and the headless CLI compose the same one.
         /// </summary>
+        /// <param name="safety">
+        /// Required, and deliberately not optional. This used to build its own, which made the
+        /// engine answer "did the user ask for a safety net?" differently from every other feature
+        /// — and the user's stored answer never reached it at all until the Settings screen was
+        /// saved again (#53). A caller that has to name the checkpoint cannot forget to share it.
+        /// </param>
         public static TweakEngine CreateDefault(
             ICommandRunner cmd,
             RegistryBackupManager backup,
             SystemRestoreManager systemRestore,
+            SafetyCheckpoint safety,
             IStatusSink sink
         )
         {
-            var safety = new SafetyCheckpoint(systemRestore, backup, sink);
             return new TweakEngine(
                 TweakCatalog.CreateDefault(cmd, backup),
                 new JsonTweakCaptureStore(),
