@@ -50,7 +50,7 @@
   "brand": {
     "adminBadge": "Administrator Active",
     "subtitle": "Envolvo Systems LTDA.",
-    "version": "Version 0.2.0 (C# / React Build)"
+    "version": "Version 0.5.1 (C# / React Build)"
   },
   "btn": {
     "clean": "Clean",
@@ -79,6 +79,115 @@
       "title": "Tools"
     }
   },
+  "debloat": {
+    "caveat": {
+      "oneDrive": "Comes back by downloading OneDrive from Microsoft again.",
+      "store": "Comes back by reinstalling it from the Microsoft Store."
+    },
+    "clearBtn": "Clear selection",
+    "confirmBody": "You are about to uninstall {{count}} app(s). VeloSys Pro cannot put them back — each one has to be reinstalled by you, from the source below. A restore point is created first.",
+    "confirmBtn": "Uninstall permanently",
+    "confirmTitle": "These apps will be uninstalled",
+    "empty": "No removable apps found. Use Refresh to query the system again.",
+    "group": {
+      "optional": "Optional (you may be using these)",
+      "optionalDesc": "Real apps, not advertising. Never ticked for you — read each one before selecting it.",
+      "safe": "Safe to remove"
+    },
+    "loading": "Querying the system...",
+    "noneSelected": "No app selected. Tick the ones you want removed.",
+    "package": {
+      "alarms": {
+        "desc": "Windows alarms, timers and world clock.",
+        "title": "Alarms & Clock"
+      },
+      "bingSearch": {
+        "desc": "Sends what you type into the Start menu to Bing on the web.",
+        "title": "Bing Search"
+      },
+      "camera": {
+        "desc": "The built-in app for taking photos and video with a webcam.",
+        "title": "Camera"
+      },
+      "clipchamp": {
+        "desc": "The preinstalled Microsoft video editor.",
+        "title": "Clipchamp"
+      },
+      "copilot": {
+        "desc": "The Microsoft assistant pinned to the taskbar.",
+        "title": "Copilot"
+      },
+      "family": {
+        "desc": "Parental controls and family screen-time reports.",
+        "title": "Microsoft Family"
+      },
+      "feedbackHub": {
+        "desc": "The app for sending feedback and diagnostics to Microsoft.",
+        "title": "Feedback Hub"
+      },
+      "news": {
+        "desc": "The news feed behind the taskbar widgets.",
+        "title": "Bing News"
+      },
+      "officeHub": {
+        "desc": "The Office launcher shortcut, not Office itself.",
+        "title": "Microsoft 365 (Office Hub)"
+      },
+      "oneDrive": {
+        "desc": "The Microsoft cloud sync client. Files already in the cloud stay there.",
+        "title": "OneDrive"
+      },
+      "outlook": {
+        "desc": "The new preinstalled mail client, not classic Outlook.",
+        "title": "Outlook for Windows"
+      },
+      "powerAutomate": {
+        "desc": "Desktop task automation. Remove it only if you build no flows.",
+        "title": "Power Automate Desktop"
+      },
+      "quickAssist": {
+        "desc": "Lets someone else take remote control of this machine.",
+        "title": "Quick Assist"
+      },
+      "screenSketch": {
+        "desc": "Screenshots and screen recording, bound to Win+Shift+S.",
+        "title": "Snipping Tool"
+      },
+      "solitaire": {
+        "desc": "The preinstalled card games, with adverts.",
+        "title": "Solitaire Collection"
+      },
+      "soundRecorder": {
+        "desc": "The built-in voice recorder.",
+        "title": "Sound Recorder"
+      },
+      "weather": {
+        "desc": "The weather app behind the taskbar widgets.",
+        "title": "Weather"
+      },
+      "xbox": {
+        "desc": "The Xbox app and its in-game overlay. Game Pass needs these.",
+        "title": "Xbox"
+      }
+    },
+    "refreshBtn": "Refresh",
+    "removeBtn": "Uninstall selected",
+    "result": {
+      "failed": "Still installed",
+      "removed": "Removed"
+    },
+    "sectionCount": "{{selected}} of {{total}} selected",
+    "sectionDesc": "Only apps on this curated list can be removed. Anything already gone from your machine cannot be selected.",
+    "sectionTitle": "Removable apps",
+    "selected": "{{count}} app(s) selected for removal",
+    "staleRead": "The system answered with something unreadable; showing the previous list.",
+    "state": {
+      "absent": "Not installed",
+      "installed": "Installed"
+    },
+    "warningBody": "Removing an app is not an optimization you can undo here. VeloSys Pro creates a restore point before it starts, but putting an app back afterwards means reinstalling it yourself.",
+    "warningTitle": "Removals cannot be undone from this app"
+  },
   "dialog": {
     "cancel": "Cancel"
   },
@@ -90,6 +199,10 @@
     "dashboard": {
       "subtitle": "Windows maintenance, network acceleration, and recovery",
       "title": "Optimization Dashboard"
+    },
+    "debloat": {
+      "subtitle": "Uninstall the preinstalled apps you do not use",
+      "title": "Preinstalled Apps"
     },
     "optimize": {
       "subtitle": "Pick, apply, and revert optimizations one by one",
@@ -130,6 +243,16 @@
       "restored": "Backup restored: {{name}}"
     },
     "cmdError": "Error running {{exe}}: {{message}}",
+    "debloat": {
+      "done": "Selected apps removed successfully.",
+      "enumerateFailed": "Could not read the list of installed apps.",
+      "noUninstaller": "No uninstaller found for {{id}}; nothing was removed.",
+      "noneSelected": "Select at least one app before removing.",
+      "removeFailed": "The app is still installed: {{id}}",
+      "removed": "App removed: {{id}}",
+      "unknown": "This app is not on the removal list: {{id}}",
+      "unverified": "Could not verify whether {{id}} was removed; treating it as still installed."
+    },
     "diskHealth": {
       "done": "Disk health report completed.",
       "start": "Generating disk health report..."
@@ -192,7 +315,8 @@
       "revertFailed": "Failed to revert the optimization: {{id}}",
       "reverted": "Optimization reverted: {{id}}",
       "unknown": "Unknown optimization: {{id}}",
-      "unknownPreset": "Unknown preset: {{id}}"
+      "unknownPreset": "Unknown preset: {{id}}",
+      "unsupported": "This PC does not have the feature {{id}} configures, so it was not applied."
     },
     "updateCache": {
       "done": "Windows Update cache cleared successfully.",
@@ -203,6 +327,7 @@
     "backup": "Backup & Restore",
     "collapse": "Collapse menu",
     "dashboard": "Dashboard",
+    "debloat": "Remove Apps",
     "expand": "Expand menu",
     "logsFolder": "Logs Folder",
     "optimize": "Optimizations",
@@ -224,7 +349,8 @@
       "network": "Network",
       "other": "Other",
       "services": "Windows services",
-      "system": "System and performance"
+      "system": "System and performance",
+      "windows": "Windows and privacy"
     },
     "clearBtn": "Clear selection",
     "empty": "No optimizations available. Use Refresh to query the system again.",
@@ -234,7 +360,7 @@
     "pending": "{{apply}} to apply · {{revert}} to revert",
     "preset": {
       "gaming": {
-        "desc": "Everything the catalog offers for games: processor priority, network, graphics, power, and background services.",
+        "desc": "A curated starting point for games, not the whole catalog: foreground priority, network, fullscreen, Game Mode, power plan and background services.",
         "title": "Gaming preset"
       }
     },
@@ -243,7 +369,7 @@
     "presetModified": "(modified)",
     "rebootHint": "Only takes effect after Windows restarts.",
     "recommended": {
-      "desc": "What suits most machines and takes effect right away — nothing that needs a Windows restart.",
+      "desc": "Simple changes with honest gains — fewer ads, less needless background cost. Nothing that needs a restart.",
       "title": "Recommended"
     },
     "revertBtn": "Revert",
@@ -265,34 +391,35 @@
     "state": {
       "applied": "Applied",
       "notApplied": "Not applied",
-      "partial": "Partial"
+      "partial": "Partial",
+      "unsupported": "Unavailable"
     },
     "tweak": {
       "boot": {
         "disableDynamicTick": {
-          "desc": "Turns off the dynamic boot timer tick so clock intervals stay constant. Requires a restart.",
+          "desc": "Turns off the dynamic timer tick, so the kernel timer fires at a constant interval instead of only when needed. Microsoft documents this boot option for debugging.",
           "title": "Disable the dynamic timer tick"
         },
         "platformClock": {
-          "desc": "Removes the boot setting that pins one clock source and lets Windows choose the best one available again.",
+          "desc": "Removes the useplatformclock boot element, letting Windows pick its own clock source again. Microsoft documents this boot option for debugging; this entry takes it away rather than setting it.",
           "title": "Stop forcing the platform clock"
         },
         "platformTick": {
-          "desc": "Makes Windows use the motherboard's hardware timer, keeping clock intervals more predictable.",
+          "desc": "Forces Windows to use the platform's hardware timer instead of picking a timer source at boot. Microsoft documents this boot option for debugging.",
           "title": "Use the platform timer"
         }
       },
       "cpu": {
         "gamesTaskPriority": {
-          "desc": "Raises the processor and graphics priority Windows grants to tasks registered as games.",
+          "desc": "Writes three MMCSS values to the Games task. Microsoft documents the GPU priority as not yet used, and pins the thread priority to a fixed value whenever the scheduling category is High — which is the third value written here. Windows acts on almost none of it.",
           "title": "Scheduler priority for games"
         },
         "systemResponsiveness": {
-          "desc": "Lowers the share of the processor the multimedia scheduler holds back for background tasks and hands it to the foreground application.",
+          "desc": "Lowers SystemResponsiveness, the share of the processor the multimedia scheduler reserves for background tasks. The mechanism is documented; what it changes for a given game is not something we can show.",
           "title": "Reserve less CPU for background work"
         },
         "win32PrioritySeparation": {
-          "desc": "Gives the foreground application short, fixed quanta, favouring games and the active window.",
+          "desc": "Sets Win32PrioritySeparation to short, fixed quanta biased to the foreground application, changing how the scheduler slices processor time between windows. No primary source ties this value to a measured gain.",
           "title": "Boost the foreground application"
         }
       },
@@ -300,6 +427,10 @@
         "fullscreenExclusive": {
           "desc": "Makes games use exclusive fullscreen instead of the Windows fullscreen optimizations.",
           "title": "Force fullscreen exclusive"
+        },
+        "gameDvrCapture": {
+          "desc": "Turns off the rolling buffer Windows keeps so the last minutes of play can be saved after the fact. The trade-off is plain: \"record the last 30 seconds\" stops working. The Game Bar overlay itself is left alone.",
+          "title": "Stop Game DVR background recording"
         },
         "gameMode": {
           "desc": "Lets Windows prioritise the running game and hold back updates and notifications.",
@@ -311,12 +442,16 @@
         }
       },
       "network": {
+        "deliveryOptimization": {
+          "desc": "Sets Delivery Optimization to download from Microsoft only, with no peer-to-peer sharing: updates still arrive normally, but this PC stops uploading pieces of them to other machines on the network or the internet. Windows Update keeps working.",
+          "title": "Stop sharing updates with other PCs"
+        },
         "tcpParameters": {
-          "desc": "Applies a set of TCP stack parameters aimed at low-latency connections and more simultaneous ports.",
+          "desc": "Writes four TCP stack values: the default TTL, RFC 1323 window scaling, the TIME_WAIT delay and the top of the ephemeral port range. What each one does is documented; no primary source ties the set to lower latency in games.",
           "title": "Tune the Windows TCP parameters"
         },
         "throttlingIndex": {
-          "desc": "Removes the ceiling the multimedia scheduler puts on network traffic while audio or video is playing.",
+          "desc": "Removes the ceiling the multimedia scheduler puts on network packets while audio or video is playing. Documented behaviour; whether a game notices it is a separate question.",
           "title": "Turn off multimedia network throttling"
         }
       },
@@ -326,11 +461,11 @@
           "title": "Telemetry (DiagTrack) on Manual start"
         },
         "doSvc": {
-          "desc": "Sets Delivery Optimization to Manual start, so the machine stops sharing updates over the network unprompted. Windows Update keeps working.",
+          "desc": "Sets Delivery Optimization to Manual start, so the machine stops sharing updates over the network unprompted. Windows Update keeps working. Stopping the service is a blunt way to reach that goal; \"Stop sharing updates with other PCs\" reaches it with the setting Windows itself provides.",
           "title": "Delivery Optimization on Manual start"
         },
         "sysMain": {
-          "desc": "Sets SysMain (Superfetch) to Manual start, cutting background disk activity.",
+          "desc": "Sets SysMain (Superfetch) to Manual start. SysMain is a cache by design: on a machine where it causes idle disk or processor spikes, stopping it removes them; elsewhere the effect is neutral or slightly negative, because Windows loses the prefetching.",
           "title": "SysMain on Manual start"
         },
         "wSearch": {
@@ -343,12 +478,31 @@
           "desc": "Activates the Ultimate Performance plan, or High performance when the machine does not have it. Draws more power on a laptop.",
           "title": "High-performance power plan"
         },
+        "transparency": {
+          "desc": "Turns off the transparency effect, so the desktop compositor stops recomposing the blurred surfaces behind menus, the Start menu and the taskbar. The same switch Windows Settings offers; afterwards those surfaces are solid.",
+          "title": "Turn off window transparency"
+        },
         "visualEffects": {
           "desc": "Trades the interface animations and shadows for the best-performance setting.",
           "title": "Visual effects tuned for performance"
         }
+      },
+      "windows": {
+        "copilotPolicy": {
+          "desc": "Applies the Windows Copilot policy that turns the assistant off for this account. This is not the same as removing the Copilot app: uninstalling it leaves the taskbar entry and the Copilot key working, and the policy is the control Microsoft documents for turning the integration off.",
+          "title": "Turn off Windows Copilot"
+        },
+        "recall": {
+          "desc": "Applies the policy that stops Recall saving snapshots of what is on screen. Recall exists only on a Copilot+ PC; anywhere else this item is shown as unavailable instead of being applied to a feature that is not there.",
+          "title": "Turn off Recall snapshots"
+        },
+        "startupAds": {
+          "desc": "Turns off the suggestions in the Start menu, the tips on the lock screen, the Windows tips, and the silent installation of suggested apps. Every one of them is a switch Windows Settings offers too.",
+          "title": "Turn off Windows suggestions and ads"
+        }
       }
-    }
+    },
+    "unsupportedHint": "This PC does not have the feature this item configures, so there is nothing to apply here."
   },
   "protection": {
     "desc": "Windows System Protection is turned off. Without it VeloSys Pro cannot create the restore point that precedes every optimization, and changes would be applied with no safety net.",
@@ -447,6 +601,11 @@
     "sectionTitle": "What changed on the system"
   },
   "status": {
+    "debloat": {
+      "done": "Removal finished!",
+      "removing": "Removing {{id}}...",
+      "verifying": "Checking what was really removed..."
+    },
     "diskHealth": {
       "done": "Disk report generated!",
       "start": "Analyzing disk health..."

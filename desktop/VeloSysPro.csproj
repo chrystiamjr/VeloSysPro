@@ -10,7 +10,7 @@
     <ApplicationIcon>assets\app.ico</ApplicationIcon>
     <AssemblyName>VeloSysPro</AssemblyName>
     <RootNamespace>VeloSysPro</RootNamespace>
-    <Version>0.2.0</Version>
+    <Version>0.5.1</Version>
 
     <!-- Produce a genuinely single, self-contained VeloSysPro.exe on publish.
          The native WebView2Loader.dll is bundled inside the exe and self-extracts at runtime. -->

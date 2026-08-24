@@ -28,6 +28,7 @@ namespace VeloSysPro
             SchedulerManager scheduler,
             SettingsManager settings,
             TweakEngine tweaks,
+            DebloatManager debloat,
             IpcEventEmitter events,
             IStatusSink sink,
             string logsDir,
@@ -41,6 +42,7 @@ namespace VeloSysPro
                     scheduler,
                     settings,
                     tweaks,
+                    debloat,
                     events,
                     logsDir,
                     backupsDir

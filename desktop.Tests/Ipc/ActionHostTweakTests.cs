@@ -20,6 +20,7 @@ public class ActionHostTweakTests
         public FakeCommandRunner Runner { get; } = new();
         public RecordingStatusSink Sink { get; } = new();
         public List<(string Event, JsonElement Payload)> Events { get; } = new();
+        public SafetyCheckpoint Checkpoint { get; }
         public ActionHost Host { get; }
 
         public Harness()
@@ -50,10 +51,12 @@ public class ActionHostTweakTests
             });
 
             var backup = new RegistryBackupManager(_temp.Path, Runner, Sink, _temp.Path);
+            Checkpoint = new SafetyCheckpoint(new SystemRestoreManager(Runner, Sink), backup, Sink);
             var engine = new TweakEngine(
                 TweakCatalog.CreateDefault(Runner, backup),
                 new JsonTweakCaptureStore(_temp.Path),
                 new SystemRestoreManager(Runner, Sink),
+                Checkpoint,
                 new SnapshotManager(Runner, Sink),
                 new JsonlSnapshotStore(System.IO.Path.Combine(_temp.Path, "history.jsonl")),
                 Sink
@@ -66,6 +69,7 @@ public class ActionHostTweakTests
                 new SchedulerManager(Runner, Sink, "VeloSysPro.exe"),
                 new SettingsManager(System.IO.Path.Combine(_temp.Path, "settings.json")),
                 engine,
+                new DebloatManager(DebloatCatalog.CreateDefault(), Runner, Checkpoint, Sink),
                 emitter,
                 Sink,
                 _temp.Path,
@@ -247,9 +251,11 @@ public class ActionHostTweakTests
     [Fact]
     public void LoadHistory_EmitsThePersistedSeriesOldestFirst()
     {
+        // Seeded through a real batch, because that is the only thing that writes history now: a
+        // standalone captureSnapshot reads the machine without recording it, so the series stays
+        // the record of what batches did.
         using var harness = new Harness();
-        harness.Dispatch(SystemActions.CaptureSnapshot);
-        harness.Dispatch(SystemActions.CaptureSnapshot);
+        harness.Dispatch(SystemActions.ApplyTweaks, """{"tweakIds":["services.sysMain"]}""");
 
         Assert.True(harness.Dispatch(SystemActions.LoadHistory));
 

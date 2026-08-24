@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, it, expect } from 'vitest';
+import { KNOWN_CATEGORIES } from '../../../src/components/organisms/TweakCatalogList';
 import { i18n } from '../../../src/domain/i18n';
 import pt_BR from '../../../src/domain/locales/pt_BR.json';
 import en_US from '../../../src/domain/locales/en_US.json';
@@ -94,9 +95,50 @@ function catalogTweaks(): { id: string; advanced: boolean }[] {
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
-/** How many Tweaks the catalog constructs, counted independently of the id pattern. */
+/**
+ * How many Tweaks the catalog registers, counted independently of the id pattern.
+ *
+ * Still every `new …Tweak(` call, so a Tweak class this file has never heard of is counted the
+ * moment it appears — minus the decorators, which are a second constructor call wrapped around a
+ * Tweak that is already counted. `SupportGatedTweak` is the only one; a new decorator has to be
+ * named here, and until it is, the count disagrees with the list and this test fails. That is the
+ * intended direction: the guard exists to fail rather than to skip.
+ */
+const TWEAK_DECORATORS = ['SupportGatedTweak'];
+
 function catalogTweakConstructorCount(): number {
-  return [...readFileSync(CATALOG_SOURCE, 'utf8').matchAll(/new \w+Tweak\(/g)].length;
+  const source = readFileSync(CATALOG_SOURCE, 'utf8');
+  const constructors = [...source.matchAll(/new \w+Tweak\(/g)].length;
+  const decorators = TWEAK_DECORATORS.reduce(
+    (total, name) => total + [...source.matchAll(new RegExp(`new ${name}\\(`, 'g'))].length,
+    0
+  );
+  return constructors - decorators;
+}
+
+const DEBLOAT_SOURCE = resolve('../desktop/Features/Debloat/DebloatCatalog.cs');
+
+/**
+ * Every entry the shipped removal allow-list registers, read from the C# source.
+ *
+ * Matched by the id literal sitting immediately before its `DebloatGroup.` argument, which both
+ * the `Appx(...)` helper and the explicit `new DebloatEntry(...)` share. Counted independently
+ * below for the same reason the Tweak list is: a shape the pattern did not anticipate would drop
+ * out silently and take its copy guard with it.
+ */
+function debloatEntries(): string[] {
+  const source = readFileSync(DEBLOAT_SOURCE, 'utf8');
+  return [
+    ...new Set(
+      [...source.matchAll(/"([a-z][A-Za-z0-9]*)"\s*,\s*DebloatGroup\.\w+/g)].map((m) => m[1])
+    ),
+  ].sort();
+}
+
+/** How many entries the allow-list registers, counted independently of the id pattern. */
+function debloatEntryCount(): number {
+  return [...readFileSync(DEBLOAT_SOURCE, 'utf8').matchAll(/DebloatGroup\.(?:Safe|Optional)\s*,/g)]
+    .length;
 }
 
 function lookup(locale: Record<string, unknown>, key: string): unknown {
@@ -170,6 +212,36 @@ describe('i18n locales', () => {
     expect(missing).toEqual([]);
   });
 
+  it('gives every category the catalog uses a heading in both locales', () => {
+    // A Tweak's category is its id's first segment, and `TweakCatalogList` renders the section
+    // heading as `optimize.category.<category>`. Adding a category is a three-layer hand edit —
+    // the C# constant, the TS order list, the copy in two locales — with no compiler tying them
+    // together, so a new one lands as a raw key under a heading nobody wrote.
+    const missing = [...new Set(catalogTweaks().map(({ id }) => id.split('.')[0]))].flatMap(
+      (category) =>
+        locales
+          .filter(
+            ([, locale]) =>
+              typeof lookup(locale as Record<string, unknown>, `optimize.category.${category}`) !==
+              'string'
+          )
+          .map(([name]) => `${name}: optimize.category.${category}`)
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it('orders every category the catalog uses instead of dropping it into Other', () => {
+    // `KNOWN_CATEGORIES` is what decides both the order of the sections and whether one gets its
+    // own heading at all. A category missing from it still renders — under the "Other" fallback,
+    // which is the quiet failure this catches.
+    const unordered = [...new Set(catalogTweaks().map(({ id }) => id.split('.')[0]))].filter(
+      (category) => !KNOWN_CATEGORIES.includes(category)
+    );
+
+    expect(unordered).toEqual([]);
+  });
+
   it('spells out the risk of every Advanced Tweak in both locales', () => {
     // OptimizePage renders `optimize.tweak.${id}.risk` as the detail line of the Advanced
     // confirmation — the one gate standing between the user and a security-reducing change. An
@@ -178,6 +250,53 @@ describe('i18n locales', () => {
     const missing = catalogTweaks()
       .filter(({ advanced }) => advanced)
       .flatMap(({ id }) => missingCopy(id, 'risk'));
+
+    expect(missing).toEqual([]);
+  });
+
+  it('reads every entry the removal allow-list registers', () => {
+    expect(debloatEntries()).toHaveLength(debloatEntryCount());
+  });
+
+  it('gives every removable app a title and description in both locales', () => {
+    // DebloatRow builds its key as `debloat.package.${id}` from an id that crosses IPC, so no C#
+    // literal ties the two together. An allow-list entry with no copy renders the raw key on the
+    // one screen whose whole job is explaining what is about to be uninstalled.
+    const missing = debloatEntries().flatMap((id) =>
+      ['title', 'desc'].flatMap((leaf) =>
+        locales
+          .filter(
+            ([, locale]) =>
+              typeof lookup(locale as Record<string, unknown>, `debloat.package.${id}.${leaf}`) !==
+              'string'
+          )
+          .map(([name]) => `${name}: debloat.package.${id}.${leaf}`)
+      )
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it('spells out how every removable app comes back, in both locales', () => {
+    // The caveat is the only thing on the screen that says a removal is not reversible in-app. It
+    // is keyed by the host's invariant token, so a new token would silently render as a raw key.
+    const caveats = [
+      ...new Set(
+        [...readFileSync(DEBLOAT_SOURCE, 'utf8').matchAll(/\?\s*"(\w+)"\s*:\s*"(\w+)"/g)].flatMap(
+          (match) => [match[1], match[2]]
+        )
+      ),
+    ];
+    expect(caveats.length).toBeGreaterThan(0);
+
+    const missing = caveats.flatMap((caveat) =>
+      locales
+        .filter(
+          ([, locale]) =>
+            typeof lookup(locale as Record<string, unknown>, `debloat.caveat.${caveat}`) !== 'string'
+        )
+        .map(([name]) => `${name}: debloat.caveat.${caveat}`)
+    );
 
     expect(missing).toEqual([]);
   });
@@ -200,8 +319,13 @@ describe('i18n locales', () => {
     // (nav.restorePoints used to read "Restore Points"). Proper nouns are allowlisted.
     const allowed = new Set(['brand.subtitle', 'settings.langEn', 'settings.langPt']);
 
+    // A Debloat entry's title is the app's own name as Windows shows it — "Clipchamp", "Xbox",
+    // "Microsoft 365 (Office Hub)". Those are the same string in every locale by design, and the
+    // description beside each one still has to be translated, so it stays covered here.
+    const properNoun = (key: string) => /^debloat\.package\.[A-Za-z0-9]+\.title$/.test(key);
+
     const suspicious = Object.keys(flatPt).filter((key) => {
-      if (allowed.has(key) || flatPt[key] !== flatEn[key]) return false;
+      if (allowed.has(key) || properNoun(key) || flatPt[key] !== flatEn[key]) return false;
       // Strip placeholders first: pure format strings ("{{frequency}} - {{optimization}}")
       // and passthroughs ("{{text}}") are language neutral, not untranslated.
       const prose = flatPt[key].replace(/\{\{\s*\w+\s*\}\}/g, '');

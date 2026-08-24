@@ -10,6 +10,21 @@ namespace VeloSysPro
 
         /// <summary>Some of a multi-value Tweak's settings match, others do not.</summary>
         Partial,
+
+        /// <summary>
+        /// This machine does not have the feature the Tweak configures, so there is nothing here to
+        /// apply.
+        /// </summary>
+        /// <remarks>
+        /// Distinct from <see cref="NotApplied"/> on purpose. Recall exists only on a Copilot+ PC;
+        /// on any other machine its policy write succeeds and configures a feature that is not
+        /// there. Folded into <see cref="NotApplied"/> the row invites the user to apply it and
+        /// then reports <see cref="Applied"/> for a change with no effect — the exact "reports
+        /// success while changing nothing" failure this catalog is built to avoid.
+        /// Nothing about it is persisted: it is re-read on every refresh, so a machine that gains
+        /// the feature starts reporting normally with no stored state to invalidate.
+        /// </remarks>
+        Unsupported,
     }
 
     /// <summary>
@@ -38,12 +53,29 @@ namespace VeloSysPro
     /// values individually — the export is the archive kept for manual recovery, and the fallback
     /// when a capture's values cannot be read.
     /// </param>
+    /// <param name="KeyWasReadable">
+    /// False when the registry key itself did not read back before the Tweak ran, which is what
+    /// lets Revert remove a key the Tweak created rather than leave it behind empty.
+    /// </param>
+    /// <remarks>
+    /// <paramref name="KeyWasReadable"/> says what was observed, not what was inferred: a key that
+    /// exists but denies access reads back the same way an absent one does, and naming the field
+    /// after existence would claim knowledge the read never produced. Revert asks a second question
+    /// before deleting anything — whether the key is empty *now* — so the one case the two answers
+    /// differ on, a pre-existing key that was unreadable then and empty now, is not enough on its
+    /// own to delete it.
+    ///
+    /// It defaults to true because captures are persisted as JSON and read back by later versions:
+    /// one written before this field existed never observed the key at all, and true is the answer
+    /// that changes nothing.
+    /// </remarks>
     public sealed record TweakCapture(
         string TweakId,
         string Kind,
         string CapturedAt,
         IReadOnlyList<CapturedValue> Values,
-        string ArtifactFile = ""
+        string ArtifactFile = "",
+        bool KeyWasReadable = true
     );
 
     /// <summary>
@@ -136,5 +168,12 @@ namespace VeloSysPro
         public const string System = "system";
         public const string Boot = "boot";
         public const string Services = "services";
+
+        /// <summary>
+        /// What Windows itself puts in front of the user: suggestions, Copilot, Recall. Grouped by
+        /// what someone recognizes rather than by hive — these live in three different keys and one
+        /// of them is a policy.
+        /// </summary>
+        public const string Windows = "windows";
     }
 }

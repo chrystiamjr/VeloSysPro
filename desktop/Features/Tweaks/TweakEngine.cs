@@ -90,37 +90,28 @@ namespace VeloSysPro
             _sink = sink;
         }
 
-        public TweakEngine(
-            TweakCatalog catalog,
-            ITweakCaptureStore captures,
-            SystemRestoreManager systemRestore,
-            SnapshotManager snapshots,
-            ISnapshotStore history,
-            IStatusSink sink
-        )
-            : this(
-                catalog,
-                captures,
-                systemRestore,
-                new SafetyCheckpoint(systemRestore, new RegistryBackupManager(AppPaths.Backups, new CommandRunner(sink), sink), sink),
-                snapshots,
-                history,
-                sink
-            )
-        {
-        }
+        // An overload that built its own SafetyCheckpoint used to sit here, unused by anything.
+        // It was the same trap `CreateDefault` fell into (#53): a second checkpoint is a second
+        // answer to "did the user ask for a safety net?", and nothing keeps the two in step. Every
+        // caller now names the one it means.
 
         /// <summary>
         /// The engine as the app ships it, so the window and the headless CLI compose the same one.
         /// </summary>
+        /// <param name="safety">
+        /// Required, and deliberately not optional. This used to build its own, which made the
+        /// engine answer "did the user ask for a safety net?" differently from every other feature
+        /// — and the user's stored answer never reached it at all until the Settings screen was
+        /// saved again (#53). A caller that has to name the checkpoint cannot forget to share it.
+        /// </param>
         public static TweakEngine CreateDefault(
             ICommandRunner cmd,
             RegistryBackupManager backup,
             SystemRestoreManager systemRestore,
+            SafetyCheckpoint safety,
             IStatusSink sink
         )
         {
-            var safety = new SafetyCheckpoint(systemRestore, backup, sink);
             return new TweakEngine(
                 TweakCatalog.CreateDefault(cmd, backup),
                 new JsonTweakCaptureStore(),
@@ -289,6 +280,19 @@ namespace VeloSysPro
             {
                 _sink.Status("status.tweaks.applying", 40 + (40 * done++ / total), new { id = tweak.Id });
 
+                // The machine decides, not the payload. The screen already leaves these out, but
+                // the selection arrives over IPC and this is the seam that has to hold: applying a
+                // Tweak whose feature is not on this machine would write a setting nothing reads
+                // and report it as an optimization. Per item — the rest of the batch is still a
+                // change the user asked for — and never for a revert, which restores a capture
+                // taken while the feature was there.
+                if (tweak.Detect() == TweakState.Unsupported)
+                {
+                    _sink.Log("log.tweaks.unsupported", "error", new { id = tweak.Id });
+                    ok = false;
+                    continue;
+                }
+
                 TweakCapture capture = tweak.Capture();
                 _captures.Save(capture);
 
@@ -387,10 +391,23 @@ namespace VeloSysPro
             return ok;
         }
 
+        /// <summary>
+        /// Reads the system's current metrics without recording them.
+        /// </summary>
+        /// <remarks>
+        /// The Optimization History is the record of what *batches* did, and the frontend reads a
+        /// batch's comparison out of it as two adjacent rows. A standalone reading persisted into
+        /// that series lands between a batch's before and its after and silently becomes half of a
+        /// comparison it was never part of — which is how a measurement taken a month later came to
+        /// be shown as the result of an optimization. Callers that only need the current numbers
+        /// use this; only <see cref="CaptureSnapshot"/> writes.
+        /// </remarks>
+        public OptimizationSnapshot Measure() => _snapshots.Capture();
+
         /// <summary>Captures a Snapshot and appends it to the Optimization History.</summary>
         public OptimizationSnapshot CaptureSnapshot()
         {
-            OptimizationSnapshot snapshot = _snapshots.Capture();
+            OptimizationSnapshot snapshot = Measure();
             try
             {
                 _history.Append(snapshot);

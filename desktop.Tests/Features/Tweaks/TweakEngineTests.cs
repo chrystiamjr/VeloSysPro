@@ -90,6 +90,7 @@ public class TweakEngineTests
         public RecordingStatusSink Sink { get; } = new();
         public RecordingCaptureStore Captures { get; } = new();
         public InMemorySnapshotStore History { get; } = new();
+        public SafetyCheckpoint Checkpoint { get; }
         public TweakEngine Engine { get; }
 
         public Harness(params ITweak[] tweaks)
@@ -108,10 +109,23 @@ public class TweakEngineTests
             // this the baseline machine would be one where every batch aborts.
             Runner.CapturedOutputsByArgs.Add(("ExpandProperty Count", "1"));
 
+            Checkpoint = new SafetyCheckpoint(
+                new SystemRestoreManager(Runner, Sink),
+                // Unused by ExecuteTweakCheckpoint, which only touches System Restore; the path is
+                // never written to because the fake command runner executes nothing.
+                new RegistryBackupManager(
+                    System.IO.Path.GetTempPath(),
+                    Runner,
+                    Sink,
+                    System.IO.Path.GetTempPath()
+                ),
+                Sink
+            );
             Engine = new TweakEngine(
                 new TweakCatalog(tweaks, presets),
                 Captures,
                 new SystemRestoreManager(Runner, Sink),
+                Checkpoint,
                 new SnapshotManager(Runner, Sink),
                 History,
                 Sink
@@ -212,7 +226,7 @@ public class TweakEngineTests
     public void ApplyTweaks_RespectsTheSafetyBackupPreference()
     {
         var harness = new Harness(new SpyTweak("cpu.a"));
-        harness.Engine.CreateSafetyBackupEnabled = false;
+        harness.Checkpoint.Enabled = false;
 
         Assert.True(harness.Engine.ApplyTweaks(new[] { "cpu.a" }).Ok);
 
@@ -276,6 +290,49 @@ public class TweakEngineTests
 
         Assert.Contains("apply", working.Calls);
         Assert.Contains(harness.Sink.Logs, log => log.Key == "log.tweaks.applyFailed");
+    }
+
+    [Fact]
+    public void ApplyTweaks_RefusesATweakThisMachineCannotUseAndSaysWhy()
+    {
+        // The seam, not the screen. OptimizePage leaves Unsupported ids out of the difference it
+        // submits, but the payload arrives over IPC and the engine is what stands between a
+        // malformed or stale one and a policy write configuring a feature the machine does not
+        // have. Refused per item: the rest of the batch is a change the user asked for.
+        var unsupported = new SpyTweak("windows.recall") { DetectedState = TweakState.Unsupported };
+        var working = new SpyTweak("cpu.b");
+        var harness = new Harness(unsupported, working);
+
+        TweakBatchResult result = harness.Engine.ApplyTweaks(new[] { "windows.recall", "cpu.b" });
+
+        Assert.False(result.Ok);
+        Assert.Empty(unsupported.Calls);
+        Assert.DoesNotContain(harness.Captures.Saved, capture => capture.TweakId == "windows.recall");
+        Assert.DoesNotContain(result.Changes, change => change.TweakId == "windows.recall");
+        Assert.Contains(
+            harness.Sink.Logs,
+            log => log.Key == "log.tweaks.unsupported" && log.Type == "error"
+        );
+
+        Assert.Contains("apply", working.Calls);
+    }
+
+    [Fact]
+    public void ApplyTweaks_StillUndoesATweakThatBecameUnsupportedAfterItWasApplied()
+    {
+        // A capture exists, so the Tweak was applied while the machine still had the feature.
+        // Refusing to undo it there would strand the user with a change they can no longer take
+        // back — the refusal guards writing, not restoring.
+        var tweak = new SpyTweak("windows.recall") { DetectedState = TweakState.Unsupported };
+        var harness = new Harness(tweak);
+        harness.Captures.Save(
+            new TweakCapture("windows.recall", TweakKinds.Registry, "2026-08-23T10:00:00.0000000Z",
+                new[] { new CapturedValue("DisableAIDataAnalysis", "REG_DWORD", "", false) })
+        );
+
+        Assert.True(harness.Engine.ApplyTweaks(Array.Empty<string>(), new[] { "windows.recall" }).Ok);
+
+        Assert.Contains("revert", tweak.Calls);
     }
 
     [Fact]
@@ -540,6 +597,43 @@ public class TweakEngineTests
         Assert.False(harness.Engine.HasPreset("quick"));
         Assert.False(harness.Engine.ApplyPreset("quick"));
         Assert.Contains(harness.Sink.Logs, log => log.Key == "log.tweaks.unknownPreset");
+    }
+
+    [Fact]
+    public void Measure_DoesNotAppendToTheHistory()
+    {
+        // The Optimization History is the record of what batches did. A standalone measurement is
+        // not a batch, and persisting one wedges an unrelated row between a batch's before and its
+        // after — which is exactly what the panel reads as "the last comparison".
+        var harness = new Harness(new SpyTweak("cpu.a"));
+
+        harness.Engine.Measure();
+
+        Assert.Empty(harness.History.Snapshots);
+    }
+
+    [Fact]
+    public void Measure_StillReturnsTheReading()
+    {
+        // Not persisting it must not mean not taking it: the caller needs the current boot's
+        // identity and duration to resolve a reboot-dependent comparison.
+        var harness = new Harness(new SpyTweak("cpu.a"));
+
+        Assert.NotNull(harness.Engine.Measure());
+    }
+
+    [Fact]
+    public void ApplyTweaks_LeavesOnlyItsOwnPairInTheHistory()
+    {
+        // The pair has to stay adjacent and alone, whatever else the app measured around it.
+        var harness = new Harness(new SpyTweak("cpu.a"));
+        harness.Engine.Measure();
+
+        harness.Engine.ApplyTweaks(new[] { "cpu.a" });
+
+        harness.Engine.Measure();
+
+        Assert.Equal(2, harness.History.Snapshots.Count);
     }
 
     [Fact]

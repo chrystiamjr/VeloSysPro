@@ -65,23 +65,20 @@ namespace VeloSysPro
 
             sink.LogRaw($"=== Headless task '{task}' started ===", "info");
 
-            TweakEngine tweaks = TweakEngine.CreateDefault(
-                cmd,
-                backup,
-                new SystemRestoreManager(cmd, sink),
-                sink
-            );
+            var systemRestore = new SystemRestoreManager(cmd, sink);
+            var safety = new SafetyCheckpoint(systemRestore, backup, sink);
+
+            TweakEngine tweaks = TweakEngine.CreateDefault(cmd, backup, systemRestore, safety, sink);
 
             // The same preference the window applies. A user who turned the safety backup off did
             // so to opt out of the Safety Checkpoint; ignoring that here would make every scheduled
-            // run abort on a machine with System Protection disabled.
-            tweaks.CreateSafetyBackupEnabled = new SettingsManager()
-                .Current
-                .CreateBackupBeforeOptimize;
+            // run abort on a machine with System Protection disabled. One checkpoint, so one place
+            // to set it — this used to be written to two objects because the engine built its own.
+            safety.Enabled = new SettingsManager().Current.CreateBackupBeforeOptimize;
 
             bool ok = tweaks.HasPreset(task)
                 ? tweaks.ApplyPreset(task)
-                : new Optimizer(cmd, backup, sink).RunByName(task);
+                : new Optimizer(cmd, safety, sink).RunByName(task);
 
             if (!ok) sink.LogRaw($"Task '{task}' is unknown or did not complete", "error");
             sink.LogRaw($"=== Headless task '{task}' finished ===", "info");

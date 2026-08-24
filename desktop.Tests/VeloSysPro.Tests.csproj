@@ -17,12 +17,14 @@
 
   <ItemGroup>
     <!-- Compile non-WPF domain/services directly; native process execution stays behind a fake. -->
+    <Compile Include="..\desktop\Features\Debloat\DebloatCatalog.cs" />
+    <Compile Include="..\desktop\Features\Debloat\DebloatManager.cs" />
     <Compile Include="..\desktop\Features\Metrics\OptimizationSnapshot.cs" />
     <Compile Include="..\desktop\Features\Metrics\SnapshotManager.cs" />
     <Compile Include="..\desktop\Features\Optimization\Optimizer.cs" />
     <Compile Include="..\desktop\Features\Recovery\RegistryBackupManager.cs" />
-    <Compile Include="..\desktop\Features\Recovery\SystemRestoreManager.cs" />
     <Compile Include="..\desktop\Features\Recovery\SafetyCheckpoint.cs" />
+    <Compile Include="..\desktop\Features\Recovery\SystemRestoreManager.cs" />
     <Compile Include="..\desktop\Features\Scheduling\SchedulerManager.cs" />
     <Compile Include="..\desktop\Features\Scheduling\SchedulePolicy.cs" />
     <Compile Include="..\desktop\Features\Settings\SettingsManager.cs" />
@@ -31,10 +33,13 @@
     <Compile Include="..\desktop\Features\Tweaks\PowerPlanTweak.cs" />
     <Compile Include="..\desktop\Features\Tweaks\RegistryTweak.cs" />
     <Compile Include="..\desktop\Features\Tweaks\ServiceTweak.cs" />
+    <Compile Include="..\desktop\Features\Tweaks\SupportGatedTweak.cs" />
     <Compile Include="..\desktop\Features\Tweaks\TweakCaptureStore.cs" />
     <Compile Include="..\desktop\Features\Tweaks\TweakCatalog.cs" />
     <Compile Include="..\desktop\Features\Tweaks\TweakEngine.cs" />
+    <Compile Include="..\desktop\Features\Tweaks\WindowsOptionalFeatures.cs" />
     <Compile Include="..\desktop\Infrastructure\Commands\CommandRunner.cs" />
+    <Compile Include="..\desktop\Infrastructure\Composition\HostServices.cs" />
     <Compile Include="..\desktop\Infrastructure\Commands\ICommandRunner.cs" />
     <Compile Include="..\desktop\Infrastructure\Commands\NativeConsoleEncoding.cs" />
     <Compile Include="..\desktop\Infrastructure\Storage\AppEnvironment.cs" />

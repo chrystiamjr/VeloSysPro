@@ -16,6 +16,42 @@ public class TweakCaptureStoreTests
         );
 
     [Fact]
+    public void LoadLatest_ReadsACaptureWrittenBeforeTheKeyFieldAsReadable()
+    {
+        // Captures are persisted and read back by later versions. One written before
+        // `KeyWasReadable` existed never observed the key at all, and true is the answer that
+        // changes nothing: Revert restores the values and leaves the key alone, exactly as the
+        // version that wrote this file did (#51).
+        using var temp = new TemporaryDirectory();
+        File.WriteAllText(
+            Path.Combine(temp.Path, "cpu.win32PrioritySeparation_20260725-100000000.json"),
+            """
+            {
+              "tweakId": "cpu.win32PrioritySeparation",
+              "kind": "registry",
+              "capturedAt": "2026-07-25T10:00:00.0000000Z",
+              "values": [
+                { "name": "Win32PrioritySeparation", "type": "REG_DWORD", "data": "0x2", "existed": true }
+              ],
+              "artifactFile": "C:\\captures\\cpu.reg"
+            }
+            """
+        );
+
+        TweakCapture? loaded = new JsonTweakCaptureStore(temp.Path).LoadLatest(
+            "cpu.win32PrioritySeparation"
+        );
+
+        Assert.NotNull(loaded);
+        Assert.True(
+            loaded!.KeyWasReadable,
+            "A capture with no `keyWasReadable` field must read back as true. False would let "
+                + "Revert delete a registry key that the capture never observed at all."
+        );
+        Assert.Equal("0x2", Assert.Single(loaded.Values).Data);
+    }
+
+    [Fact]
     public void LoadLatest_RoundTripsEveryFieldOfASavedCapture()
     {
         using var temp = new TemporaryDirectory();

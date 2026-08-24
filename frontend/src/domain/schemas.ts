@@ -48,8 +48,15 @@ export const UpdateInfoSchema = z.object({
   url: z.string(),
 });
 
-/** Narrow: the badge and the Revert control branch on this, so an unknown state must be rejected. */
-export const TweakStateSchema = z.enum(['Applied', 'NotApplied', 'Partial']);
+/**
+ * Narrow: the badge and the Revert control branch on this, so an unknown state must be rejected.
+ *
+ * `Unsupported` means the machine does not have the feature the Tweak configures. Widening the set
+ * is backwards compatible in the direction that matters — a host that predates it still sends one
+ * of the first three and parses unchanged — so a dev build running an older `VeloSysPro.exe` keeps
+ * working.
+ */
+export const TweakStateSchema = z.enum(['Applied', 'NotApplied', 'Partial', 'Unsupported']);
 
 export const RiskTierSchema = z.enum(['Safe', 'Advanced']);
 
@@ -124,6 +131,43 @@ export const SnapshotCapturedPayloadSchema = z.object({
   changes: z.array(TweakChangeSchema),
 });
 
+/**
+ * Which side of the allow-list an entry sits on. `Optional` names apps a person may genuinely be
+ * using, so the UI never ticks one on their behalf.
+ */
+export const DebloatGroupSchema = z.enum(['Safe', 'Optional']);
+
+/**
+ * How the app comes back, as an invariant token the UI translates.
+ *
+ * A caveat rather than a description: Debloat is not reversible in-app, and the sentence that says
+ * so has to be rendered from a value the host chose, not parsed out of a localized string.
+ */
+export const DebloatCaveatSchema = z.enum(['store', 'oneDrive']);
+
+export const DebloatPackageSchema = z.object({
+  /** The host's own invariant id — never a package family name, which is what the host removes. */
+  id: z.string().min(1),
+  group: DebloatGroupSchema,
+  caveat: DebloatCaveatSchema,
+  /** False when the machine does not have it, in which case it cannot be submitted. */
+  installed: z.boolean(),
+});
+
+export const DebloatCatalogSchema = z.object({
+  packages: z.array(DebloatPackageSchema),
+});
+
+/** What one selected entry really did, read back off the machine rather than off an exit code. */
+export const DebloatResultSchema = z.object({
+  id: z.string().min(1),
+  ok: z.boolean(),
+});
+
+export const DebloatCompletedPayloadSchema = z.object({
+  results: z.array(DebloatResultSchema),
+});
+
 export const LogTypeSchema = z.enum(['info', 'error', 'success']);
 
 export const LocalizedMessageSchema = z.object({
@@ -144,6 +188,8 @@ export const IpcEventNameSchema = z.enum([
   'tweaksLoaded',
   'snapshotCaptured',
   'historyLoaded',
+  'debloatLoaded',
+  'debloatCompleted',
 ]);
 
 export const IpcEventEnvelopeSchema = z.object({
@@ -169,6 +215,11 @@ export type TweakCatalog = z.infer<typeof TweakCatalogSchema>;
 export type TweakChange = z.infer<typeof TweakChangeSchema>;
 export type OptimizationSnapshot = z.infer<typeof OptimizationSnapshotSchema>;
 export type SnapshotCapturedPayload = z.infer<typeof SnapshotCapturedPayloadSchema>;
+export type DebloatGroup = z.infer<typeof DebloatGroupSchema>;
+export type DebloatCaveat = z.infer<typeof DebloatCaveatSchema>;
+export type DebloatPackage = z.infer<typeof DebloatPackageSchema>;
+export type DebloatCatalog = z.infer<typeof DebloatCatalogSchema>;
+export type DebloatResult = z.infer<typeof DebloatResultSchema>;
 export type BackupItem = z.infer<typeof BackupItemSchema>;
 export type ScheduledTaskItem = z.infer<typeof ScheduledTaskItemSchema>;
 export type RestorePointItem = z.infer<typeof RestorePointItemSchema>;

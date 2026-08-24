@@ -15,5 +15,7 @@ namespace VeloSysPro
         public const string TweaksLoaded = "tweaksLoaded";
         public const string SnapshotCaptured = "snapshotCaptured";
         public const string HistoryLoaded = "historyLoaded";
+        public const string DebloatLoaded = "debloatLoaded";
+        public const string DebloatCompleted = "debloatCompleted";
     }
 }

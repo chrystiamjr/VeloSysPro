@@ -6,6 +6,8 @@ import {
   subscribeBackups,
   subscribeHistory,
   subscribeLogs,
+  subscribeDebloat,
+  subscribeDebloatResults,
   subscribeProgress,
   subscribeSettings,
   subscribeSnapshot,
@@ -28,6 +30,13 @@ const validBackup = {
   CreatedAt: '2026-07-24T13:30:00.000Z',
   SizeBytes: 43520,
 };
+const validDebloatPackage = {
+  id: 'weather',
+  group: 'Safe' as const,
+  caveat: 'store' as const,
+  installed: true,
+};
+const validDebloatCatalog = { packages: [validDebloatPackage] };
 const validSettings = {
   language: 'pt_BR' as const,
   createBackupBeforeOptimize: true,
@@ -178,6 +187,26 @@ describe('IPC Event module', () => {
     unsubscribe();
   });
 
+  it.each([['Applied'], ['NotApplied'], ['Partial'], ['Unsupported']])(
+    'accepts a catalog reporting the %s state',
+    (state) => {
+      // The first three are what a host built before Unsupported existed can send, and a dev build
+      // running an older VeloSysPro.exe has to keep working. The fourth is the widening itself.
+      const callback = vi.fn();
+      const unsubscribe = subscribeTweaks(callback);
+
+      const catalog = {
+        tweaks: [{ ...validTweak, state }],
+        presets: [],
+        systemProtectionEnabled: true,
+      };
+      emitHostEventForTest('tweaksLoaded', catalog);
+
+      expect(callback).toHaveBeenCalledWith(catalog);
+      unsubscribe();
+    }
+  );
+
   it.each([
     ['an unknown Tweak state', { ...validTweak, state: 'Pending' }],
     ['an unknown risk tier', { ...validTweak, riskTier: 'Dangerous' }],
@@ -228,6 +257,73 @@ describe('IPC Event module', () => {
     const unsubscribe = subscribeTweaks(callback);
 
     emitHostEventForTest('tweaksLoaded', { ...validCatalog, systemProtectionEnabled });
+
+    expect(callback).not.toHaveBeenCalled();
+    unsubscribe();
+  });
+
+  it('routes a valid Debloat list to its subscriber', () => {
+    const callback = vi.fn();
+    const unsubscribe = subscribeDebloat(callback);
+
+    emitHostEventForTest('debloatLoaded', validDebloatCatalog);
+
+    expect(callback).toHaveBeenCalledWith(validDebloatCatalog);
+    unsubscribe();
+  });
+
+  it.each([
+    ['an unknown group', { ...validDebloatPackage, group: 'Aggressive' }],
+    ['an unknown caveat', { ...validDebloatPackage, caveat: 'nowhere' }],
+    ['a missing caveat', { ...validDebloatPackage, caveat: undefined }],
+    ['an empty id', { ...validDebloatPackage, id: '' }],
+    ['a non-string id', { ...validDebloatPackage, id: 42 }],
+    ['a stringly-typed installed flag', { ...validDebloatPackage, installed: 'yes' }],
+    ['no installed flag at all', { id: 'weather', group: 'Safe', caveat: 'store' }],
+  ])('keeps the last valid Debloat list when an entry has %s', (_label, pkg) => {
+    // The screen submits ids straight off this list, so a shape it cannot vouch for must not
+    // reach it — a malformed group would silently move an Optional app into the Safe section.
+    const callback = vi.fn();
+    const unsubscribe = subscribeDebloat(callback);
+    emitHostEventForTest('debloatLoaded', validDebloatCatalog);
+
+    emitHostEventForTest('debloatLoaded', { packages: [pkg] });
+
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenCalledWith(validDebloatCatalog);
+    unsubscribe();
+  });
+
+  it('routes per-package removal results to their subscriber', () => {
+    const callback = vi.fn();
+    const unsubscribe = subscribeDebloatResults(callback);
+
+    emitHostEventForTest('debloatCompleted', {
+      results: [
+        { id: 'weather', ok: true },
+        { id: 'news', ok: false },
+      ],
+    });
+
+    expect(callback).toHaveBeenCalledWith([
+      { id: 'weather', ok: true },
+      { id: 'news', ok: false },
+    ]);
+    unsubscribe();
+  });
+
+  it.each([
+    ['a stringly-typed outcome', { results: [{ id: 'weather', ok: 'sim' }] }],
+    ['a missing outcome', { results: [{ id: 'weather' }] }],
+    ['an empty id', { results: [{ id: '', ok: true }] }],
+    ['no results array', { results: { id: 'weather', ok: true } }],
+  ])('refuses a removal report with %s rather than inventing an outcome', (_label, payload) => {
+    // Reporting "removed" for a batch whose outcome could not be read is the one lie this screen
+    // must never tell, so an unreadable report reaches nobody.
+    const callback = vi.fn();
+    const unsubscribe = subscribeDebloatResults(callback);
+
+    emitHostEventForTest('debloatCompleted', payload);
 
     expect(callback).not.toHaveBeenCalled();
     unsubscribe();

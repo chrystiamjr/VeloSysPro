@@ -1,6 +1,7 @@
 import type {
   AppSettings,
   BackupItem,
+  DebloatCatalog,
   OptimizationSnapshot,
   RestorePointItem,
   ScheduledTaskItem,
@@ -126,6 +127,60 @@ export const appliedTweakCatalog: TweakCatalog = {
 };
 
 /**
+ * A machine that does not have the feature one of the preset's Tweaks configures — the case
+ * `TweakState.Unsupported` was added for, standing in for a desktop PC and Recall. A preset member
+ * is used rather than a standalone row because the id staying in the preset is the point:
+ * membership is the catalog's decision, and the machine decides what is offered.
+ */
+export const unsupportedTweakCatalog: TweakCatalog = {
+  ...tweakCatalog,
+  tweaks: tweakCatalog.tweaks.map((tweak) =>
+    tweak.id === 'services.sysMain' ? { ...tweak, state: 'Unsupported' as const } : tweak
+  ),
+};
+
+/**
+ * The E8 `Recommended` set as the shipped catalog reports it, including the `windows` category the
+ * other fixtures have no row for. Two of the longest descriptions in the catalog live here, and the
+ * section they add sits above `boot` and `services` — which is why the specs using this fixture
+ * assert those sections are still reachable
+ * (`.agents/rules/copy-length-is-a-layout-change.md`).
+ */
+export const recommendedTweakCatalog: TweakCatalog = {
+  ...tweakCatalog,
+  tweaks: [
+    ...tweakCatalog.tweaks.map((tweak) => ({ ...tweak, recommended: false })),
+    {
+      id: 'windows.startupAds',
+      category: 'windows',
+      riskTier: 'Safe',
+      kind: 'registry',
+      state: 'Partial',
+      recommended: true,
+      requiresReboot: false,
+    },
+    {
+      id: 'windows.recall',
+      category: 'windows',
+      riskTier: 'Safe',
+      kind: 'registry',
+      state: 'Unsupported',
+      recommended: false,
+      requiresReboot: false,
+    },
+    {
+      id: 'system.transparency',
+      category: 'system',
+      riskTier: 'Safe',
+      kind: 'registry',
+      state: 'NotApplied',
+      recommended: true,
+      requiresReboot: false,
+    },
+  ],
+};
+
+/**
  * Mixed tiers and an unknown category. No Advanced Tweak ships yet — E5 adds them — so this is the
  * only place the gate around them can be exercised end to end.
  */
@@ -154,6 +209,21 @@ export const mixedTweakCatalog: TweakCatalog = {
   ],
 };
 
+/**
+ * A cross-section of DebloatCatalog.CreateDefault: both groups, both reinstall caveats, and one
+ * entry the machine no longer has. Deliberately not all eighteen — these specs are about the
+ * screen, and pinning the whole allow-list here would make every catalog change edit this file.
+ */
+export const debloatCatalog: DebloatCatalog = {
+  packages: [
+    { id: 'weather', group: 'Safe', caveat: 'store', installed: true },
+    { id: 'news', group: 'Safe', caveat: 'store', installed: true },
+    { id: 'solitaire', group: 'Safe', caveat: 'store', installed: false },
+    { id: 'camera', group: 'Optional', caveat: 'store', installed: true },
+    { id: 'oneDrive', group: 'Optional', caveat: 'oneDrive', installed: true },
+  ],
+};
+
 export const snapshotBefore: OptimizationSnapshot = {
   capturedAt: '2026-07-25T10:00:00.000Z',
   bootDurationMs: 32000,
@@ -175,6 +245,17 @@ export const snapshotAfter: OptimizationSnapshot = {
   freeMemoryBytes: 8388608,
   automaticServices: 94,
   runningServices: 71,
+};
+
+/**
+ * The first measurement taken after the machine restarted. Its boot identity differs, which is the
+ * only thing that makes a reboot-dependent metric comparable at all.
+ */
+export const snapshotAfterReboot: OptimizationSnapshot = {
+  ...snapshotBefore,
+  capturedAt: '2026-07-26T09:05:00.000Z',
+  bootDurationMs: 18200,
+  lastBootUpTime: '2026-07-26T09:00:00.000Z',
 };
 
 export const updateInfo: UpdateInfo = {

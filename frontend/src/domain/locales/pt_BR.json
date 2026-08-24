@@ -50,7 +50,7 @@
   "brand": {
     "adminBadge": "Administrador Ativo",
     "subtitle": "Envolvo Systems LTDA.",
-    "version": "Versão 0.2.0 (Build C# / React)"
+    "version": "Versão 0.5.1 (Build C# / React)"
   },
   "btn": {
     "clean": "Limpar",
@@ -79,6 +79,115 @@
       "title": "Ferramentas"
     }
   },
+  "debloat": {
+    "caveat": {
+      "oneDrive": "Volta baixando o OneDrive da Microsoft novamente.",
+      "store": "Volta reinstalando pela Microsoft Store."
+    },
+    "clearBtn": "Limpar seleção",
+    "confirmBody": "Você vai desinstalar {{count}} aplicativo(s). O VeloSys Pro não consegue trazê-los de volta — cada um precisa ser reinstalado por você, na origem indicada abaixo. Um ponto de restauração é criado antes.",
+    "confirmBtn": "Desinstalar definitivamente",
+    "confirmTitle": "Estes aplicativos serão desinstalados",
+    "empty": "Nenhum aplicativo removível encontrado. Use Atualizar para consultar o sistema novamente.",
+    "group": {
+      "optional": "Opcionais (você pode estar usando)",
+      "optionalDesc": "Aplicativos de verdade, não propaganda. Nunca marcados por você — leia cada um antes de selecionar.",
+      "safe": "Seguros para remover"
+    },
+    "loading": "Consultando o sistema...",
+    "noneSelected": "Nenhum aplicativo selecionado. Marque os que deseja remover.",
+    "package": {
+      "alarms": {
+        "desc": "Alarmes, timers e relógio mundial do Windows.",
+        "title": "Alarmes e Relógio"
+      },
+      "bingSearch": {
+        "desc": "Envia o que você digita no menu Iniciar para o Bing na web.",
+        "title": "Bing Search"
+      },
+      "camera": {
+        "desc": "Aplicativo nativo para tirar fotos e gravar vídeo pela webcam.",
+        "title": "Câmera"
+      },
+      "clipchamp": {
+        "desc": "Editor de vídeo pré-instalado da Microsoft.",
+        "title": "Clipchamp"
+      },
+      "copilot": {
+        "desc": "Assistente da Microsoft fixado na barra de tarefas.",
+        "title": "Copilot"
+      },
+      "family": {
+        "desc": "Controles parentais e relatórios de tempo de tela.",
+        "title": "Microsoft Family"
+      },
+      "feedbackHub": {
+        "desc": "Aplicativo de envio de feedback e diagnósticos à Microsoft.",
+        "title": "Hub de Comentários"
+      },
+      "news": {
+        "desc": "Feed de notícias por trás dos widgets da barra de tarefas.",
+        "title": "Bing Notícias"
+      },
+      "officeHub": {
+        "desc": "Atalho inicializador do Office, não o Office em si.",
+        "title": "Microsoft 365 (Office Hub)"
+      },
+      "oneDrive": {
+        "desc": "Cliente de sincronização em nuvem da Microsoft. Arquivos já na nuvem permanecem lá.",
+        "title": "OneDrive"
+      },
+      "outlook": {
+        "desc": "Novo cliente de e-mail pré-instalado, não o Outlook clássico.",
+        "title": "Outlook para Windows"
+      },
+      "powerAutomate": {
+        "desc": "Automação de tarefas no desktop. Remova apenas se não criar fluxos.",
+        "title": "Power Automate Desktop"
+      },
+      "quickAssist": {
+        "desc": "Permite que outra pessoa controle esta máquina remotamente.",
+        "title": "Assistência Rápida"
+      },
+      "screenSketch": {
+        "desc": "Capturas e gravação de tela, atalho Win+Shift+S.",
+        "title": "Ferramenta de Captura"
+      },
+      "solitaire": {
+        "desc": "Jogos de cartas pré-instalados, com anúncios.",
+        "title": "Coleção Solitaire"
+      },
+      "soundRecorder": {
+        "desc": "Gravador de voz nativo do Windows.",
+        "title": "Gravador de Som"
+      },
+      "weather": {
+        "desc": "Aplicativo de clima por trás dos widgets da barra de tarefas.",
+        "title": "Clima"
+      },
+      "xbox": {
+        "desc": "Aplicativo Xbox e sua sobreposição no jogo. O Game Pass depende deles.",
+        "title": "Xbox"
+      }
+    },
+    "refreshBtn": "Atualizar",
+    "removeBtn": "Desinstalar selecionados",
+    "result": {
+      "failed": "Ainda instalado",
+      "removed": "Removido"
+    },
+    "sectionCount": "{{selected}} de {{total}} selecionados",
+    "sectionDesc": "Só é possível remover aplicativos desta lista curada. O que já não está na sua máquina não pode ser selecionado.",
+    "sectionTitle": "Aplicativos removíveis",
+    "selected": "{{count}} aplicativo(s) selecionado(s) para remoção",
+    "staleRead": "O sistema respondeu algo ilegível; exibindo a lista anterior.",
+    "state": {
+      "absent": "Não instalado",
+      "installed": "Instalado"
+    },
+    "warningBody": "Remover um aplicativo não é uma otimização que você possa desfazer aqui. O VeloSys Pro cria um ponto de restauração antes de começar, mas recolocar um aplicativo depois significa reinstalá-lo por conta própria.",
+    "warningTitle": "Remoções não podem ser desfeitas por este aplicativo"
+  },
   "dialog": {
     "cancel": "Cancelar"
   },
@@ -90,6 +199,10 @@
     "dashboard": {
       "subtitle": "Manutenção, aceleração de rede e recuperação do Windows",
       "title": "Painel de Otimização"
+    },
+    "debloat": {
+      "subtitle": "Desinstale os aplicativos pré-instalados que você não usa",
+      "title": "Aplicativos Pré-instalados"
     },
     "optimize": {
       "subtitle": "Escolha, aplique e reverta otimizações individualmente",
@@ -130,6 +243,16 @@
       "restored": "Backup restaurado: {{name}}"
     },
     "cmdError": "Erro executando {{exe}}: {{message}}",
+    "debloat": {
+      "done": "Aplicativos selecionados removidos com sucesso.",
+      "enumerateFailed": "Não foi possível ler a lista de aplicativos instalados.",
+      "noUninstaller": "Nenhum desinstalador encontrado para {{id}}; nada foi removido.",
+      "noneSelected": "Selecione ao menos um aplicativo antes de remover.",
+      "removeFailed": "O aplicativo continua instalado: {{id}}",
+      "removed": "Aplicativo removido: {{id}}",
+      "unknown": "Este aplicativo não está na lista de remoção: {{id}}",
+      "unverified": "Não foi possível verificar se {{id}} foi removido; tratando como ainda instalado."
+    },
     "diskHealth": {
       "done": "Relatório de saúde do disco concluído.",
       "start": "Gerando relatório de saúde do disco..."
@@ -192,7 +315,8 @@
       "revertFailed": "Falha ao reverter a otimização: {{id}}",
       "reverted": "Otimização revertida: {{id}}",
       "unknown": "Otimização desconhecida: {{id}}",
-      "unknownPreset": "Predefinição desconhecida: {{id}}"
+      "unknownPreset": "Predefinição desconhecida: {{id}}",
+      "unsupported": "Este PC não tem o recurso que {{id}} configura, então ela não foi aplicada."
     },
     "updateCache": {
       "done": "Cache do Windows Update limpo com sucesso.",
@@ -203,6 +327,7 @@
     "backup": "Backup & Restauração",
     "collapse": "Recolher menu",
     "dashboard": "Painel Inicial",
+    "debloat": "Remover Apps",
     "expand": "Expandir menu",
     "logsFolder": "Pasta de Logs",
     "optimize": "Otimizações",
@@ -224,7 +349,8 @@
       "network": "Rede",
       "other": "Outras",
       "services": "Serviços do Windows",
-      "system": "Sistema e desempenho"
+      "system": "Sistema e desempenho",
+      "windows": "Windows e privacidade"
     },
     "clearBtn": "Limpar seleção",
     "empty": "Nenhuma otimização disponível. Use Atualizar para consultar o sistema novamente.",
@@ -234,7 +360,7 @@
     "pending": "{{apply}} para aplicar · {{revert}} para reverter",
     "preset": {
       "gaming": {
-        "desc": "Tudo o que o catálogo oferece para jogos: prioridade de processador, rede, gráficos, energia e serviços em segundo plano.",
+        "desc": "Um ponto de partida curado para jogos, não o catálogo inteiro: prioridade em primeiro plano, rede, tela cheia, Modo Jogo, plano de energia e serviços em segundo plano.",
         "title": "Predefinição Gaming"
       }
     },
@@ -243,7 +369,7 @@
     "presetModified": "(modificada)",
     "rebootHint": "Só entra em vigor depois de reiniciar o Windows.",
     "recommended": {
-      "desc": "O que vale para a maioria e tem efeito na hora — sem nada que exija reiniciar o Windows.",
+      "desc": "Mudanças simples com ganho honesto — menos anúncios, menos custo em segundo plano. Nada que exija reiniciar.",
       "title": "Recomendadas"
     },
     "revertBtn": "Reverter",
@@ -265,34 +391,35 @@
     "state": {
       "applied": "Aplicada",
       "notApplied": "Não aplicada",
-      "partial": "Parcial"
+      "partial": "Parcial",
+      "unsupported": "Indisponível"
     },
     "tweak": {
       "boot": {
         "disableDynamicTick": {
-          "desc": "Desativa o tick dinâmico do temporizador de boot, deixando os intervalos do relógio constantes. Exige reinicialização.",
+          "desc": "Desativa o tick dinâmico do temporizador, fazendo o temporizador do kernel disparar em intervalo constante em vez de apenas quando necessário. A Microsoft documenta essa opção de inicialização para depuração.",
           "title": "Desativar tick dinâmico do temporizador"
         },
         "platformClock": {
-          "desc": "Remove a imposição de uma única fonte de relógio na inicialização e devolve ao Windows a escolha da melhor disponível.",
+          "desc": "Remove o elemento de boot useplatformclock, devolvendo ao Windows a escolha da fonte de relógio. A Microsoft documenta essa opção de inicialização para depuração; esta entrada a retira, em vez de defini-la.",
           "title": "Não forçar o relógio da plataforma"
         },
         "platformTick": {
-          "desc": "Faz o Windows usar o temporizador de hardware da placa-mãe, deixando os intervalos de relógio mais previsíveis.",
+          "desc": "Força o Windows a usar o temporizador de hardware da plataforma em vez de escolher a fonte na inicialização. A Microsoft documenta essa opção de inicialização para depuração.",
           "title": "Usar o temporizador da plataforma"
         }
       },
       "cpu": {
         "gamesTaskPriority": {
-          "desc": "Eleva a prioridade de processador e de vídeo que o Windows concede às tarefas registradas como jogos.",
+          "desc": "Grava três valores MMCSS na tarefa Games. A Microsoft documenta a prioridade de GPU como ainda não utilizada e fixa a prioridade de thread sempre que a categoria de agendamento é High — que é o terceiro valor gravado aqui. O Windows aplica quase nada disso.",
           "title": "Prioridade do agendador para jogos"
         },
         "systemResponsiveness": {
-          "desc": "Reduz a fatia de processador que o agendador multimídia guarda para tarefas de fundo e a devolve ao aplicativo em primeiro plano.",
+          "desc": "Reduz o SystemResponsiveness, a fatia de processador que o agendador multimídia reserva para tarefas em segundo plano. O mecanismo é documentado; o que ele muda em um jogo específico não é algo que possamos demonstrar.",
           "title": "Reservar menos CPU para o segundo plano"
         },
         "win32PrioritySeparation": {
-          "desc": "Dá quantum curto e fixo ao aplicativo em primeiro plano, favorecendo jogos e janelas ativas.",
+          "desc": "Define o Win32PrioritySeparation com quantum curto e fixo voltado ao aplicativo em primeiro plano, mudando como o agendador divide o tempo de processador entre as janelas. Nenhuma fonte primária liga esse valor a um ganho medido.",
           "title": "Prioridade para o aplicativo em primeiro plano"
         }
       },
@@ -300,6 +427,10 @@
         "fullscreenExclusive": {
           "desc": "Faz os jogos usarem o modo de tela cheia exclusiva em vez das otimizações de tela cheia do Windows.",
           "title": "Forçar tela cheia exclusiva"
+        },
+        "gameDvrCapture": {
+          "desc": "Desliga o buffer contínuo que o Windows mantém para permitir salvar os últimos minutos de jogo depois que algo acontece. A contrapartida é clara: \"gravar os últimos 30 segundos\" deixa de funcionar. A sobreposição da Barra de Jogos não é alterada.",
+          "title": "Parar a gravação em segundo plano do Game DVR"
         },
         "gameMode": {
           "desc": "Deixa o Windows priorizar o jogo em execução e adiar atualizações e notificações.",
@@ -311,12 +442,16 @@
         }
       },
       "network": {
+        "deliveryOptimization": {
+          "desc": "Faz a Otimização de Entrega baixar somente da Microsoft, sem compartilhamento ponto a ponto: as atualizações continuam chegando normalmente, mas este PC deixa de enviar pedaços delas para outras máquinas na rede ou na internet. O Windows Update continua funcionando.",
+          "title": "Parar de compartilhar atualizações com outros PCs"
+        },
         "tcpParameters": {
-          "desc": "Aplica um conjunto de parâmetros da pilha TCP voltado a conexões de baixa latência e a mais portas simultâneas.",
+          "desc": "Grava quatro valores da pilha TCP: o TTL padrão, o escalonamento de janela da RFC 1323, o atraso de TIME_WAIT e o topo da faixa de portas efêmeras. O que cada um faz é documentado; nenhuma fonte primária liga o conjunto a menor latência em jogos.",
           "title": "Ajustar os parâmetros TCP do Windows"
         },
         "throttlingIndex": {
-          "desc": "Remove o teto que o agendador multimídia impõe ao tráfego de rede enquanto há áudio ou vídeo em execução.",
+          "desc": "Remove o teto que o agendador multimídia impõe aos pacotes de rede enquanto há áudio ou vídeo em execução. Comportamento documentado; se um jogo percebe a diferença é outra questão.",
           "title": "Desligar a limitação de rede multimídia"
         }
       },
@@ -326,11 +461,11 @@
           "title": "Telemetria (DiagTrack) em início Manual"
         },
         "doSvc": {
-          "desc": "Coloca a Otimização de Entrega em início Manual, impedindo que a máquina compartilhe atualizações pela rede sem necessidade. O Windows Update continua funcionando.",
+          "desc": "Coloca a Otimização de Entrega em início Manual, para a máquina parar de compartilhar atualizações pela rede sem pedir. O Windows Update continua funcionando. Parar o serviço é uma forma grosseira de chegar lá; \"Parar de compartilhar atualizações com outros PCs\" chega pela configuração que o próprio Windows oferece.",
           "title": "Otimização de Entrega em início Manual"
         },
         "sysMain": {
-          "desc": "Coloca o SysMain (Superfetch) em início Manual, reduzindo leitura de disco em segundo plano.",
+          "desc": "Coloca o SysMain (Superfetch) em início Manual. O SysMain é um cache por natureza: em máquinas onde ele provoca picos de disco ou de processador em ociosidade, desativá-lo elimina esses picos; nas demais, o efeito é neutro ou levemente negativo, porque o Windows perde a pré-carga.",
           "title": "SysMain em início Manual"
         },
         "wSearch": {
@@ -343,12 +478,31 @@
           "desc": "Ativa o plano Desempenho Máximo, ou o de Alto desempenho quando a máquina não tem o primeiro. Consome mais energia em notebooks.",
           "title": "Plano de energia de alto desempenho"
         },
+        "transparency": {
+          "desc": "Desliga o efeito de transparência, para o compositor da área de trabalho parar de recompor as superfícies desfocadas atrás dos menus, do Iniciar e da barra de tarefas. É a mesma opção das Configurações do Windows; depois disso essas superfícies ficam sólidas.",
+          "title": "Desativar a transparência das janelas"
+        },
         "visualEffects": {
           "desc": "Troca as animações e sombras da interface pelo ajuste de melhor desempenho.",
           "title": "Efeitos visuais ajustados para desempenho"
         }
+      },
+      "windows": {
+        "copilotPolicy": {
+          "desc": "Aplica a política do Windows Copilot que desliga o assistente para esta conta. Não é o mesmo que remover o aplicativo Copilot: desinstalar deixa o botão na barra de tarefas e a tecla Copilot funcionando, e a política é o controle que a Microsoft documenta para desligar a integração.",
+          "title": "Desativar o Windows Copilot"
+        },
+        "recall": {
+          "desc": "Aplica a política que impede o Recall de salvar instantâneos do que está na tela. O Recall existe apenas em um PC Copilot+; em qualquer outro este item aparece como indisponível em vez de ser aplicado a um recurso que não está lá.",
+          "title": "Desativar os instantâneos do Recall"
+        },
+        "startupAds": {
+          "desc": "Desliga as sugestões no menu Iniciar, as dicas na tela de bloqueio, as dicas do Windows e a instalação silenciosa de aplicativos sugeridos. Cada uma delas também é uma opção oferecida pelas Configurações do Windows.",
+          "title": "Desativar sugestões e anúncios do Windows"
+        }
       }
-    }
+    },
+    "unsupportedHint": "Este PC não tem o recurso que este item configura, então não há nada a aplicar aqui."
   },
   "protection": {
     "desc": "A Proteção do Sistema do Windows está desativada. Sem ela o VeloSys Pro não consegue criar o ponto de restauração que antecede cada otimização, e as alterações seriam aplicadas sem essa rede de proteção.",
@@ -447,6 +601,11 @@
     "sectionTitle": "O que mudou no sistema"
   },
   "status": {
+    "debloat": {
+      "done": "Remoção concluída!",
+      "removing": "Removendo {{id}}...",
+      "verifying": "Verificando o que foi realmente removido..."
+    },
     "diskHealth": {
       "done": "Relatório de disco gerado!",
       "start": "Analisando saúde do disco..."

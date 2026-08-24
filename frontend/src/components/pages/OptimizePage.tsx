@@ -12,6 +12,8 @@ import { useTranslation } from '../../infrastructure/i18nContext';
 export interface OptimizePageProps {
   catalog: TweakCatalog;
   snapshot: SnapshotCapturedPayload | null;
+  /** The cross-boot pair for reboot-dependent metrics; null until a later boot has been measured. */
+  nextBootSnapshot?: SnapshotCapturedPayload | null;
   onApply: (change: { tweakIds: string[]; revertIds: string[] }) => void;
   onRevert: (tweakId: string) => void;
   onRefresh: () => void;
@@ -35,6 +37,7 @@ const sameSet = (left: string[], right: string[]) =>
 export const OptimizePage: React.FC<OptimizePageProps> = ({
   catalog,
   snapshot,
+  nextBootSnapshot = null,
   onApply,
   onRevert,
   onRefresh,
@@ -71,17 +74,23 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
     setPresetSelection(null);
   }
 
-  // Anything the host stopped reporting cannot be acted on, whatever the user drew earlier.
+  // Anything the host stopped reporting cannot be acted on, whatever the user drew earlier — and
+  // neither can a Tweak whose feature this machine does not have. The host refuses an Unsupported
+  // id at its own seam; leaving it out here is what stops the screen asking in the first place, and
+  // it is read off the live catalog so a machine that gains the feature simply starts offering it.
   const knownIds = catalog.tweaks.map((tweak) => tweak.id);
-  const liveDesired = desiredIds.filter((id) => knownIds.includes(id));
+  const tweakById = (id: string) => catalog.tweaks.find((tweak) => tweak.id === id);
+  const selectable = (id: string) => {
+    const tweak = tweakById(id);
+    return tweak !== undefined && tweak.state !== 'Unsupported';
+  };
+  const liveDesired = desiredIds.filter(selectable);
 
   const toApply = liveDesired.filter((id) => !appliedIds.includes(id));
   const toRevert = appliedIds.filter((id) => !liveDesired.includes(id));
   const hasPendingChange = toApply.length > 0 || toRevert.length > 0;
 
-  const advancedToApply = toApply.filter(
-    (id) => catalog.tweaks.find((tweak) => tweak.id === id)?.riskTier === 'Advanced'
-  );
+  const advancedToApply = toApply.filter((id) => tweakById(id)?.riskTier === 'Advanced');
 
   const titleOf = (id: string) => t(`optimize.tweak.${id}.title`);
   const modified = presetSelection !== null && !sameSet(liveDesired, presetSelection);
@@ -97,14 +106,11 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
   // builds the catalog; it is enforced again here because these are the controls a non-expert
   // clicks without reading, so malformed or stale host data must not tick an Advanced Tweak for
   // them. An Advanced Tweak already applied stays ticked — unticking it would stage a revert
-  // nobody asked for.
+  // nobody asked for. A Preset naming a Tweak this machine cannot use simply draws one fewer box:
+  // the catalog decides membership, the machine decides what is offered.
   const drawSafeOnly = (ids: string[]) => {
-    const safe = ids.filter((id) =>
-      catalog.tweaks.some((tweak) => tweak.id === id && tweak.riskTier === 'Safe')
-    );
-    const appliedAdvanced = appliedIds.filter(
-      (id) => catalog.tweaks.find((tweak) => tweak.id === id)?.riskTier === 'Advanced'
-    );
+    const safe = ids.filter((id) => tweakById(id)?.riskTier === 'Safe' && selectable(id));
+    const appliedAdvanced = appliedIds.filter((id) => tweakById(id)?.riskTier === 'Advanced');
     return [...safe, ...appliedAdvanced];
   };
 
@@ -133,7 +139,7 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
   const submit = () => {
     // Revalidated one last time against the catalog as it stands right now: the list may have been
     // re-read while the user was deciding.
-    const apply = toApply.filter((id) => knownIds.includes(id));
+    const apply = toApply.filter(selectable);
     const revert = toRevert.filter((id) => knownIds.includes(id));
     if (apply.length === 0 && revert.length === 0) return;
 
@@ -202,14 +208,14 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
         stale={catalogStale}
       />
 
-      <SnapshotDiff snapshot={snapshot} />
+      <SnapshotDiff snapshot={snapshot} nextBoot={nextBootSnapshot} />
 
       {/* Bleeds through the page padding to span the whole content panel, so it reads as a bar the
           screen sits on rather than one more card in the stack. Sticky so the pending difference
           and the action stay in view however far the catalog scrolls. */}
       <div
         data-cy="tweak-action-bar"
-        className="sticky bottom-0 z-20 -mx-4 mt-auto flex flex-col gap-3 border-t border-borderColor bg-bgSidebar/95 px-4 py-4 shadow-[0_-8px_24px_rgba(0,0,0,0.35)] backdrop-blur sm:-mx-6 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:-mx-8 lg:px-8"
+        className="sticky bottom-0 z-20 -mx-4 mt-auto flex flex-col gap-3 border-t border-borderColor bg-bgSidebar/95 px-4 py-4 shadow-action-bar backdrop-blur sm:-mx-6 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:-mx-8 lg:px-8"
       >
         <span data-cy="tweak-pending-summary" className="text-xs text-textMuted">
           {hasPendingChange

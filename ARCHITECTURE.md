@@ -80,7 +80,7 @@ string-payload compatibility to maintain.
 
 `logReceived` · `statusUpdated` · `progressUpdated` · `backupsLoaded` · `tasksLoaded` ·
 `restorePointsLoaded` · `settingsLoaded` · `updateAvailable` · `actionFinished` · `tweaksLoaded` ·
-`snapshotCaptured` · `historyLoaded`
+`snapshotCaptured` · `historyLoaded` · `debloatLoaded` · `debloatCompleted`
 
 ---
 
@@ -114,6 +114,8 @@ WebView2 and that tests capture directly.
 | `Optimizer` | Runs the named **Optimization Plans** — `Quick`, `Full`, `Revert` — plus `ClearUpdateCache`, `CleanPrefetch`, `ReportDiskHealth`. These are **maintenance**: cleanup and repair, owning no Tweaks. Success is derived from **exit codes**, not stderr presence. Honors the safety-backup preference. |
 | `TweakCatalog` + `ITweak` | The **Tweak** catalog: one registry, BCD, service, or power-plan optimization each, able to `Detect`, `Capture`, `Apply`, and `Revert` itself, and declaring whether it `RequiresReboot`. **Presets** are Tweak-id sets over it, keyed by the CLI task names, and may reference `Safe` Tweaks only; **Recommended** additionally excludes anything needing a restart (ADR [0003](docs/adr/0003-tweak-as-reversible-unit.md), [0005](docs/adr/0005-advanced-risk-tier.md)). |
 | `TweakEngine` | Orchestrates a batch: **Safety Checkpoint**, per-Tweak capture, then apply **and revert together under that one checkpoint** (reverts first), and the before/after measurement (ADR [0004](docs/adr/0004-safety-checkpoint.md)). Reports which settings actually moved, read back off the live system. Returns facts; `ActionHost` publishes them. `ApplyPreset` is the headless CLI's entry point. |
+| `DebloatCatalog` + `DebloatManager` | Curated, **allow-listed** removal of preinstalled apps — explicitly *not* Tweaks, because an uninstalled app can only be reinstalled from the Store, by the user. The catalog names each entry by an id of the app's own making and keeps the real Appx family names to itself, so **no string the frontend sends can reach a removal command**. A batch runs behind the same Safety Checkpoint, and each entry's outcome is **read back off the machine** rather than taken from an exit code. |
+| `SafetyCheckpoint` | The restore point a batch of system changes runs behind, and the single decision on whether the batch may proceed without one. Shared by `TweakEngine` and `DebloatManager` so the safeguard cannot exist on only one of the paths that need it. |
 | `SnapshotManager` + `ISnapshotStore` | Captures an **Optimization Snapshot** from built-in facilities only (CIM, `Get-Service`, the Diagnostics-Performance log) and appends it to the append-only JSONL **Optimization History** (ADR [0006](docs/adr/0006-built-in-only-boundary.md), [0007](docs/adr/0007-jsonl-snapshot-store.md)). |
 | `RegistryBackupManager` | Exports/imports TCP/IP registry `.reg` backups and lists them as Management Records; also exports/imports arbitrary keys as a Tweak's capture archive. |
 | `SystemRestoreManager` | Lists, creates, and rolls back Windows System Restore points (rollback reboots). |
@@ -167,7 +169,7 @@ React state is split into three focused owners instead of one mega-component:
 | Hook | Owns |
 | :-- | :-- |
 | `useExecutionLifecycle` | The execution lock, mirroring the host: `runMutation` acquires it and only the matching `actionFinished` Event releases it; `runRead` never locks; progress is visual-only. |
-| `useOsBackedLists` | The **Management Records** (backups, tasks, restore points) and the Tweak catalog. Refreshes on relevant navigation and after successful mutations; a failed read **keeps the last valid list** rather than blanking it. |
+| `useOsBackedLists` | The **Management Records** (backups, tasks, restore points), the Tweak catalog, and the Debloat list. Refreshes on relevant navigation and after successful mutations; a failed read **keeps the last valid list** rather than blanking it. |
 | `usePreferences` | Settings. Updates are optimistic, but the host re-emits the persisted settings after acceptance or rejection, which wins. |
 
 ### UI conventions
@@ -178,6 +180,10 @@ React state is split into three focused owners instead of one mega-component:
   host reports and the action bar submits the *difference*, so one batch can both apply and revert
   under a single Safety Checkpoint. A host re-emit always wins over the drawn intent, and anything
   that undoes an applied Tweak passes a `ConfirmDialog` naming exactly what will be undone.
+- **Removal is not a desired state.** The Debloat screen is the deliberate exception to the rule
+  above: a tick there means "uninstall this", nothing starts ticked (Optional least of all), and a
+  `ConfirmDialog` names every selected app and how it would have to come back. Nothing on that
+  screen calls a removal reversible, because this app cannot reverse one.
 - **Tailwind design tokens only** — no inline hex/colors.
 - **i18n** via Rosetta with nested keys mirrored in `pt_BR.json` / `en_US.json`. Host log/status
   messages travel as **i18n keys + args** and are translated in React, so the live console follows
@@ -214,5 +220,9 @@ React state is split into three focused owners instead of one mega-component:
   the UI.
 - **Locale-neutral boundary data.** Management Records cross IPC as ISO timestamps, byte counts, and
   structured schedule fields — never localized OS display strings.
-- **Refresh only after success.** OS-backed lists refresh on navigation and successful mutations, and
-  retain their last valid state when a read fails.
+- **Refresh after a mutation that ran, not only after one that succeeded.** OS-backed lists refresh
+  on navigation and after mutations, and retain their last valid state when a read fails. A batch
+  refused *before* it touched anything — an unknown id, a Safety Checkpoint that could not be built —
+  refreshes nothing, so a refused batch never looks like one that happened to change nothing. A
+  batch that ran and partly failed does refresh: a stale row claiming an app is still installed, or
+  a Tweak still unapplied, is worse than a partial truth.

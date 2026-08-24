@@ -1,3 +1,45 @@
+## [0.5.1](https://github.com/chrystiamjr/VeloSysPro/compare/v0.5.0...v0.5.1) (2026-08-24)
+
+### Bug Fixes
+
+* **optimize:** remove the empty policy key a Tweak created ([#52](https://github.com/chrystiamjr/VeloSysPro/issues/52)) ([52c9545](https://github.com/chrystiamjr/VeloSysPro/commit/52c95453b366e3006eb55363be0ebb973e3bf5fd)), closes [#51](https://github.com/chrystiamjr/VeloSysPro/issues/51)
+
+## [0.5.0](https://github.com/chrystiamjr/VeloSysPro/compare/v0.4.3...v0.5.0) (2026-08-24)
+
+### Features
+
+* **optimize:** refill Recommended with what the machine exposes ([#50](https://github.com/chrystiamjr/VeloSysPro/issues/50)) ([2146a21](https://github.com/chrystiamjr/VeloSysPro/commit/2146a218f4716a945f808ea9897a38c9e544478e))
+
+## [0.4.3](https://github.com/chrystiamjr/VeloSysPro/compare/v0.4.2...v0.4.3) (2026-08-23)
+
+### Bug Fixes
+
+* **optimize:** recommend only what primary sources support ([#49](https://github.com/chrystiamjr/VeloSysPro/issues/49)) ([a245553](https://github.com/chrystiamjr/VeloSysPro/commit/a245553e2fcc1dba24bd99d1270f3ab47b388b3c))
+
+## [0.4.2](https://github.com/chrystiamjr/VeloSysPro/compare/v0.4.1...v0.4.2) (2026-08-23)
+
+### Bug Fixes
+
+* **snapshot:** stop pairing unrelated readings as a batch result ([#48](https://github.com/chrystiamjr/VeloSysPro/issues/48)) ([02daeb5](https://github.com/chrystiamjr/VeloSysPro/commit/02daeb5c37892702378c0e8264b3a8c1b8c9e5cc))
+
+## [0.4.1](https://github.com/chrystiamjr/VeloSysPro/compare/v0.4.0...v0.4.1) (2026-08-22)
+
+### Bug Fixes
+
+* **snapshot:** resolve the restart hint after an actual restart ([#47](https://github.com/chrystiamjr/VeloSysPro/issues/47)) ([646d7ed](https://github.com/chrystiamjr/VeloSysPro/commit/646d7ed17880ed81ab8276a65b63acf335a0e3dc))
+
+## [0.4.0](https://github.com/chrystiamjr/VeloSysPro/compare/v0.3.0...v0.4.0) (2026-08-21)
+
+### Features
+
+* **debloat:** allow-listed Appx removal with per-package results ([#45](https://github.com/chrystiamjr/VeloSysPro/issues/45)) ([b0bb69f](https://github.com/chrystiamjr/VeloSysPro/commit/b0bb69f9b1aae4e7a3d12760e73ab336eb2acc86))
+
+## [0.3.0](https://github.com/chrystiamjr/VeloSysPro/compare/v0.2.0...v0.3.0) (2026-08-21)
+
+### Features
+
+* **arch:** deepen IPC, recovery checkpoints, and state hooks ([#46](https://github.com/chrystiamjr/VeloSysPro/issues/46)) ([f5271a1](https://github.com/chrystiamjr/VeloSysPro/commit/f5271a17de6e2d173005188ffc75a31dd95fbe0c))
+
 ## [0.2.0](https://github.com/chrystiamjr/VeloSysPro/compare/v0.1.6...v0.2.0) (2026-08-21)
 
 ### Features

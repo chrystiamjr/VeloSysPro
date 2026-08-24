@@ -5,12 +5,16 @@ import {
   NEXT_BOOT_METRICS,
   MetricDefinition,
   formatMetricValue,
-  isSameBootSession,
 } from '../../domain/metricDeltas';
 import { useTranslation } from '../../infrastructure/i18nContext';
 
 export interface SnapshotDiffProps {
   snapshot: SnapshotCapturedPayload | null;
+  /**
+   * The cross-boot comparison for metrics that cannot move until the machine restarts, or null
+   * while no measurement from a later boot exists yet. Resolved by `resolveNextBootComparison`.
+   */
+  nextBoot?: SnapshotCapturedPayload | null;
 }
 
 /**
@@ -19,15 +23,24 @@ export interface SnapshotDiffProps {
  * for reasons of its own). Measured with built-in Windows facilities only — see
  * docs/adr/0006-built-in-only-boundary.md.
  */
-export const SnapshotDiff: React.FC<SnapshotDiffProps> = ({ snapshot }) => {
+export const SnapshotDiff: React.FC<SnapshotDiffProps> = ({ snapshot, nextBoot = null }) => {
   const { t, lang } = useTranslation();
 
-  const sameBootSession = isSameBootSession(snapshot);
+  // The "before" side is known for every metric — the batch measured it. Only the "after" side of
+  // a reboot-dependent metric has to wait, because the machine has to restart before there is
+  // anything new to read.
+  const afterSourceFor = (groupKey: string) => (groupKey === 'nextBoot' ? nextBoot : snapshot);
 
-  const renderAfter = (metric: MetricDefinition): string => {
-    if (!snapshot) return t('snapshot.notMeasured');
-    if (metric.key === 'bootDuration' && sameBootSession) return t('snapshot.restartToMeasure');
-    return formatMetricValue(metric, snapshot.after, lang, t).formatted;
+  const renderAfter = (
+    metric: MetricDefinition,
+    source: SnapshotCapturedPayload | null
+  ): string => {
+    if (!source) {
+      return t(
+        NEXT_BOOT_METRICS.includes(metric) ? 'snapshot.restartToMeasure' : 'snapshot.notMeasured'
+      );
+    }
+    return formatMetricValue(metric, source.after, lang, t).formatted;
   };
 
   const metricRows = (rows: readonly MetricDefinition[], groupKey: string) => (
@@ -51,7 +64,7 @@ export const SnapshotDiff: React.FC<SnapshotDiffProps> = ({ snapshot }) => {
             {formatMetricValue(metric, snapshot?.before ?? null, lang, t).formatted}
           </td>
           <td className="px-5 py-3 text-right font-semibold text-textMain">
-            {renderAfter(metric)}
+            {renderAfter(metric, afterSourceFor(groupKey))}
           </td>
         </tr>
       ))}
