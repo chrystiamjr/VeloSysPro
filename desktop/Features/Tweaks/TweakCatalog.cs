@@ -528,18 +528,23 @@ namespace VeloSysPro
                 // recording buffer nobody asked for, `system.transparency` stops the compositor
                 // recomposing acrylic continuously. Every path was read on a live machine first.
                 //
-                // The two E8 entries that stayed out, each for its own reason.
-                // `windows.copilotPolicy` turns off an assistant — a preference, like forced
-                // fullscreen-exclusive, not a gain anyone can measure. `windows.recall` configures
-                // a feature this project's target machine does not have; membership would be legal
-                // (the machine decides, not the catalog) but recommending it says the catalog
-                // stands behind something most users cannot use.
+                // `windows.copilotPolicy` belongs here for a reason the other entries do not share:
+                // it is the half of a removal that E4 cannot do. E4 uninstalls the Copilot Appx and
+                // the taskbar entry and the Copilot key keep working, so the policy is the only
+                // thing that actually turns the integration off. Someone who asked for Copilot to
+                // be gone and got a half-removal is left in the state they were trying to leave.
+                //
+                // `windows.recall` is the one E8 entry that stayed out: it configures a feature
+                // this project's target machine does not have. Membership would be legal — the
+                // machine decides, not the catalog — but recommending it would say the catalog
+                // stands behind something most users cannot use. It stays selectable.
                 new[]
                 {
                     gameMode.Id,
                     gameDvrCapture.Id,
                     transparency.Id,
                     startupAds.Id,
+                    copilotPolicy.Id,
                     deliveryOptimization.Id,
                     diagTrack.Id,
                 }
