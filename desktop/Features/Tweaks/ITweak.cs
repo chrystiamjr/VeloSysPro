@@ -53,12 +53,22 @@ namespace VeloSysPro
     /// values individually — the export is the archive kept for manual recovery, and the fallback
     /// when a capture's values cannot be read.
     /// </param>
+    /// <param name="KeyExisted">
+    /// False when the registry key itself was not there before the Tweak ran, so Revert can remove
+    /// the key the Tweak created rather than leaving it behind empty.
+    /// </param>
+    /// <remarks>
+    /// <paramref name="KeyExisted"/> defaults to true because captures are persisted as JSON and
+    /// read back by later versions: one written before this field existed never observed the key's
+    /// own state, and true is the answer that changes nothing.
+    /// </remarks>
     public sealed record TweakCapture(
         string TweakId,
         string Kind,
         string CapturedAt,
         IReadOnlyList<CapturedValue> Values,
-        string ArtifactFile = ""
+        string ArtifactFile = "",
+        bool KeyExisted = true
     );
 
     /// <summary>

@@ -60,6 +60,16 @@ public class CatalogTweakTests
         /// <summary>A value reg.exe cannot find — indistinguishable from a failed query by design.</summary>
         public void ValueAbsent() => Runner.EnqueueFailedCapture();
 
+        /// <summary>
+        /// A key that reads back holding nothing at all.
+        /// </summary>
+        /// <remarks>
+        /// Exactly what reg.exe returns for an empty key, read on a real machine on 2026-08-23:
+        /// exit 0 and a single line break, with not even the key's own path echoed back. A key
+        /// holding anything prints its path and a line per value or subkey.
+        /// </remarks>
+        public void KeyIsEmpty() => Runner.EnqueueCapture("\r\n");
+
         /// <summary>Answers the optional-feature probe: this Windows image has the feature.</summary>
         public void FeaturePresent() => Runner.EnqueueCapture("present\r\n");
 
@@ -809,7 +819,80 @@ public class CatalogTweakTests
 
         catalog.Runner.Runs.Clear();
         Assert.True(tweak.Revert(tweakCapture));
-        Assert.StartsWith("delete ", Assert.Single(catalog.Args));
+        // First, and the one that matters here: the value goes. What follows it is the leftover-key
+        // check (#51), which has its own tests below.
+        Assert.StartsWith("delete ", catalog.Args.First());
+    }
+
+    [Fact]
+    public void PolicyTweaks_RemoveThePolicyKeyTheyCreatedWhenNothingElseIsLeftInIt()
+    {
+        // #51. Apply creates the key along with the value, so leaving the key behind after Revert
+        // is an artefact the app made and did not clean up. Verified on a real machine on
+        // 2026-08-23: after reverting Delivery Optimization, `reg query` on the key returned exit 0
+        // and a single empty line — the key still there, holding nothing.
+        using var catalog = new ShippedCatalog();
+
+        ITweak delivery = catalog.Find("network.deliveryOptimization");
+        TweakCapture capture = delivery.Capture();
+        Assert.True(delivery.Apply(capture));
+
+        catalog.Runner.Runs.Clear();
+        catalog.KeyIsEmpty();
+
+        Assert.True(delivery.Revert(capture));
+        Assert.Equal(
+            new[]
+            {
+                "delete \"" + DeliveryPolicy + "\" /v \"DODownloadMode\" /f",
+                "query \"" + DeliveryPolicy + "\"",
+                "delete \"" + DeliveryPolicy + "\" /f",
+            },
+            catalog.Args
+        );
+    }
+
+    [Fact]
+    public void PolicyTweaks_LeaveAKeyAloneWhenSomeoneElsesPolicyIsStillInIt()
+    {
+        // The trap. Between Apply and Revert an administrator may have set another policy under the
+        // same branch. Deleting the branch wholesale would destroy their setting — a far worse bug
+        // than the leftover key this fixes.
+        using var catalog = new ShippedCatalog();
+
+        ITweak delivery = catalog.Find("network.deliveryOptimization");
+        TweakCapture capture = delivery.Capture();
+        Assert.True(delivery.Apply(capture));
+
+        catalog.Runner.Runs.Clear();
+        catalog.Value("DOMaxCacheSize", "REG_DWORD", "0x14");
+
+        Assert.True(delivery.Revert(capture));
+        Assert.DoesNotContain(
+            catalog.Args,
+            arg => arg == "delete \"" + DeliveryPolicy + "\" /f"
+        );
+    }
+
+    [Fact]
+    public void PolicyTweaks_NeverRemoveAKeyThatWasAlreadyThereBeforeTheyRan()
+    {
+        // The key existing beforehand is someone else's decision, whether or not it is empty now.
+        using var catalog = new ShippedCatalog();
+        catalog.KeyReadsBack();
+        catalog.ValueAbsent();
+
+        ITweak delivery = catalog.Find("network.deliveryOptimization");
+        TweakCapture capture = delivery.Capture();
+        Assert.True(delivery.Apply(capture));
+
+        catalog.Runner.Runs.Clear();
+        Assert.True(delivery.Revert(capture));
+
+        Assert.Equal(
+            "delete \"" + DeliveryPolicy + "\" /v \"DODownloadMode\" /f",
+            Assert.Single(catalog.Args)
+        );
     }
 
     [Fact]
@@ -829,7 +912,9 @@ public class CatalogTweakTests
 
         catalog.Runner.Runs.Clear();
         Assert.True(recall.Revert(capture));
-        Assert.StartsWith("delete ", Assert.Single(catalog.Args));
+        // First, and the one that matters here: the value goes. What follows it is the leftover-key
+        // check (#51), which has its own tests below.
+        Assert.StartsWith("delete ", catalog.Args.First());
     }
 
     [Fact]

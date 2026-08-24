@@ -142,7 +142,8 @@ namespace VeloSysPro
                 // real machine on 2026-08-23, applying the Delivery Optimization policy. There is
                 // nothing to archive either: the capture already holds the whole prior state, which
                 // for an absent policy key is "no policy set".
-                keyIsReadable ? _backup.ExportKey(_keyPath, Id) : ""
+                keyIsReadable ? _backup.ExportKey(_keyPath, Id) : "",
+                keyIsReadable
             );
         }
 
@@ -180,8 +181,44 @@ namespace VeloSysPro
                     ? Write(value.Name, value.Type, value.Data)
                     : Delete(value.Name);
             }
+
+            // Apply created the key along with the value, so leaving it behind is an artefact the
+            // app made and did not clean up. Only ever for a key this Tweak is allowed to create,
+            // only when the capture saw it absent, and only when nothing is left in it: between
+            // Apply and Revert an administrator may have set another policy under the same branch,
+            // and deleting the branch wholesale would destroy their setting — a far worse failure
+            // than the leftover key (#51). A restore that already failed is left exactly as it is.
+            if (ok && !capture.KeyExisted && _keyMayBeAbsent && KeyIsEmpty()) ok &= DeleteKey();
+
             return ok;
         }
+
+        /// <summary>
+        /// True when the key reads back holding nothing at all — no values, no subkeys.
+        /// </summary>
+        /// <remarks>
+        /// Read on a real machine on 2026-08-23: reg.exe answers an empty key with exit 0 and a
+        /// single line break, not even echoing the key's own path, while a key holding anything
+        /// prints that path and a line per value or subkey. So "no non-blank line" is the whole
+        /// test, and it needs nothing Windows translates — the alternative, reading the localized
+        /// text of a failure, is the trap `.agents/rules/locale-neutral-boundary-data.md` names.
+        ///
+        /// A query that fails answers nothing, and nothing is not permission to delete.
+        /// </remarks>
+        private bool KeyIsEmpty()
+        {
+            CaptureResult query = _cmd.RunCapture("reg.exe", "query \"" + _keyPath + "\"");
+            if (!query.Success) return false;
+
+            foreach (string line in query.Output.Split('\n'))
+            {
+                if (line.Trim().Length > 0) return false;
+            }
+            return true;
+        }
+
+        private bool DeleteKey() =>
+            _cmd.Run("reg.exe", "delete \"" + _keyPath + "\" /f").Success;
 
         private bool KeyIsReadable() =>
             _cmd.RunCapture("reg.exe", "query \"" + _keyPath + "\"").Success;
