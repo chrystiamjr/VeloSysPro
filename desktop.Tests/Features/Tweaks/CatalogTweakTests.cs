@@ -779,6 +779,52 @@ public class CatalogTweakTests
         );
     }
 
+    [Theory]
+    [InlineData("windows.copilotPolicy")]
+    [InlineData("network.deliveryOptimization")]
+    public void PolicyTweaks_RoundTripAPolicyKeyThatDoesNotExistAtAll(string id)
+    {
+        // The normal state of a `Policies` branch, and the one the other tests miss: no
+        // `KeyReadsBack()`, because nobody has ever created the key. Both reg queries fail, the
+        // whole-key export fails with them, and the capture has no archive to fall back on — so the
+        // prior state has to be recorded as "every value absent" or Revert has nothing to restore
+        // and the policy stays applied for good.
+        using var catalog = new ShippedCatalog();
+
+        ITweak tweak = catalog.Find(id);
+        TweakCapture tweakCapture = tweak.Capture();
+
+        // NotEmpty first: an empty capture satisfies Assert.All vacuously, and an empty capture is
+        // precisely the bug.
+        Assert.NotEmpty(tweakCapture.Values);
+        Assert.All(tweakCapture.Values, value => Assert.False(value.Existed));
+        Assert.True(tweak.Apply(tweakCapture));
+
+        catalog.Runner.Runs.Clear();
+        Assert.True(tweak.Revert(tweakCapture));
+        Assert.StartsWith("delete ", Assert.Single(catalog.Args));
+    }
+
+    [Fact]
+    public void Recall_RoundTripsAPolicyKeyThatDoesNotExistAtAll()
+    {
+        // Same case, through the support gate: the probe is answered only after the capture, so the
+        // capture's reg queries are the ones that find nothing.
+        using var catalog = new ShippedCatalog();
+
+        ITweak recall = catalog.Find("windows.recall");
+        TweakCapture capture = recall.Capture();
+        Assert.NotEmpty(capture.Values);
+        Assert.All(capture.Values, value => Assert.False(value.Existed));
+
+        catalog.FeaturePresent();
+        Assert.True(recall.Apply(capture));
+
+        catalog.Runner.Runs.Clear();
+        Assert.True(recall.Revert(capture));
+        Assert.StartsWith("delete ", Assert.Single(catalog.Args));
+    }
+
     [Fact]
     public void Recall_ReportsUnsupportedWhereWindowsDoesNotHaveTheFeature()
     {

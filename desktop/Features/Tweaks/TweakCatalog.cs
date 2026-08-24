@@ -299,7 +299,10 @@ namespace VeloSysPro
                 @"HKCU\Software\Policies\Microsoft\Windows\WindowsCopilot",
                 new[] { new RegistryValue("TurnOffWindowsCopilot", "REG_DWORD", "1") },
                 cmd,
-                backup
+                backup,
+                requiresReboot: false,
+                requiresExistingValue: false,
+                keyMayBeAbsent: true
             );
 
             // Recall is a Copilot+ PC feature. On any other machine the policy write succeeds and
@@ -319,7 +322,10 @@ namespace VeloSysPro
                     @"HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsAI",
                     new[] { new RegistryValue("DisableAIDataAnalysis", "REG_DWORD", "1") },
                     cmd,
-                    backup
+                    backup,
+                    requiresReboot: false,
+                    requiresExistingValue: false,
+                    keyMayBeAbsent: true
                 ),
                 () => features.Exists("Recall")
             );
@@ -338,7 +344,10 @@ namespace VeloSysPro
                 // stays in the catalog and stays revertible; this replaces its mechanism, not it.
                 new[] { new RegistryValue("DODownloadMode", "REG_DWORD", "0") },
                 cmd,
-                backup
+                backup,
+                requiresReboot: false,
+                requiresExistingValue: false,
+                keyMayBeAbsent: true
             );
 
             // Every value read live on 2026-08-23 under the per-user ContentDeliveryManager key —
