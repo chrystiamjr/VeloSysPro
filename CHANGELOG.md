@@ -1,3 +1,9 @@
+## [0.5.2](https://github.com/chrystiamjr/VeloSysPro/compare/v0.5.1...v0.5.2) (2026-08-24)
+
+### Bug Fixes
+
+* **safety:** share one checkpoint across every feature ([#54](https://github.com/chrystiamjr/VeloSysPro/issues/54)) ([7a7c3c8](https://github.com/chrystiamjr/VeloSysPro/commit/7a7c3c80021c9cf64a6787a55b46ae44f4bbf180))
+
 ## [0.5.1](https://github.com/chrystiamjr/VeloSysPro/compare/v0.5.0...v0.5.1) (2026-08-24)
 
 ### Bug Fixes
