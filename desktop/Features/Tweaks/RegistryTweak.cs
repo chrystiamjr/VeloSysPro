@@ -184,11 +184,21 @@ namespace VeloSysPro
 
             // Apply created the key along with the value, so leaving it behind is an artefact the
             // app made and did not clean up. Only ever for a key this Tweak is allowed to create,
-            // only when the capture saw it absent, and only when nothing is left in it: between
-            // Apply and Revert an administrator may have set another policy under the same branch,
-            // and deleting the branch wholesale would destroy their setting — a far worse failure
-            // than the leftover key (#51). A restore that already failed is left exactly as it is.
-            if (ok && !capture.KeyExisted && _keyMayBeAbsent && KeyIsEmpty()) ok &= DeleteKey();
+            // only when the capture could not read it, and only when nothing is left in it:
+            // between Apply and Revert an administrator may have set another policy under the same
+            // branch, and deleting the branch wholesale would destroy their setting — a far worse
+            // failure than the leftover key (#51). A restore that already failed is left exactly as
+            // it is.
+            //
+            // Nothing can make the emptiness check and the delete one operation through reg.exe, so
+            // a value written into the key in between is deleted with it. The window is
+            // microseconds on a policy branch nothing else is touching, and the alternative —
+            // never cleaning up — is the bug being fixed.
+            //
+            // Its result deliberately does not reach `ok`. The prior state is already restored by
+            // this point; an empty key nobody reads is cosmetic, and failing the whole Revert over
+            // it would report a failure that did not happen and that the user cannot act on.
+            if (ok && !capture.KeyWasReadable && _keyMayBeAbsent && KeyIsEmpty()) DeleteKey();
 
             return ok;
         }
@@ -207,7 +217,7 @@ namespace VeloSysPro
         /// </remarks>
         private bool KeyIsEmpty()
         {
-            CaptureResult query = _cmd.RunCapture("reg.exe", "query \"" + _keyPath + "\"");
+            CaptureResult query = QueryKey();
             if (!query.Success) return false;
 
             foreach (string line in query.Output.Split('\n'))
@@ -220,8 +230,14 @@ namespace VeloSysPro
         private bool DeleteKey() =>
             _cmd.Run("reg.exe", "delete \"" + _keyPath + "\" /f").Success;
 
-        private bool KeyIsReadable() =>
-            _cmd.RunCapture("reg.exe", "query \"" + _keyPath + "\"").Success;
+        /// <summary>
+        /// The one read of the whole key, asked two different questions: whether it answered at
+        /// all, and whether it answered holding anything.
+        /// </summary>
+        private CaptureResult QueryKey() =>
+            _cmd.RunCapture("reg.exe", "query \"" + _keyPath + "\"");
+
+        private bool KeyIsReadable() => QueryKey().Success;
 
         private CapturedValue Read(RegistryValue value)
         {

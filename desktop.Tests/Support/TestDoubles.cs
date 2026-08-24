@@ -112,9 +112,27 @@ internal sealed class ScriptedCommandRunner : ICommandRunner
     /// <summary>Queues a query that fails, e.g. a registry value or key that is not there.</summary>
     public void EnqueueFailedCapture() => _captures.Enqueue(("", false));
 
+    /// <summary>
+    /// Substrings of a Run that should fail while every other command succeeds.
+    /// </summary>
+    /// <remarks>
+    /// The mirror of <see cref="FakeCommandRunner.FailingCapturesByArgs"/>, for the write side. A
+    /// single <see cref="Result"/> makes every command in a sequence agree, so "the last step
+    /// failed" cannot be told apart from "the first one did" — and a Revert that restores the value
+    /// and then fails to tidy up is exactly that distinction.
+    /// </remarks>
+    public List<string> FailingRunsByArgs { get; } = new();
+
     public CommandResult Run(string exe, string args)
     {
         Runs.Add((exe, args));
+
+        foreach (string failing in FailingRunsByArgs)
+        {
+            if (args.Contains(failing, StringComparison.OrdinalIgnoreCase))
+                return new CommandResult(1, false);
+        }
+
         return Result;
     }
 

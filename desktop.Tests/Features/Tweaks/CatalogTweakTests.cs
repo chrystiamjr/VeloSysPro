@@ -790,9 +790,13 @@ public class CatalogTweakTests
     }
 
     [Theory]
-    [InlineData("windows.copilotPolicy")]
-    [InlineData("network.deliveryOptimization")]
-    public void PolicyTweaks_RoundTripAPolicyKeyThatDoesNotExistAtAll(string id)
+    [InlineData("windows.copilotPolicy", CopilotPolicy, "TurnOffWindowsCopilot")]
+    [InlineData("network.deliveryOptimization", DeliveryPolicy, "DODownloadMode")]
+    public void PolicyTweaks_RoundTripAPolicyKeyThatDoesNotExistAtAll(
+        string id,
+        string key,
+        string valueName
+    )
     {
         // The normal state of a `Policies` branch, and the one the other tests miss: no
         // `KeyReadsBack()`, because nobody has ever created the key. Both reg queries fail, the
@@ -819,9 +823,13 @@ public class CatalogTweakTests
 
         catalog.Runner.Runs.Clear();
         Assert.True(tweak.Revert(tweakCapture));
-        // First, and the one that matters here: the value goes. What follows it is the leftover-key
-        // check (#51), which has its own tests below.
-        Assert.StartsWith("delete ", catalog.Args.First());
+        // The exact sequence, not just the first command: a test that pinned only the delete would
+        // stay green if a stray destructive command were appended after it. The query is the
+        // leftover-key check (#51); it finds nothing readable here, so no key is removed.
+        Assert.Equal(
+            new[] { "delete \"" + key + "\" /v \"" + valueName + "\" /f", "query \"" + key + "\"" },
+            catalog.Args
+        );
     }
 
     [Fact]
@@ -868,9 +876,44 @@ public class CatalogTweakTests
         catalog.Value("DOMaxCacheSize", "REG_DWORD", "0x14");
 
         Assert.True(delivery.Revert(capture));
-        Assert.DoesNotContain(
-            catalog.Args,
-            arg => arg == "delete \"" + DeliveryPolicy + "\" /f"
+
+        // The exact sequence, so the test tells "checked and declined" apart from "never checked".
+        // A DoesNotContain on its own passes for both, and only one of them is the guard.
+        Assert.Equal(
+            new[]
+            {
+                "delete \"" + DeliveryPolicy + "\" /v \"DODownloadMode\" /f",
+                "query \"" + DeliveryPolicy + "\"",
+            },
+            catalog.Args
+        );
+    }
+
+    [Fact]
+    public void PolicyTweaks_LeaveAKeyAloneWhenOnlyASubkeyIsLeftInIt()
+    {
+        // A subkey is data too, and it is the case the emptiness read has to distinguish by shape:
+        // an empty key answers with nothing at all, while a key holding only subkeys answers with
+        // its own path and a line per subkey.
+        using var catalog = new ShippedCatalog();
+
+        ITweak delivery = catalog.Find("network.deliveryOptimization");
+        TweakCapture capture = delivery.Capture();
+        Assert.True(delivery.Apply(capture));
+
+        catalog.Runner.Runs.Clear();
+        catalog.Runner.EnqueueCapture(
+            "\r\n" + DeliveryPolicy.Replace("HKLM", "HKEY_LOCAL_MACHINE") + "\\SomeSubkey\r\n\r\n"
+        );
+
+        Assert.True(delivery.Revert(capture));
+        Assert.Equal(
+            new[]
+            {
+                "delete \"" + DeliveryPolicy + "\" /v \"DODownloadMode\" /f",
+                "query \"" + DeliveryPolicy + "\"",
+            },
+            catalog.Args
         );
     }
 
@@ -902,6 +945,9 @@ public class CatalogTweakTests
         // capture's reg queries are the ones that find nothing.
         using var catalog = new ShippedCatalog();
 
+        const string key = WindowsAiPolicy;
+        const string valueName = "DisableAIDataAnalysis";
+
         ITweak recall = catalog.Find("windows.recall");
         TweakCapture capture = recall.Capture();
         Assert.NotEmpty(capture.Values);
@@ -912,9 +958,13 @@ public class CatalogTweakTests
 
         catalog.Runner.Runs.Clear();
         Assert.True(recall.Revert(capture));
-        // First, and the one that matters here: the value goes. What follows it is the leftover-key
-        // check (#51), which has its own tests below.
-        Assert.StartsWith("delete ", catalog.Args.First());
+        // The exact sequence, not just the first command: a test that pinned only the delete would
+        // stay green if a stray destructive command were appended after it. The query is the
+        // leftover-key check (#51); it finds nothing readable here, so no key is removed.
+        Assert.Equal(
+            new[] { "delete \"" + key + "\" /v \"" + valueName + "\" /f", "query \"" + key + "\"" },
+            catalog.Args
+        );
     }
 
     [Fact]

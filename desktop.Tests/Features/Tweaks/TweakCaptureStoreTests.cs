@@ -16,11 +16,12 @@ public class TweakCaptureStoreTests
         );
 
     [Fact]
-    public void LoadLatest_ReadsACaptureWrittenBeforeTheKeyExistedFieldAsKeyExisted()
+    public void LoadLatest_ReadsACaptureWrittenBeforeTheKeyFieldAsReadable()
     {
-        // Captures are persisted and read back by later versions. One written before `KeyExisted`
-        // existed never observed the key's own state, and true is the answer that changes nothing:
-        // Revert restores the values and leaves the key alone, exactly as that version did (#51).
+        // Captures are persisted and read back by later versions. One written before
+        // `KeyWasReadable` existed never observed the key at all, and true is the answer that
+        // changes nothing: Revert restores the values and leaves the key alone, exactly as the
+        // version that wrote this file did (#51).
         using var temp = new TemporaryDirectory();
         File.WriteAllText(
             Path.Combine(temp.Path, "cpu.win32PrioritySeparation_20260725-100000000.json"),
@@ -43,9 +44,9 @@ public class TweakCaptureStoreTests
 
         Assert.NotNull(loaded);
         Assert.True(
-            loaded!.KeyExisted,
-            "A capture with no `keyExisted` field must read back as true. False would let Revert "
-                + "delete a registry key that the capture never observed as absent."
+            loaded!.KeyWasReadable,
+            "A capture with no `keyWasReadable` field must read back as true. False would let "
+                + "Revert delete a registry key that the capture never observed at all."
         );
         Assert.Equal("0x2", Assert.Single(loaded.Values).Data);
     }

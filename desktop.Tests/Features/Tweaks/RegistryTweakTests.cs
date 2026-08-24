@@ -400,4 +400,75 @@ public class RegistryTweakTests
             capture.Values.Select(value => value.Data)
         );
     }
+
+    /// <summary>The same Tweak, allowed to create the key it writes under (a Policies branch).</summary>
+    private static RegistryTweak KeyCreatingTweak(
+        ICommandRunner runner,
+        RegistryBackupManager backup
+    ) =>
+        new(
+            "windows.policy",
+            TweakCategories.System,
+            RiskTier.Safe,
+            KeyPath,
+            new[] { new RegistryValue("Policy", "REG_DWORD", "1") },
+            runner,
+            backup,
+            requiresReboot: false,
+            requiresExistingValue: false,
+            keyMayBeAbsent: true
+        );
+
+    [Fact]
+    public void Revert_RemovesAKeyItCreatedOnceNothingIsLeftInIt()
+    {
+        // The mechanism on its own, away from the catalog: an unreadable key at capture time, an
+        // empty one at revert time, and this Tweak is allowed to create the key it writes under.
+        using var temp = new TemporaryDirectory();
+        var sink = new RecordingStatusSink();
+        var runner = new ScriptedCommandRunner();
+        var tweak = KeyCreatingTweak(runner, new RegistryBackupManager(temp.Path, runner, sink, temp.Path));
+
+        TweakCapture capture = tweak.Capture(); // no script: the key does not read back
+        Assert.False(capture.KeyWasReadable);
+        Assert.True(tweak.Apply(capture));
+
+        runner.Runs.Clear();
+        runner.EnqueueCapture("\r\n"); // reg.exe's answer for a key holding nothing
+
+        Assert.True(tweak.Revert(capture));
+        Assert.Equal(
+            new[]
+            {
+                "delete \"" + KeyPath + "\" /v \"Policy\" /f",
+                "query \"" + KeyPath + "\"",
+                "delete \"" + KeyPath + "\" /f",
+            },
+            runner.Runs.Select(run => run.Args)
+        );
+    }
+
+    [Fact]
+    public void Revert_StillReportsSuccessWhenOnlyTheLeftoverKeyCouldNotBeRemoved()
+    {
+        // The prior state is restored by the time the key is considered. An empty key nobody reads
+        // is cosmetic, so failing the whole Revert over it would report a failure that did not
+        // happen and that the user cannot act on.
+        using var temp = new TemporaryDirectory();
+        var sink = new RecordingStatusSink();
+        var runner = new ScriptedCommandRunner();
+        var tweak = KeyCreatingTweak(runner, new RegistryBackupManager(temp.Path, runner, sink, temp.Path));
+
+        TweakCapture capture = tweak.Capture();
+        Assert.True(tweak.Apply(capture));
+
+        runner.Runs.Clear();
+        runner.EnqueueCapture("\r\n");
+        // Only the key delete fails. Failing every command would make the value delete fail first,
+        // which is a different outcome and would never reach the line under test.
+        runner.FailingRunsByArgs.Add("delete \"" + KeyPath + "\" /f");
+
+        Assert.True(tweak.Revert(capture));
+        Assert.Contains(runner.Runs, run => run.Args == "delete \"" + KeyPath + "\" /f");
+    }
 }
