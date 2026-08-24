@@ -934,6 +934,27 @@ public class CatalogTweakTests
         Assert.Contains("/d \"0x1\"", Assert.Single(catalog.Args));
     }
 
+    [Theory]
+    [InlineData("graphics.gameDvrCapture")]
+    [InlineData("system.transparency")]
+    public void SettingsBackedTweaks_RefuseToCreateAValueTheBuildDoesNotExpose(string id)
+    {
+        // Neither writes under a `Policies` branch, so the exception that lets the Copilot, Recall
+        // and Delivery Optimization entries create an absent value does not apply here: Windows
+        // owns these two, and an absent one means this build does not offer the switch. Both were
+        // present on the machine they were verified against; this is the other machine.
+        using var catalog = new ShippedCatalog();
+        catalog.KeyReadsBack();
+        catalog.ValueAbsent();
+
+        ITweak tweak = catalog.Find(id);
+        TweakCapture capture = tweak.Capture();
+        catalog.Runner.Runs.Clear();
+
+        Assert.False(tweak.Apply(capture));
+        Assert.Empty(catalog.Args);
+    }
+
     [Fact]
     public void Transparency_NeedsNoRestartAndIsThereforeRecommendable()
     {

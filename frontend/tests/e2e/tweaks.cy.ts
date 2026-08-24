@@ -1,6 +1,7 @@
 import {
   appliedTweakCatalog,
   mixedTweakCatalog,
+  recommendedTweakCatalog,
   snapshotAfter,
   snapshotAfterReboot,
   snapshotBefore,
@@ -369,6 +370,43 @@ describe('à-la-carte optimizations', () => {
       ],
       revertIds: [],
     });
+  });
+
+  it('renders the refreshed Recommended set, and the Windows section it brought with it', () => {
+    // The `windows` category is inserted above `boot` and `services`, and it carries two of the
+    // longest descriptions in the catalog. jsdom has no viewport, so this is the only place the
+    // added height is measured against the scrollport.
+    cy.emitHost('tweaksLoaded', recommendedTweakCatalog);
+
+    cy.getByCy('tweak-category-windows').should('be.visible').and('contain', 'Windows');
+    cy.getByCy('tweak-category-boot').scrollIntoView().should('be.visible');
+    cy.getByCy('tweak-category-services').scrollIntoView().should('be.visible');
+
+    cy.getByCy('tweak-recommended').click();
+    cy.getByCy('tweak-select-windows.startupAds').should('be.checked');
+    cy.getByCy('tweak-select-system.transparency').should('be.checked');
+    // Recommended may not tick what this machine cannot use, even where it is offered.
+    cy.getByCy('tweak-select-windows.recall').should('not.be.checked').and('be.disabled');
+  });
+
+  it('renders the same rows in English with no raw keys left showing', () => {
+    // The copy for six new Tweaks landed in two locales at once. A key present in pt_BR and missing
+    // in en_US renders as the raw path, which every unit guard sees but no screenshot would.
+    cy.emitHost('tweaksLoaded', recommendedTweakCatalog);
+    cy.getByCy('nav-Settings').click();
+    cy.getByCy('language-en').click();
+    cy.getByCy('nav-Optimize').click();
+    cy.emitHost('tweaksLoaded', recommendedTweakCatalog);
+
+    cy.getByCy('tweak-category-windows').should('contain', 'Windows and privacy');
+    cy.getByCy('tweak-row-windows.startupAds')
+      .should('contain', 'Turn off Windows suggestions and ads')
+      .and('not.contain', 'optimize.tweak.');
+    cy.getByCy('tweak-row-system.transparency')
+      .scrollIntoView()
+      .should('contain', 'Turn off window transparency')
+      .and('not.contain', 'optimize.tweak.');
+    cy.getByCy('tweak-state-windows.recall').should('contain', 'Unavailable');
   });
 
   it('renders a category it does not have copy for instead of dropping it', () => {

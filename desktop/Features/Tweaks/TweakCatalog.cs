@@ -233,7 +233,12 @@ namespace VeloSysPro
                 @"HKCU\System\GameConfigStore",
                 new[] { new RegistryValue("GameDVR_Enabled", "REG_DWORD", "0") },
                 cmd,
-                backup
+                backup,
+                requiresReboot: false,
+                // Not a Policies branch. Windows writes this value itself, so an absent one is a
+                // capture stack this build does not expose and creating it would be writing
+                // something nothing reads — the rule every entry outside `Policies` follows.
+                requiresExistingValue: true
             );
 
             var transparency = new RegistryTweak(
@@ -246,7 +251,11 @@ namespace VeloSysPro
                 @"HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
                 new[] { new RegistryValue("EnableTransparency", "REG_DWORD", "0") },
                 cmd,
-                backup
+                backup,
+                requiresReboot: false,
+                // As above: Settings owns this value, so absence means this build does not offer
+                // the switch rather than that nobody has flipped it yet.
+                requiresExistingValue: true
             );
 
             var visualEffects = new RegistryTweak(

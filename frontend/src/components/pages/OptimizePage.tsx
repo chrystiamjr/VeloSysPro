@@ -79,17 +79,18 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
   // id at its own seam; leaving it out here is what stops the screen asking in the first place, and
   // it is read off the live catalog so a machine that gains the feature simply starts offering it.
   const knownIds = catalog.tweaks.map((tweak) => tweak.id);
-  const selectable = (id: string) =>
-    catalog.tweaks.some((tweak) => tweak.id === id && tweak.state !== 'Unsupported');
+  const tweakById = (id: string) => catalog.tweaks.find((tweak) => tweak.id === id);
+  const selectable = (id: string) => {
+    const tweak = tweakById(id);
+    return tweak !== undefined && tweak.state !== 'Unsupported';
+  };
   const liveDesired = desiredIds.filter(selectable);
 
   const toApply = liveDesired.filter((id) => !appliedIds.includes(id));
   const toRevert = appliedIds.filter((id) => !liveDesired.includes(id));
   const hasPendingChange = toApply.length > 0 || toRevert.length > 0;
 
-  const advancedToApply = toApply.filter(
-    (id) => catalog.tweaks.find((tweak) => tweak.id === id)?.riskTier === 'Advanced'
-  );
+  const advancedToApply = toApply.filter((id) => tweakById(id)?.riskTier === 'Advanced');
 
   const titleOf = (id: string) => t(`optimize.tweak.${id}.title`);
   const modified = presetSelection !== null && !sameSet(liveDesired, presetSelection);
@@ -108,14 +109,8 @@ export const OptimizePage: React.FC<OptimizePageProps> = ({
   // nobody asked for. A Preset naming a Tweak this machine cannot use simply draws one fewer box:
   // the catalog decides membership, the machine decides what is offered.
   const drawSafeOnly = (ids: string[]) => {
-    const safe = ids.filter((id) =>
-      catalog.tweaks.some(
-        (tweak) => tweak.id === id && tweak.riskTier === 'Safe' && tweak.state !== 'Unsupported'
-      )
-    );
-    const appliedAdvanced = appliedIds.filter(
-      (id) => catalog.tweaks.find((tweak) => tweak.id === id)?.riskTier === 'Advanced'
-    );
+    const safe = ids.filter((id) => tweakById(id)?.riskTier === 'Safe' && selectable(id));
+    const appliedAdvanced = appliedIds.filter((id) => tweakById(id)?.riskTier === 'Advanced');
     return [...safe, ...appliedAdvanced];
   };
 

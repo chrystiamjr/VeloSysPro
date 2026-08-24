@@ -127,8 +127,9 @@ export const appliedTweakCatalog: TweakCatalog = {
 };
 
 /**
- * A machine that does not have the feature one of the preset's Tweaks configures — a desktop PC
- * and Recall, which is the case `TweakState.Unsupported` was added for. The id stays in the preset:
+ * A machine that does not have the feature one of the preset's Tweaks configures — the case
+ * `TweakState.Unsupported` was added for, standing in for a desktop PC and Recall. A preset member
+ * is used rather than a standalone row because the id staying in the preset is the point:
  * membership is the catalog's decision, and the machine decides what is offered.
  */
 export const unsupportedTweakCatalog: TweakCatalog = {
@@ -136,6 +137,47 @@ export const unsupportedTweakCatalog: TweakCatalog = {
   tweaks: tweakCatalog.tweaks.map((tweak) =>
     tweak.id === 'services.sysMain' ? { ...tweak, state: 'Unsupported' as const } : tweak
   ),
+};
+
+/**
+ * The E8 `Recommended` set as the shipped catalog reports it, including the `windows` category the
+ * other fixtures have no row for. Two of the longest descriptions in the catalog live here, and the
+ * section they add sits above `boot` and `services` — which is why the specs using this fixture
+ * assert those sections are still reachable
+ * (`.agents/rules/copy-length-is-a-layout-change.md`).
+ */
+export const recommendedTweakCatalog: TweakCatalog = {
+  ...tweakCatalog,
+  tweaks: [
+    ...tweakCatalog.tweaks.map((tweak) => ({ ...tweak, recommended: false })),
+    {
+      id: 'windows.startupAds',
+      category: 'windows',
+      riskTier: 'Safe',
+      kind: 'registry',
+      state: 'Partial',
+      recommended: true,
+      requiresReboot: false,
+    },
+    {
+      id: 'windows.recall',
+      category: 'windows',
+      riskTier: 'Safe',
+      kind: 'registry',
+      state: 'Unsupported',
+      recommended: false,
+      requiresReboot: false,
+    },
+    {
+      id: 'system.transparency',
+      category: 'system',
+      riskTier: 'Safe',
+      kind: 'registry',
+      state: 'NotApplied',
+      recommended: true,
+      requiresReboot: false,
+    },
+  ],
 };
 
 /**

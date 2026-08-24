@@ -22,7 +22,15 @@ export interface TweakCatalogListProps {
  * not by hive or by reboot cost — a section holds a mix of both, and the per-row restart badge is
  * what actually tells the user when a change lands.
  */
-const KNOWN_CATEGORIES = ['cpu', 'graphics', 'network', 'system', 'windows', 'boot', 'services'];
+export const KNOWN_CATEGORIES = [
+  'cpu',
+  'graphics',
+  'network',
+  'system',
+  'windows',
+  'boot',
+  'services',
+];
 
 /**
  * The catalog, grouped so it stays readable as it grows, with the Advanced tier held apart.
